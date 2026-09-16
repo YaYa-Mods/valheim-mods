@@ -179,6 +179,7 @@ namespace ModHub
                     _capturingKey = null;
                     _entryScroll = Vector2.zero;
                 }
+                Theme.RowSpace();
             }
             _pad.EndScrollView();
             GUILayout.Space(6);

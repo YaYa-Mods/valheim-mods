@@ -507,6 +507,7 @@ namespace ResourceFinder
                 if (revealedOnly) { if (_pad.Button("×", GUILayout.Width(34), GUILayout.Height(34))) Layers.SetRevealed(e.Label, false); }
                 else if (_anyRevealed) GUILayout.Space(40); // colonne du « × » réservée : les lignes gardent la même largeur
                 GUILayout.EndHorizontal();
+                Theme.RowSpace();
             }
             if (_visibleEntries.Count == 0) GUILayout.Label(L.T("Rien de découvert dans cette catégorie pour l'instant."), _small);
 
@@ -523,6 +524,7 @@ namespace ResourceFinder
                         GUILayout.Label(L.T(e.Label), _rowHidden, GUILayout.ExpandWidth(true), GUILayout.Height(34));
                         if (_pad.Button(L.T("Révéler"), GUILayout.Width(90), GUILayout.Height(34))) Layers.SetRevealed(e.Label, true);
                         GUILayout.EndHorizontal();
+                        Theme.RowSpace();
                     }
                 }
             }
@@ -592,6 +594,7 @@ namespace ResourceFinder
                 // Grande carte centrée sur ce résultat
                 if (_pad.Button(L.T("Carte"), GUILayout.Width(70), GUILayout.Height(34)) && Minimap.instance != null) { _target = r; Close(); ShowOnMap(r.Pos); } // (ou clic droit sur la ligne)
                 GUILayout.EndHorizontal();
+                Theme.RowSpace();
             }
             if (_shown.Count == 0 && _finder.State != Finder.Phase.Idle) GUILayout.Label(L.T("Aucun résultat pour l'instant."), _small);
             _pad.EndScrollView();
@@ -616,6 +619,7 @@ namespace ResourceFinder
                 if (_pad.Button(L.T("Cibler"), GUILayout.Width(80), GUILayout.Height(30))) { _targetLayer = l; _target = Nearest(l.Results, from); }
                 if (_pad.Button(L.T("Supprimer"), GUILayout.Width(100), GUILayout.Height(30))) toRemove = l;
                 GUILayout.EndHorizontal();
+                Theme.RowSpace();
             }
             if (Layers.All.Count == 0) GUILayout.Label(L.T("Aucune couche : chaque recherche crée la sienne."), _small);
             if (toRemove != null) { if (_targetLayer == toRemove) { _targetLayer = null; _target = null; } Layers.Remove(toRemove); }

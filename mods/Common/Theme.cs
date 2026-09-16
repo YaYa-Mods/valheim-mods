@@ -41,6 +41,11 @@ namespace ModsCommon
         public static void End((GUISkin skin, Matrix4x4 matrix) prev) { GUI.skin = prev.skin; GUI.matrix = prev.matrix; }
 
         /// <summary>Titre de section (accent, gras) et texte secondaire (atténué), partagés par toutes les fenêtres.</summary>
+        /// <summary>Espace entre deux lignes d'une liste : le même dans tous les mods, appelé après chaque ligne (RowSpace).</summary>
+        public const float RowGap = 6f;
+        /// <summary>À appeler après chaque ligne de liste (catalogue, résultats, chapitres, mods...) : aucune ne colle à la suivante.</summary>
+        public static void RowSpace() => GUILayout.Space(RowGap);
+
         private static GUIStyle s_h1, s_h2, s_muted;
         public static GUIStyle H1 { get { if (s_h1 == null) { s_h1 = new GUIStyle(Skin.label) { fontSize = 20, fontStyle = TitleFont != null ? FontStyle.Normal : FontStyle.Bold, wordWrap = false }; if (TitleFont != null) s_h1.font = TitleFont; s_h1.normal.textColor = Accent; } return s_h1; } }
         public static GUIStyle H2 { get { if (s_h2 == null) { s_h2 = new GUIStyle(Skin.label) { fontSize = 16, fontStyle = TitleFont != null ? FontStyle.Normal : FontStyle.Bold, wordWrap = false }; if (TitleFont != null) s_h2.font = TitleFont; s_h2.normal.textColor = Accent; } return s_h2; } }

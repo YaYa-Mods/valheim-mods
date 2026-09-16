@@ -358,6 +358,7 @@ namespace Guide
                         GUILayout.BeginHorizontal(); Theme.SpriteLayout(null, 30f, 30f);
                         if (_pad.Button(L.F("… {0} chapitre(s) à venir", rest), _chapterRow, GUILayout.Height(30))) _showLocked = true;
                         GUILayout.EndHorizontal();
+                        Theme.RowSpace();
                     }
                     n++; continue;
                 }
@@ -370,6 +371,7 @@ namespace Guide
                 Theme.SpriteLayout(unlocked ? Facts.ChapterIcon(c) : null, 30f, 36f); // trophée du boss (rien tant que le chapitre est verrouillé : pas de spoiler)
                 if (_pad.Toggle(sel, $"{mark}{n++}. {title}{count}", _chapterRow, GUILayout.Height(36)) && !sel) { _selected = c; _stepScroll = Vector2.zero; }
                 GUILayout.EndHorizontal();
+                Theme.RowSpace();
             }
             _pad.EndScrollView();
             GUILayout.Space(4);
