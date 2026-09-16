@@ -39,7 +39,7 @@ namespace InventoryMod
         {
             Log = Logger;
             Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod (poids, piles, lignes)."));
-            Enabled.SettingChanged += (_, __) => Patches.ReapplyStacks();
+            Enabled.SettingChanged += (_, __) => { Patches.ReapplyStacks(); Grid.OnEnabledChanged(); };
             NoWeightLimit = Config.Bind("General", "NoWeightLimit", true, L.T("Plus de limite de poids (jamais surchargé)."));
             MaxStackSize = Config.Bind("General", "MaxStackSize", 9999,
                 new ConfigDescription(L.T("Taille max des piles pour tous les items empilables. 0 = vanilla."), new AcceptableValueRange<int>(0, 99999)));

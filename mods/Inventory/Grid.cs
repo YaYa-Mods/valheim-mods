@@ -51,8 +51,9 @@ namespace InventoryMod
         [HarmonyPostfix]
         private static void InventoryGui_Show(InventoryGui __instance)
         {
-            if (!Plugin.Enabled.Value) return;
-            try { EnsureScroll(__instance); EnsureButtons(__instance); }
+            // Mod éteint : la colonne d'outils doit disparaître, sinon le joueur garde un panneau dont il ne peut plus rien faire
+            if (!Plugin.Enabled.Value) { ShowTools(false); return; }
+            try { EnsureScroll(__instance); EnsureButtons(__instance); ShowTools(true); }
             catch (Exception ex) { Plugin.Log.LogWarning("Inventaire (défilement/boutons) : " + ex.Message); }
         }
 
@@ -246,6 +247,18 @@ namespace InventoryMod
                 case 4: return Icon("@cat_trophies.png");
                 default: return Icon("@cat_misc.png");
             }
+        }
+
+        /// <summary>Le mod vient d'être allumé ou éteint : la colonne d'outils suit tout de suite, même inventaire ouvert.</summary>
+        internal static void OnEnabledChanged() => ShowTools(Plugin.Enabled.Value);
+
+        /// <summary>Affiche ou cache toute la colonne d'outils (séparateur compris) : le mod éteint doit rendre l'inventaire d'origine.</summary>
+        private static void ShowTools(bool show)
+        {
+            var gui = InventoryGui.instance;
+            if (gui == null || gui.m_player == null) return;
+            foreach (var t in gui.m_player.GetComponentsInChildren<RectTransform>(true))
+                if (t.name.StartsWith("ModTool", StringComparison.Ordinal) && t.gameObject.activeSelf != show) t.gameObject.SetActive(show);
         }
 
         private static void RefreshTools()
