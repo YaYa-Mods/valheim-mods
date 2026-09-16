@@ -265,6 +265,8 @@ namespace TestHarness
                 yield return Safe("CatalogSearchTests", CatalogSearchTests.Run(this, Player.m_localPlayer));
                 yield return Safe("TeleportTests", TeleportTests.Run(this, Player.m_localPlayer));
                 yield return Safe("TrackTests", TrackTests.Run(this, Player.m_localPlayer));
+                yield return Safe("L10nTests", L10nTests.Run(this, Player.m_localPlayer));
+                L10nTests.Restore();
                 Log.LogInfo($"[TEST] ===== fin : {_pass} PASS, {_fail} FAIL =====");
                 yield break;
             }
@@ -508,6 +510,8 @@ namespace TestHarness
             yield return Safe("CatalogSearchTests", CatalogSearchTests.Run(this, player));
             yield return Safe("TeleportTests", TeleportTests.Run(this, player));
             yield return Safe("TrackTests", TrackTests.Run(this, player));
+            yield return Safe("L10nTests", L10nTests.Run(this, player));
+            L10nTests.Restore();
 
             // ---------------- Diagnostic : table de végétation (filtre biome du finder) ----------------
             try

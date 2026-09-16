@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using ModsCommon;
 
 namespace Movement
 {
@@ -20,11 +21,11 @@ namespace Movement
 
         private void Awake()
         {
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod.");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod."));
             SpeedMultiplier = Config.Bind("General", "SpeedMultiplier", 1.3f,
-                new ConfigDescription("Multiplicateur de vitesse de marche/jogging/course du joueur. 1 = vanilla.", new AcceptableValueRange<float>(1f, 3f)));
+                new ConfigDescription(L.T("Multiplicateur de vitesse de marche/jogging/course du joueur. 1 = vanilla."), new AcceptableValueRange<float>(1f, 3f)));
             SwimMultiplier = Config.Bind("General", "SwimMultiplier", 1.3f,
-                new ConfigDescription("Multiplicateur de vitesse de nage. 1 = vanilla.", new AcceptableValueRange<float>(1f, 3f)));
+                new ConfigDescription(L.T("Multiplicateur de vitesse de nage. 1 = vanilla."), new AcceptableValueRange<float>(1f, 3f)));
             SwimMultiplier.SettingChanged += (_, __) => Patches.ApplySwim(Player.m_localPlayer);
             Enabled.SettingChanged += (_, __) => Patches.ApplySwim(Player.m_localPlayer);
 

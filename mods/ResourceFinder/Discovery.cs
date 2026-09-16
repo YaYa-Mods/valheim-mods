@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using UnityEngine;
+using ModsCommon;
 
 namespace ResourceFinder
 {
@@ -49,7 +50,7 @@ namespace ResourceFinder
                 if (Array.IndexOf(e.Prefabs, prefab) >= 0 && !WasDiscoveredBefore(e, prefab))
                 {
                     s_cache.Remove(e);
-                    p.Message(MessageHud.MessageType.TopLeft, "Scanner : " + e.Label + " (découvert)");
+                    p.Message(MessageHud.MessageType.TopLeft, L.T("Scanner : ") + L.T(e.Label) + L.T(" (découvert)"));
                     break;
                 }
             return true;
@@ -168,10 +169,13 @@ namespace ResourceFinder
         // « Forêt-Noire, Marais » : biomes où la ressource pousse (table de végétation), où se trouvent ses lieux, ou déclarés
         // dans le catalogue. Calculé une fois par entrée ; vide pour les créatures (biomes de spawn non lus).
         private static readonly Dictionary<ResourceEntry, string> s_biomeText = new Dictionary<ResourceEntry, string>();
+        private static string s_biomeLang; // langue des textes en cache : un changement de langue du jeu les invalide
         private static readonly Heightmap.Biome[] s_biomeOrder = { Heightmap.Biome.Meadows, Heightmap.Biome.BlackForest, Heightmap.Biome.Swamp, Heightmap.Biome.Mountain, Heightmap.Biome.Plains, Heightmap.Biome.Ocean, Heightmap.Biome.Mistlands, Heightmap.Biome.AshLands, Heightmap.Biome.DeepNorth };
 
         public static string BiomeText(ResourceEntry e)
         {
+            string lang = Localization.instance != null ? Localization.instance.GetSelectedLanguage() : null;
+            if (lang != s_biomeLang) { s_biomeText.Clear(); s_biomeLang = lang; }
             if (s_biomeText.TryGetValue(e, out var t)) return t;
             if (ZoneSystem.instance == null) return "";
             var mask = e.Biomes | (e.Category == Category.Creature ? SpawnBiomes(e) : VegetationBiomes(e)) | LocationBiomes(e);

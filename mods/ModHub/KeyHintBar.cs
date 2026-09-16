@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BepInEx.Bootstrap;
 using UnityEngine;
 using UnityEngine.UI;
+using ModsCommon;
 
 namespace ModHub
 {
@@ -100,12 +101,12 @@ namespace ModHub
             switch (k)
             {
                 case KeyCode.Escape: return "Echap";
-                case KeyCode.Mouse0: return "Souris 1"; case KeyCode.Mouse1: return "Souris 2"; case KeyCode.Mouse2: return "Souris 3";
+                case KeyCode.Mouse0: return L.T("Souris 1"); case KeyCode.Mouse1: return L.T("Souris 2"); case KeyCode.Mouse2: return L.T("Souris 3");
                 case KeyCode.LeftShift: case KeyCode.RightShift: return "Maj";
                 case KeyCode.LeftControl: case KeyCode.RightControl: return "Ctrl";
                 case KeyCode.LeftAlt: case KeyCode.RightAlt: return "Alt";
                 case KeyCode.Space: return "Espace";
-                case KeyCode.Return: return "Entrée";
+                case KeyCode.Return: return L.T("Entrée");
                 case KeyCode.Tab: return "Tab";
                 case KeyCode.Backspace: return "Retour";
                 default:
@@ -132,7 +133,7 @@ namespace ModHub
                 foreach (var kv in list)
                 {
                     if (string.IsNullOrEmpty(kv.Key) || kv.Value == KeyCode.None) continue;
-                    s_collected.Add(kv);
+                    s_collected.Add(new KeyValuePair<string, KeyCode>(L.T(kv.Key), kv.Value)); // libellé traduit ici : les mods publient des clés françaises
                     if (s_collected.Count >= MaxHints) return s_collected;
                 }
             }

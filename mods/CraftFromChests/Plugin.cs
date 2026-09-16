@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
+using ModsCommon;
 
 namespace CraftFromChests
 {
@@ -31,11 +32,11 @@ namespace CraftFromChests
         private void Awake()
         {
             Log = Logger;
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod (artisanat depuis les coffres).");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod (artisanat depuis les coffres)."));
             Range = Config.Bind("General", "Range", 30f,
-                new ConfigDescription("Rayon (m) autour du joueur dans lequel les coffres sont utilisés.", new AcceptableValueRange<float>(2f, 200f)));
+                new ConfigDescription(L.T("Rayon (m) autour du joueur dans lequel les coffres sont utilisés."), new AcceptableValueRange<float>(2f, 200f)));
             Stations = Config.Bind("General", "Stations", true,
-                "Feu, four, fonderie, station de cuisson et fermenteur prennent aussi dans les coffres (touche E).");
+                L.T("Feu, four, fonderie, station de cuisson et fermenteur prennent aussi dans les coffres (touche E)."));
 
             var harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(ScopePatches));

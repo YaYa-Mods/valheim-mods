@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
+using ModsCommon;
 
 namespace Lumberjack
 {
@@ -33,21 +34,21 @@ namespace Lumberjack
         private void Awake()
         {
             Log = Logger;
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod (compétence en % des PV et auto-découpe).");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod (compétence en % des PV et auto-découpe)."));
 
             HpPercentAtMaxLevel = Config.Bind("Skill", "HpPercentAtMaxLevel", 100f,
                 new ConfigDescription(
-                    "Pourcentage des PV max d'un arbre enlevé au minimum par coup au niveau 100 de Bûcheron. " +
-                    "La garantie est proportionnelle au niveau : à 100, le niveau 50 enlève 50% (2 coups), le niveau 100 enlève 100% (1 coup). " +
-                    "0 = désactivé.",
+                    L.T("Pourcentage des PV max d'un arbre enlevé au minimum par coup au niveau 100 de Bûcheron. ") +
+                    L.T("La garantie est proportionnelle au niveau : à 100, le niveau 50 enlève 50% (2 coups), le niveau 100 enlève 100% (1 coup). ") +
+                    L.T("0 = désactivé."),
                     new AcceptableValueRange<float>(0f, 100f)));
             AutoChopLogs = Config.Bind("AutoChop", "AutoChopLogs", true,
-                "Les troncs, sous-troncs et souches des arbres que vous abattez se découpent tout seuls.");
+                L.T("Les troncs, sous-troncs et souches des arbres que vous abattez se découpent tout seuls."));
             AutoChopChainReaction = Config.Bind("AutoChop", "AutoChopChainReaction", true,
-                "Les arbres renversés par la chute d'un arbre que vous avez abattu (réaction en chaîne) se découpent aussi.");
+                L.T("Les arbres renversés par la chute d'un arbre que vous avez abattu (réaction en chaîne) se découpent aussi."));
             AutoChopDelay = Config.Bind("AutoChop", "AutoChopDelay", 1.5f,
                 new ConfigDescription(
-                    "Secondes d'attente avant qu'un tronc tombé se découpe (laisse le temps à l'animation de chute).",
+                    L.T("Secondes d'attente avant qu'un tronc tombé se découpe (laisse le temps à l'animation de chute)."),
                     new AcceptableValueRange<float>(0.3f, 10f)));
 
             Harmony.CreateAndPatchAll(typeof(SkillDamage), Guid);

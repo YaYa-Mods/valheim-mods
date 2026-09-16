@@ -34,9 +34,13 @@ try {
     
     if (Test-Path "$V\BepInEx\LogOutput.log") { Copy-Item "$V\BepInEx\LogOutput.log" "$V\BepInEx\LogOutput.prev.log" -Force }
     $p = Start-Process -FilePath "$V\valheim.exe" -WorkingDirectory $V -PassThru
+    # Fenetre du jeu au premier plan : sans focus, Unity ignore les entrees (manette virtuelle des tests comprise)
+    $ws = New-Object -ComObject WScript.Shell
+    for ($i = 0; $i -lt 90; $i++) { Start-Sleep -Seconds 1; $p.Refresh(); if ($p.HasExited) { break }; if ($p.MainWindowHandle -ne [IntPtr]::Zero) { $null = $ws.AppActivate($p.Id); break } }
     $deadline = (Get-Date).AddSeconds(600)
     while ((Get-Date) -lt $deadline) {
         Start-Sleep -Seconds 5
+        if ($p.HasExited) { Write-Host "Le jeu s'est ferme avant la fin des tests." -ForegroundColor Yellow; break }
         if ((Test-Path "$V\BepInEx\LogOutput.log") -and (Select-String -Path "$V\BepInEx\LogOutput.log" -Pattern "\[TEST\] ===== fin|rien n.est charg|REFUS|impossible . pr.parer" -Quiet)) { break }
     }
     Start-Sleep -Seconds 2

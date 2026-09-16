@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using ModsCommon;
 
 namespace LongerFood
 {
@@ -27,11 +28,11 @@ namespace LongerFood
         private void Awake()
         {
             Log = Logger;
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod (durée des aliments allongée).");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod (durée des aliments allongée)."));
             Enabled.SettingChanged += (_, __) => Patches.Reapply();
             FoodDurationMultiplier = Config.Bind("General", "FoodDurationMultiplier", 1.5f,
                 new ConfigDescription(
-                    "Multiplicateur de la durée des aliments à effets positifs. 1.0 = vanilla, 1.5 = +50%, 1.67 ≈ 3 min → 5 min.",
+                    L.T("Multiplicateur de la durée des aliments à effets positifs. 1.0 = vanilla, 1.5 = +50%, 1.67 ≈ 3 min → 5 min."),
                     new AcceptableValueRange<float>(1f, 3f)));
             FoodDurationMultiplier.SettingChanged += (_, __) => Patches.Reapply();
 

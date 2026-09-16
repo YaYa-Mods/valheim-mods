@@ -47,6 +47,12 @@ namespace TestHarness
 
         public static IEnumerator Run(Plugin h, Player player)
         {
+            // Sans le focus de la fenêtre, l'Input System coupe les périphériques « avant-plan » : les événements de la manette
+            // virtuelle seraient ignorés quand le jeu est lancé depuis un script. On lui demande d'ignorer le focus le temps des tests.
+            var prevBackground = InputSystem.settings.backgroundBehavior;
+            try { InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus; Application.runInBackground = true; }
+            catch (Exception ex) { Plugin.Log.LogWarning("[TEST] backgroundBehavior : " + ex.Message); }
+            Plugin.Log.LogInfo($"[TEST] focus de la fenêtre : {Application.isFocused}, comportement arrière-plan : {prevBackground} → {InputSystem.settings.backgroundBehavior}");
             try { s_pad = InputSystem.AddDevice<UnityEngine.InputSystem.XInput.XInputController>(); } // vue comme une manette Xbox (glyphes, type connu)
             catch (Exception ex) { h.Check("Manette.virtuelle", false, ex.Message); yield break; }
             yield return new WaitForSecondsRealtime(1f);
@@ -155,6 +161,7 @@ namespace TestHarness
             h.Check("Hub.B ferme", !(bool)hubOpenF.GetValue(null));
 
             try { InputSystem.RemoveDevice(s_pad); } catch { }
+            try { InputSystem.settings.backgroundBehavior = prevBackground; } catch { }
             // Mode de bascule d'entrée remis tel quel (il peut être enregistré dans les préférences du joueur)
             if (prevMode != null) { try { typeof(ZInput).GetMethod("SetInputSwitchingMode").Invoke(null, new[] { prevMode }); } catch { } }
         }

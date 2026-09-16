@@ -63,38 +63,38 @@ namespace ResourceFinder
         {
             Log = Logger;
             s_instance = this;
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod (fenêtre, indicateur, épingles).");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod (fenêtre, indicateur, épingles)."));
             Enabled.SettingChanged += (_, __) => Layers.RefreshPins();
-            ToggleKey = Config.Bind("General", "ToggleKey", KeyCode.F7, "Touche qui ouvre/ferme la fenêtre du scanner.");
-            NextTargetKey = Config.Bind("General", "NextTargetKey", KeyCode.F6, "Touche : cible suivante (par distance) dans la couche ciblée, sans ouvrir la fenêtre.");
-            TrackKey = Config.Bind("General", "TrackKey", KeyCode.F4, "Touche : mode Traque on/off. En traque, dès que la cible est tuée ou récoltée, la plus proche suivante est visée depuis votre position ; s'il n'en reste plus, la recherche est relancée d'ici.");
+            ToggleKey = Config.Bind("General", "ToggleKey", KeyCode.F7, L.T("Touche qui ouvre/ferme la fenêtre du scanner."));
+            NextTargetKey = Config.Bind("General", "NextTargetKey", KeyCode.F6, L.T("Touche : cible suivante (par distance) dans la couche ciblée, sans ouvrir la fenêtre."));
+            TrackKey = Config.Bind("General", "TrackKey", KeyCode.F4, L.T("Touche : mode Traque on/off. En traque, dès que la cible est tuée ou récoltée, la plus proche suivante est visée depuis votre position ; s'il n'en reste plus, la recherche est relancée d'ici."));
             ResultCount = Config.Bind("General", "ResultCount", 3,
-                new ConfigDescription("Nombre de résultats voulus : le scan s'arrête dès qu'il les a.", new AcceptableValueRange<int>(1, 20)));
+                new ConfigDescription(L.T("Nombre de résultats voulus : le scan s'arrête dès qu'il les a."), new AcceptableValueRange<int>(1, 20)));
             MaxScanRadius = Config.Bind("Scan", "MaxScanRadius", 3000f,
-                new ConfigDescription("Rayon (m) du premier scan des zones inconnues. Les zones générées sont enregistrées dans le monde, " +
-                                      "comme si vous y étiez passé. 0 = ne jamais générer, chercher seulement dans le monde connu.",
+                new ConfigDescription(L.T("Rayon (m) du premier scan des zones inconnues. Les zones générées sont enregistrées dans le monde, ") +
+                                      L.T("comme si vous y étiez passé. 0 = ne jamais générer, chercher seulement dans le monde connu."),
                     new AcceptableValueRange<float>(0f, 10000f)));
             ExtendedScanRadius = Config.Bind("Scan", "ExtendedScanRadius", 10000f,
-                new ConfigDescription("Rayon (m) atteint par le bouton « Chercher plus loin » quand le premier scan n'a pas assez de résultats " +
-                                      "(10000 = tout le monde).", new AcceptableValueRange<float>(0f, 10000f)));
+                new ConfigDescription(L.T("Rayon (m) atteint par le bouton « Chercher plus loin » quand le premier scan n'a pas assez de résultats ") +
+                                      L.T("(10000 = tout le monde)."), new AcceptableValueRange<float>(0f, 10000f)));
             ScanBudgetMs = Config.Bind("Scan", "ScanBudgetMs", 8f,
-                new ConfigDescription("Temps max (ms) consacré au scan à chaque image. Plus = scan plus rapide mais le jeu saccade. " +
-                                      "Un PC modeste génère simplement moins de zones par image.", new AcceptableValueRange<float>(1f, 50f)));
+                new ConfigDescription(L.T("Temps max (ms) consacré au scan à chaque image. Plus = scan plus rapide mais le jeu saccade. ") +
+                                      L.T("Un PC modeste génère simplement moins de zones par image."), new AcceptableValueRange<float>(1f, 50f)));
             DumpNames = Config.Bind("Debug", "DumpNames", true,
-                "Au premier chargement de monde, écrit la liste des noms de prefabs et de lieux dans BepInEx/config/ResourceFinder.names.txt " +
-                "(utile pour compléter le catalogue). Ne coûte rien ensuite.");
-            ShowHud = Config.Bind("Display", "ShowHud", true, "Indicateur à l'écran (point / flèche + distance) vers la cible.");
-            HighlightStyle = Config.Bind("Display", "HighlightStyle", Highlight.Lueur, "Surbrillance de la cible chargée : Lueur = la silhouette de l'objet s'éclaire (émission pulsée sur ses matériaux), Cadre = coins dessinés autour, LesDeux, Aucun.");
-            MinimapMarker = Config.Bind("Display", "MinimapMarker", true, "Repère de la cible au bord de la mini-carte quand elle est hors du cadre.");
-            AddMapPins = Config.Bind("Display", "AddMapPins", true, "Épingles sur la carte pour les résultats.");
-            PinNames = Config.Bind("Display", "PinNames", false, "Nom de la ressource sous chaque épingle du mod. Désactivé : icône seule, la carte reste lisible quand les épingles se touchent.");
+                L.T("Au premier chargement de monde, écrit la liste des noms de prefabs et de lieux dans BepInEx/config/ResourceFinder.names.txt ") +
+                L.T("(utile pour compléter le catalogue). Ne coûte rien ensuite."));
+            ShowHud = Config.Bind("Display", "ShowHud", true, L.T("Indicateur à l'écran (point / flèche + distance) vers la cible."));
+            HighlightStyle = Config.Bind("Display", "HighlightStyle", Highlight.Lueur, L.T("Surbrillance de la cible chargée : Lueur = la silhouette de l'objet s'éclaire (émission pulsée sur ses matériaux), Cadre = coins dessinés autour, LesDeux, Aucun."));
+            MinimapMarker = Config.Bind("Display", "MinimapMarker", true, L.T("Repère de la cible au bord de la mini-carte quand elle est hors du cadre."));
+            AddMapPins = Config.Bind("Display", "AddMapPins", true, L.T("Épingles sur la carte pour les résultats."));
+            PinNames = Config.Bind("Display", "PinNames", false, L.T("Nom de la ressource sous chaque épingle du mod. Désactivé : icône seule, la carte reste lisible quand les épingles se touchent."));
             PinNames.SettingChanged += (_, __) => Layers.MarkDirty();
             MaxPinsPerLayer = Config.Bind("Display", "MaxPinsPerLayer", 30,
-                new ConfigDescription("Nombre max de positions (donc d'épingles) conservées par couche : les plus proches. " +
-                                      "Des milliers d'épingles ralentissent fortement le jeu.", new AcceptableValueRange<int>(3, 200)));
+                new ConfigDescription(L.T("Nombre max de positions (donc d'épingles) conservées par couche : les plus proches. ") +
+                                      L.T("Des milliers d'épingles ralentissent fortement le jeu."), new AcceptableValueRange<int>(3, 200)));
             HideUndiscovered = Config.Bind("Display", "HideUndiscovered", true,
-                "Immersion : ne proposer que les ressources dont vous avez déjà eu le matériau en main et les lieux dont vous avez visité le biome. " +
-                "Les autres peuvent être révélés un par un dans la fenêtre.");
+                L.T("Immersion : ne proposer que les ressources dont vous avez déjà eu le matériau en main et les lieux dont vous avez visité le biome. ") +
+                L.T("Les autres peuvent être révélés un par un dans la fenêtre."));
 
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             Log.LogInfo($"Resource Finder chargé (touche {ToggleKey.Value})");
@@ -135,7 +135,7 @@ namespace ResourceFinder
                 if (Tracking)
                 {
                     if (_target == null && _currentEntry != null && _finder.State == Finder.Phase.Done) { _trackRelaunch = true; StartSearch(_currentEntry); }
-                    else if (_target != null) player.Message(MessageHud.MessageType.TopLeft, $"Traque : {DisplayName(_target)} à {_target.Distance(from):0} m");
+                    else if (_target != null) player.Message(MessageHud.MessageType.TopLeft, L.F("Traque : {0} à {1:0} m", DisplayName(_target), _target.Distance(from)));
                 }
             }
         }
@@ -148,7 +148,7 @@ namespace ResourceFinder
             Tracking = !Tracking;
             var p = Player.m_localPlayer;
             if (Tracking && _target == null && _currentEntry != null && p != null) StartSearch(_currentEntry);
-            p?.Message(MessageHud.MessageType.Center, Tracking ? $"Traque activée{(_currentEntry != null ? " : " + _currentEntry.Label : "")}, {TrackKey.Value} pour arrêter" : "Traque arrêtée");
+            p?.Message(MessageHud.MessageType.Center, Tracking ? L.T("Traque activée") + (_currentEntry != null ? " : " + L.T(_currentEntry.Label) : "") + L.F(", {0} pour arrêter", TrackKey.Value) : L.T("Traque arrêtée"));
         }
 
         private bool _focusSearch;
@@ -162,7 +162,7 @@ namespace ResourceFinder
             _finder.Cancel(); _finder.Results.Clear();
             _target = null; _targetLayer = null;
             Layers.RemoveAll();
-            Player.m_localPlayer?.Message(MessageHud.MessageType.Center, "Épingles du scanner effacées");
+            Player.m_localPlayer?.Message(MessageHud.MessageType.Center, L.T("Épingles du scanner effacées"));
         }
 
         // Entrées du menu radial manette, lues par réflexion par Mod Hub : « libellé|icône » → action, l'icône étant
@@ -174,7 +174,7 @@ namespace ResourceFinder
             if (!Enabled.Value) return l;
             if (s_instance != null && s_instance._target != null)
             {
-                l.Add(new KeyValuePair<string, KeyCode>("Cible suivante", NextTargetKey.Value));
+                l.Add(new KeyValuePair<string, KeyCode>(L.T("Cible suivante"), NextTargetKey.Value));
                 l.Add(new KeyValuePair<string, KeyCode>(Tracking ? "Arrêter la traque" : "Traquer", TrackKey.Value));
             }
             else l.Add(new KeyValuePair<string, KeyCode>("Scanner", ToggleKey.Value));
@@ -208,9 +208,9 @@ namespace ResourceFinder
             list.Sort((a, b) => a.Distance(from).CompareTo(b.Distance(from)));
             int i = _target != null ? list.IndexOf(_target) : -1;
             // Après le dernier résultat : guidage arrêté (les épingles restent) ; l'appui suivant repart du plus proche
-            if (i >= 0 && i + 1 >= list.Count) { _target = null; Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, "Guidage arrêté (épingles conservées)"); return; }
+            if (i >= 0 && i + 1 >= list.Count) { _target = null; Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, L.T("Guidage arrêté (épingles conservées)")); return; }
             _target = list[i + 1];
-            Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, $"Cible {i + 2}/{list.Count} : {DisplayName(_target)}, {_target.Distance(from):0} m");
+            Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, L.F("Cible {0}/{1} : {2}, {3:0} m", i + 2, list.Count, DisplayName(_target), _target.Distance(from)));
         }
 
         private void OnSearchDone()
@@ -224,16 +224,16 @@ namespace ResourceFinder
             if (_trackRelaunch)
             {
                 _trackRelaunch = false;
-                if (_target != null) { player?.Message(MessageHud.MessageType.TopLeft, $"Traque : {DisplayName(_target)} à {_target.Distance(player.transform.position):0} m"); return; }
+                if (_target != null) { player?.Message(MessageHud.MessageType.TopLeft, L.F("Traque : {0} à {1:0} m", DisplayName(_target), _target.Distance(player.transform.position))); return; }
                 Tracking = false;
-                player?.Message(MessageHud.MessageType.Center, "Traque terminée : plus rien à proximité");
+                player?.Message(MessageHud.MessageType.Center, L.T("Traque terminée : plus rien à proximité"));
                 return;
             }
             // Fenêtre fermée pendant le scan : on prévient quand même du résultat
             if (!WindowOpen && player != null)
                 player.Message(MessageHud.MessageType.TopLeft, _target != null
-                    ? $"Scanner : {_finder.Results.Count} × {_finder.Label}, le plus proche à {_target.Distance(player.transform.position):0} m"
-                    : $"Scanner : rien trouvé pour {_finder.Label}");
+                    ? L.F("Scanner : {0} × {1}, le plus proche à {2:0} m", _finder.Results.Count, L.T(_finder.Label), _target.Distance(player.transform.position))
+                    : L.F("Scanner : rien trouvé pour {0}", L.T(_finder.Label)));
         }
 
         private static Result Nearest(List<Result> results, Vector3 from)
@@ -304,7 +304,7 @@ namespace ResourceFinder
                 if (string.Equals(e.Label, label, StringComparison.OrdinalIgnoreCase))
                 {
                     s_instance.StartSearch(e);
-                    Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Scanner : " + e.Label);
+                    Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, L.T("Scanner : ") + e.Label);
                     return true;
                 }
             Log.LogWarning($"SearchLabel : entrée « {label} » inconnue");
@@ -369,7 +369,7 @@ namespace ResourceFinder
             EnsureStyles();
             if (ShowHud.Value && !WindowOpen && !Hud.IsUserHidden() && !(Minimap.instance != null && Minimap.IsOpen())) { DrawHud(); DrawMinimapMarker(); }
             if (WindowOpen && !_pad.ConsumeSkipRepaint())
-                _window = GUILayout.Window(GetHashCode(), _window, DrawWindow, "Scanner de ressources");
+                _window = GUILayout.Window(GetHashCode(), _window, DrawWindow, L.T("Scanner de ressources"));
             Theme.End(prev);
         }
 
@@ -392,15 +392,15 @@ namespace ResourceFinder
                 var layer = Layers.Get(e.Label);
                 int pins = layer != null ? layer.Results.Count : 0;
                 string biomes = Discovery.BiomeText(e);
-                _rowText[e] = e.Label
-                    + (revealedOnly ? "   <size=12><color=#f5a847>révélé</color></size>" : "")
-                    + (biomes.Length > 0 ? "   <size=12><color=#9a9488>" + biomes + "</color></size>" : "")
-                    + (pins > 0 ? "   <size=12><color=#cfcabf>" + pins + " sur la carte</color></size>" : "");
+                _rowText[e] = L.T(e.Label)
+                    + (revealedOnly ? L.T("   <size=12><color=#f5a847>révélé</color></size>") : "")
+                    + (biomes.Length > 0 ? L.T("   <size=12><color=#9a9488>") + biomes + "</color></size>" : "")
+                    + (pins > 0 ? L.T("   <size=12><color=#cfcabf>") + pins + L.T(" sur la carte</color></size>") : "");
             }
             foreach (Category c in Enum.GetValues(typeof(Category)))
             {
                 int n = 0; foreach (var e in _visibleEntries) if (e.Category == c) n++;
-                _catHeader[c] = Catalog.CategoryLabel(c) + "  <size=12><color=#cfcabf>(" + n + ")</color></size>";
+                _catHeader[c] = Catalog.CategoryLabel(c) + L.T("  <size=12><color=#cfcabf>(") + n + ")</color></size>";
             }
         }
 
@@ -431,23 +431,23 @@ namespace ResourceFinder
             // ------------------------------------------------ pied
             GUILayout.Space(6);
             GUILayout.BeginHorizontal();
-            if (_pad.Button("Cible : la plus proche")) _target = Nearest(_finder.Results, from);
-            if (_pad.Button("Effacer la recherche")) { _finder.Cancel(); _finder.Results.Clear(); _target = null; Tracking = false; }
+            if (_pad.Button(L.T("Cible : la plus proche"))) _target = Nearest(_finder.Results, from);
+            if (_pad.Button(L.T("Effacer la recherche"))) { _finder.Cancel(); _finder.Results.Clear(); _target = null; Tracking = false; }
             if (Layers.All.Count > 0)
             {
                 bool anyVisible = false; foreach (var l in Layers.All) if (l.Visible) { anyVisible = true; break; }
-                if (_pad.Button(anyVisible ? "Masquer les épingles" : "Afficher les épingles")) foreach (var l in Layers.All) Layers.SetVisible(l, !anyVisible);
+                if (_pad.Button(anyVisible ? L.T("Masquer les épingles") : L.T("Afficher les épingles"))) foreach (var l in Layers.All) Layers.SetVisible(l, !anyVisible);
             }
             // Suppression des couches (persistées) en deux temps : « Confirmer ? » pendant 3 s
             bool armed = Time.unscaledTime < _clearArmedUntil;
-            if (_pad.Button(armed ? "<color=#f5a847>Confirmer : tout effacer ?</color>" : "Effacer toutes les épingles du mod"))
+            if (_pad.Button(armed ? L.T("<color=#f5a847>Confirmer : tout effacer ?</color>") : L.T("Effacer toutes les épingles du mod")))
             {
                 if (armed) { ClearAllPins(); _clearArmedUntil = 0f; } else _clearArmedUntil = Time.unscaledTime + 3f;
             }
             GUILayout.FlexibleSpace();
-            if (_pad.Button(Pad.Active ? "Fermer  (B)" : "Fermer  (F7)", GUILayout.Width(130))) Close();
+            if (_pad.Button(Pad.Active ? L.T("Fermer  (B)") : L.T("Fermer  (F7)"), GUILayout.Width(130))) Close();
             GUILayout.EndHorizontal();
-            Pad.Hints(_small, "<b>Échap</b> ou <b>F7</b> fermer    <b>Entrée</b> chercher    <b>clic droit</b> sur un résultat : carte    <b>F6</b> cible suivante");
+            Pad.Hints(_small, L.T("<b>Échap</b> ou <b>F7</b> fermer    <b>Entrée</b> chercher    <b>clic droit</b> sur un résultat : carte    <b>F6</b> cible suivante"));
             _pad.EndWindow();
             GUI.DragWindow();
         }
@@ -455,11 +455,11 @@ namespace ResourceFinder
         private void DrawCatalog()
         {
             GUILayout.BeginVertical(GUI.skin.box, GUILayout.ExpandHeight(true));
-            GUILayout.Label("Catalogue", _h1);
+            GUILayout.Label(L.T("Catalogue"), _h1);
 
             // Onglets de catégorie
             GUILayout.BeginHorizontal();
-            if (_pad.Toggle(_category < 0, "Tout", _tab) && _category >= 0) { _category = -1; _nextCatalogRefresh = 0f; }
+            if (_pad.Toggle(_category < 0, L.T("Tout"), _tab) && _category >= 0) { _category = -1; _nextCatalogRefresh = 0f; }
             foreach (Category c in Enum.GetValues(typeof(Category)))
             {
                 bool sel = _category == (int)c;
@@ -477,9 +477,9 @@ namespace ResourceFinder
                 // Entrée dans le champ = chercher
                 bool enter = Event.current.type == EventType.KeyDown && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "finder_search";
                 if (enter) Event.current.Use();
-                if ((_pad.Button("Chercher", GUILayout.Width(90)) || enter) && _search.Trim().Length >= 2) StartSearch(ResolveSearch(_search));
+                if ((_pad.Button(L.T("Chercher"), GUILayout.Width(90)) || enter) && _search.Trim().Length >= 2) StartSearch(ResolveSearch(_search));
                 GUILayout.EndHorizontal();
-                GUILayout.Label("Nom du catalogue (cuivre, or, autel…) ou nom interne du jeu (copper, Pickable_, Crypt).", _small);
+                GUILayout.Label(L.T("Nom du catalogue (cuivre, or, autel…) ou nom interne du jeu (copper, Pickable_, Crypt)."), _small);
             }
             GUILayout.Space(4);
 
@@ -497,20 +497,20 @@ namespace ResourceFinder
                 if (revealedOnly && _pad.Button("×", GUILayout.Width(30), GUILayout.Height(32))) Layers.SetRevealed(e.Label, false);
                 GUILayout.EndHorizontal();
             }
-            if (_visibleEntries.Count == 0) GUILayout.Label("Rien de découvert dans cette catégorie pour l'instant.", _small);
+            if (_visibleEntries.Count == 0) GUILayout.Label(L.T("Rien de découvert dans cette catégorie pour l'instant."), _small);
 
             if (_hiddenEntries.Count > 0)
             {
                 GUILayout.Space(8);
-                _showHidden = _pad.Toggle(_showHidden, $" Non découverts ({_hiddenEntries.Count}), révéler brise l'immersion");
+                _showHidden = _pad.Toggle(_showHidden, L.F(" Non découverts ({0}), révéler brise l'immersion", _hiddenEntries.Count));
                 if (_showHidden)
                 {
                     foreach (var e in _hiddenEntries)
                     {
                         GUILayout.BeginHorizontal();
                         Icons.DrawLayout(Icons.ForEntry(e), 30f);
-                        GUILayout.Label(e.Label, _small, GUILayout.ExpandWidth(true), GUILayout.Height(32));
-                        if (_pad.Button("Révéler", GUILayout.Width(84), GUILayout.Height(32))) Layers.SetRevealed(e.Label, true);
+                        GUILayout.Label(L.T(e.Label), _small, GUILayout.ExpandWidth(true), GUILayout.Height(32));
+                        if (_pad.Button(L.T("Révéler"), GUILayout.Width(84), GUILayout.Height(32))) Layers.SetRevealed(e.Label, true);
                         GUILayout.EndHorizontal();
                     }
                 }
@@ -523,24 +523,24 @@ namespace ResourceFinder
         {
             GUILayout.BeginVertical(GUI.skin.box);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Recherche", _h1);
+            GUILayout.Label(L.T("Recherche"), _h1);
             GUILayout.FlexibleSpace();
-            if (_finder.State != Finder.Phase.Idle && _pad.Toggle(Tracking, Tracking ? $"Traque en cours  ({TrackKey.Value} : arrêter)" : $"Traquer  ({TrackKey.Value})", Theme.Skin.toggle, GUILayout.Width(220)) != Tracking) ToggleTrack();
-            if (_finder.State == Finder.Phase.Scanning && _pad.Button("Stop", GUILayout.Width(70))) _finder.Cancel();
+            if (_finder.State != Finder.Phase.Idle && _pad.Toggle(Tracking, Tracking ? L.F("Traque en cours  ({0} : arrêter)", TrackKey.Value) : L.F("Traquer  ({0})", TrackKey.Value), Theme.Skin.toggle, GUILayout.Width(220)) != Tracking) ToggleTrack();
+            if (_finder.State == Finder.Phase.Scanning && _pad.Button(L.T("Stop"), GUILayout.Width(70))) _finder.Cancel();
             GUILayout.EndHorizontal();
             if (_finder.State == Finder.Phase.Idle)
-                GUILayout.Label("Choisissez une ressource dans le catalogue. Les résultats sont épinglés sur la carte et le plus proche est pointé à l'écran.", _small);
+                GUILayout.Label(L.T("Choisissez une ressource dans le catalogue. Les résultats sont épinglés sur la carte et le plus proche est pointé à l'écran."), _small);
             else
             {
                 GUILayout.BeginHorizontal();
                 Icons.DrawLayout(Icons.ForEntry(_currentEntry), 26f);
-                GUILayout.Label($"<b>{_finder.Label}</b>  <color=#cfcabf>-</color>  {_finder.Status}");
+                GUILayout.Label($"<b>{L.T(_finder.Label)}</b>  <color=#cfcabf>-</color>  {_finder.Status}");
                 GUILayout.EndHorizontal();
                 // Créature introuvable : où elle vit, d'après les listes de spawn du jeu
                 if (_currentEntry != null && _currentEntry.Category == Category.Creature && _finder.State == Finder.Phase.Done && _finder.Results.Count == 0)
                 {
                     string where = Discovery.BiomeText(_currentEntry);
-                    GUILayout.Label(where.Length > 0 ? $"Vit dans : <b>{where}</b>, allez-y, elle sera détectée une fois la zone chargée." : "Cette créature n'apparaît que par événement ou dans certains lieux (pas de zone de spawn libre).", _small);
+                    GUILayout.Label(where.Length > 0 ? L.F("Vit dans : <b>{0}</b>, allez-y, elle sera détectée une fois la zone chargée.", where) : "Cette créature n'apparaît que par événement ou dans certains lieux (pas de zone de spawn libre).", _small);
                 }
                 if (_finder.State == Finder.Phase.Scanning)
                 {
@@ -553,8 +553,8 @@ namespace ResourceFinder
                     _finder.EstimateExtension(out int zones, out float secs);
                     string eta = secs < 90f ? $"{secs:0} s" : $"{secs / 60f:0.#} min";
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label($"Seulement {_finder.Results.Count}/{ResultCount.Value} dans {_finder.EffectiveRadius:0} m.", _small);
-                    if (_pad.Button($"Chercher plus loin (jusqu'à {ExtendedScanRadius.Value / 1000f:0.#} km, ~{zones} zones, ≈ {eta})")) _finder.Extend();
+                    GUILayout.Label(L.F("Seulement {0}/{1} dans {2:0} m.", _finder.Results.Count, ResultCount.Value, _finder.EffectiveRadius), _small);
+                    if (_pad.Button(L.F("Chercher plus loin (jusqu'à {0:0.#} km, ~{1} zones, ≈ {2})", ExtendedScanRadius.Value / 1000f, zones, eta))) _finder.Extend();
                     GUILayout.EndHorizontal();
                 }
             }
@@ -564,7 +564,7 @@ namespace ResourceFinder
         private void DrawResults(Vector3 from)
         {
             GUILayout.BeginVertical(GUI.skin.box, GUILayout.ExpandHeight(true));
-            GUILayout.Label($"Résultats  <size=12><color=#cfcabf>({_shown.Count})</color></size>", _h1);
+            GUILayout.Label(L.T("Résultats") + $"  <size=12><color=#cfcabf>({_shown.Count})</color></size>", _h1);
             _resultScroll = _pad.BeginScrollView(_resultScroll, GUILayout.ExpandHeight(true));
             foreach (var r in _shown)
             {
@@ -573,15 +573,15 @@ namespace ResourceFinder
                 Icons.DrawLayout(r.IsLocation ? Icons.ForEntry(_currentEntry) : (Icons.ForPrefab(r.Prefab) ?? Icons.ForEntry(_currentEntry)), 24f);
                 _pickInfo.TryGetValue(r, out var info);
                 // Toute la ligne est le bouton « cibler » (un seul élément à parcourir à la manette) ; la ligne ciblée reste surlignée
-                string row = (isTarget ? "<color=#f5a847>►</color>  " : "") + $"<b>{r.Distance(from):0} m</b> <color=#cfcabf>{Compass(from, r.Pos)}</color>   {DisplayName(r)}<color=#cfcabf>{info}</color>";
+                string row = (isTarget ? L.T("<color=#f5a847>►</color>  ") : "") + $"<b>{r.Distance(from):0} m</b> <color=#cfcabf>{Compass(from, r.Pos)}</color>   {DisplayName(r)}<color=#cfcabf>{info}</color>";
                 if (_pad.Toggle(isTarget, row, _rowLabel, GUILayout.ExpandWidth(true), GUILayout.Height(30)) && !isTarget) _target = r;
                 // Clic droit sur la ligne = grande carte centrée dessus (souris)
                 if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition)) { _target = r; Close(); ShowOnMap(r.Pos); Event.current.Use(); }
                 // Grande carte centrée sur ce résultat
-                if (_pad.Button("Carte", GUILayout.Width(62), GUILayout.Height(30)) && Minimap.instance != null) { _target = r; Close(); ShowOnMap(r.Pos); } // (ou clic droit sur la ligne)
+                if (_pad.Button(L.T("Carte"), GUILayout.Width(62), GUILayout.Height(30)) && Minimap.instance != null) { _target = r; Close(); ShowOnMap(r.Pos); } // (ou clic droit sur la ligne)
                 GUILayout.EndHorizontal();
             }
-            if (_shown.Count == 0 && _finder.State != Finder.Phase.Idle) GUILayout.Label("Aucun résultat pour l'instant.", _small);
+            if (_shown.Count == 0 && _finder.State != Finder.Phase.Idle) GUILayout.Label(L.T("Aucun résultat pour l'instant."), _small);
             _pad.EndScrollView();
             GUILayout.EndVertical();
         }
@@ -590,21 +590,21 @@ namespace ResourceFinder
         private void DrawLayers(Vector3 from)
         {
             GUILayout.BeginVertical(GUI.skin.box, GUILayout.Height(Mathf.Clamp(60f + Layers.All.Count * 36f, 90f, 230f)));
-            GUILayout.Label($"Couches sur la carte  <size=12><color=#cfcabf>({Layers.All.Count}), positions connues, conservées entre les sessions</color></size>", _h1);
+            GUILayout.Label(L.T("Couches sur la carte") + $"  <size=12><color=#cfcabf>({Layers.All.Count}), " + L.T("positions connues, conservées entre les sessions") + "</color></size>", _h1);
             _layerScroll = _pad.BeginScrollView(_layerScroll);
             Layer toRemove = null;
             foreach (var l in Layers.All)
             {
                 GUILayout.BeginHorizontal();
                 Icons.DrawLayout(l.Icon(), 24f);
-                GUILayout.Label($"{l.Label}  <color=#d6d1c6>({l.Results.Count})</color>", GUILayout.ExpandWidth(true));
-                bool vis = _pad.Toggle(l.Visible, l.Visible ? "Visible" : "Masquée", GUILayout.Width(90));
+                GUILayout.Label($"{L.T(l.Label)}  <color=#d6d1c6>({l.Results.Count})</color>", GUILayout.ExpandWidth(true));
+                bool vis = _pad.Toggle(l.Visible, L.T(l.Visible ? "Visible" : "Masquée"), GUILayout.Width(90));
                 if (vis != l.Visible) Layers.SetVisible(l, vis);
-                if (_pad.Button("Cibler", GUILayout.Width(70))) { _targetLayer = l; _target = Nearest(l.Results, from); }
-                if (_pad.Button("Supprimer", GUILayout.Width(90))) toRemove = l;
+                if (_pad.Button(L.T("Cibler"), GUILayout.Width(70))) { _targetLayer = l; _target = Nearest(l.Results, from); }
+                if (_pad.Button(L.T("Supprimer"), GUILayout.Width(90))) toRemove = l;
                 GUILayout.EndHorizontal();
             }
-            if (Layers.All.Count == 0) GUILayout.Label("Aucune couche : chaque recherche crée la sienne.", _small);
+            if (Layers.All.Count == 0) GUILayout.Label(L.T("Aucune couche : chaque recherche crée la sienne."), _small);
             if (toRemove != null) { if (_targetLayer == toRemove) { _targetLayer = null; _target = null; } Layers.Remove(toRemove); }
             _pad.EndScrollView();
             GUILayout.EndVertical();
@@ -628,9 +628,9 @@ namespace ResourceFinder
         {
             try
             {
-                var lines = new List<string> { "# Prefabs (ZNetScene)" };
+                var lines = new List<string> { L.T("# Prefabs (ZNetScene)") };
                 foreach (var go in ZNetScene.instance.m_prefabs) if (go != null) lines.Add(go.name);
-                lines.Add(""); lines.Add("# Lieux (ZoneSystem.m_locations)");
+                lines.Add(""); lines.Add(L.T("# Lieux (ZoneSystem.m_locations)"));
                 if (ZoneSystem.instance != null)
                     foreach (var loc in ZoneSystem.instance.m_locations) if (loc != null) lines.Add(loc.m_prefabName + "	" + loc.m_biome);
                 var path = System.IO.Path.Combine(Paths.ConfigPath, "ResourceFinder.names.txt");
@@ -647,11 +647,11 @@ namespace ResourceFinder
             var zdo = ZDOMan.instance.GetZDO(r.Id);
             if (zdo == null || !zdo.GetBool(ZDOVars.s_picked, false)) return "";
             var pickable = ZNetScene.instance.GetPrefab(r.Hash)?.GetComponent<Pickable>();
-            if (pickable == null || pickable.m_respawnTimeMinutes <= 0f) return " (cueilli)";
+            if (pickable == null || pickable.m_respawnTimeMinutes <= 0f) return L.T(" (cueilli)");
             long picked = zdo.GetLong(ZDOVars.s_pickedTime, 0L);
             double elapsedMin = (ZNet.instance.GetTime().Ticks - picked) / (double)TimeSpan.TicksPerMinute;
             double remaining = pickable.m_respawnTimeMinutes - elapsedMin;
-            return remaining <= 0 ? " (repousse bientôt)" : $" (cueilli, repousse dans {remaining:0} min)";
+            return remaining <= 0 ? L.T(" (repousse bientôt)") : L.F(" (cueilli, repousse dans {0:0} min)", remaining);
         }
 
 
@@ -677,7 +677,7 @@ namespace ResourceFinder
             }
             catch { }
             // Ni créature ni butin identifiable : le libellé du catalogue plutôt qu'un nom interne « rock 4 copper »
-            if (string.IsNullOrEmpty(name)) foreach (var e in Catalog.Entries) if (Array.IndexOf(e.Prefabs, r.Prefab) >= 0) { name = e.Label; break; }
+            if (string.IsNullOrEmpty(name)) foreach (var e in Catalog.Entries) if (Array.IndexOf(e.Prefabs, r.Prefab) >= 0) { name = L.T(e.Label); break; }
             if (string.IsNullOrEmpty(name)) name = Prettify(r.Prefab);
             s_displayNames[r.Prefab] = name;
             return name;
@@ -702,7 +702,7 @@ namespace ResourceFinder
         internal static string Compass(Vector3 from, Vector3 to)
         {
             var d = to - from; d.y = 0f;
-            if (d.sqrMagnitude < 1f) return "ici";
+            if (d.sqrMagnitude < 1f) return L.T("ici");
             float ang = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg; if (ang < 0f) ang += 360f;
             return s_dirs[Mathf.RoundToInt(ang / 45f) % 8];
         }
@@ -863,16 +863,16 @@ namespace ResourceFinder
 
             var from = Player.m_localPlayer.transform.position;
             float dist = _target.Distance(from);
-            string label = _targetLayer?.Label ?? _finder.Label;
+            string label = L.T(_targetLayer?.Label ?? _finder.Label);
             // Textes, largeurs et icône figés tant que la cible, le libellé et la distance arrondie ne changent pas
             // (OnGUI passe plusieurs fois par image : pas de formatage ni de CalcSize à chaque passage)
             int distKey = dist >= 1000f ? 1000 + Mathf.RoundToInt(dist / 100f) : Mathf.RoundToInt(dist);
             if (_hudTarget != _target || _hudLayer != _targetLayer || !ReferenceEquals(_hudLabel, label) || _hudDistKey != distKey || _hudTracking != Tracking)
             {
                 _hudTarget = _target; _hudLayer = _targetLayer; _hudLabel = label; _hudDistKey = distKey; _hudTracking = Tracking;
-                _hudDistText = dist >= 1000f ? $"{dist / 1000f:0.0} km" : dist < 3f ? "ici" : $"{dist:0} m";
+                _hudDistText = dist >= 1000f ? $"{dist / 1000f:0.0} km" : dist < 3f ? L.T("ici") : $"{dist:0} m";
                 // Pas de compteur sur la pastille : le rang n'est dit qu'au moment d'appuyer sur F6
-                if (Tracking) _hudDistText += "  <size=12><color=#7cc35a>traque</color></size>";
+                if (Tracking) _hudDistText += L.T("  <size=12><color=#7cc35a>traque</color></size>");
                 s_content.text = label; _hudLabelW = _hudStyle.CalcSize(s_content).x;
                 s_content.text = _hudDistText; _hudDistW = _hudDist.CalcSize(s_content).x;
                 _hudIcon = _targetLayer?.Icon() ?? (_target.IsLocation ? Icons.ForEntry(_currentEntry) : (Icons.ForPrefab(_target.Prefab) ?? Icons.ForEntry(_currentEntry)));

@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
+using ModsCommon;
 
 namespace QuickStart
 {
@@ -32,15 +33,15 @@ namespace QuickStart
         private void Awake()
         {
             Log = Logger;
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod.");
-            SkipIntro = Config.Bind("General", "SkipIntro", true, "Saute la cinématique d'intro : arrivée directe sur le menu principal.");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod."));
+            SkipIntro = Config.Bind("General", "SkipIntro", true, L.T("Saute la cinématique d'intro : arrivée directe sur le menu principal."));
             AutoLoadLastWorld = Config.Bind("General", "AutoLoadLastWorld", false,
-                "Au lancement du jeu, charge automatiquement le dernier personnage dans le dernier monde joué. " +
-                "Une seule fois par lancement : revenir au menu depuis une partie laisse le choix libre.");
+                L.T("Au lancement du jeu, charge automatiquement le dernier personnage dans le dernier monde joué. ") +
+                L.T("Une seule fois par lancement : revenir au menu depuis une partie laisse le choix libre."));
             AutoLoadDelay = Config.Bind("General", "AutoLoadDelay", 0.15f,
-                new ConfigDescription("Secondes d'attente entre chaque étape automatique (menu → personnage → monde).", new AcceptableValueRange<float>(0.1f, 5f)));
-            AutoLoadCharacter = Config.Bind("General", "AutoLoadCharacter", "", "Nom du personnage à charger automatiquement (vide = dernier joué). Utilisé par le harnais de test pour ne JAMAIS toucher la vraie partie.");
-            AutoLoadWorld = Config.Bind("General", "AutoLoadWorld", "", "Nom du monde à charger automatiquement (vide = dernier joué). Si le personnage ou le monde demandé n'existe pas, rien n'est chargé.");
+                new ConfigDescription(L.T("Secondes d'attente entre chaque étape automatique (menu → personnage → monde)."), new AcceptableValueRange<float>(0.1f, 5f)));
+            AutoLoadCharacter = Config.Bind("General", "AutoLoadCharacter", "", L.T("Nom du personnage à charger automatiquement (vide = dernier joué). Utilisé par le harnais de test pour ne JAMAIS toucher la vraie partie."));
+            AutoLoadWorld = Config.Bind("General", "AutoLoadWorld", "", L.T("Nom du monde à charger automatiquement (vide = dernier joué). Si le personnage ou le monde demandé n'existe pas, rien n'est chargé."));
 
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             Log.LogInfo($"Quick Start chargé (SkipIntro={SkipIntro.Value}, AutoLoadLastWorld={AutoLoadLastWorld.Value})");

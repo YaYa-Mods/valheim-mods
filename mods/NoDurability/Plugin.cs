@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using ModsCommon;
 
 namespace NoDurability
 {
@@ -23,7 +24,7 @@ namespace NoDurability
         private void Awake()
         {
             Log = Logger;
-            Enabled = Config.Bind("General", "Enabled", true, "Plus aucune usure sur les items (armes, outils, armures, torches).");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Plus aucune usure sur les items (armes, outils, armures, torches)."));
             Enabled.SettingChanged += (_, __) => Patches.Reapply();
 
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);

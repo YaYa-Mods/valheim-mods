@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using BepInEx;
 using UnityEngine;
+using ModsCommon;
 
 namespace ResourceFinder
 {
@@ -217,7 +218,7 @@ namespace ResourceFinder
                 var icon = l.Icon();
                 foreach (var r in l.Results)
                 {
-                    var pin = map.AddPin(r.Pos, Minimap.PinType.Icon2, Plugin.PinNames.Value ? l.Label : "", false, false, 0L, default(Splatform.PlatformUserID));
+                    var pin = map.AddPin(r.Pos, Minimap.PinType.Icon2, Plugin.PinNames.Value ? L.T(l.Label) : "", false, false, 0L, default(Splatform.PlatformUserID));
                     if (pin == null) continue;
                     if (icon != null) pin.m_icon = icon; // grande carte et mini-carte lisent m_icon
                     l.Pins[r] = pin;
@@ -245,7 +246,7 @@ namespace ResourceFinder
             if (s_worldUid == 0) return;
             try
             {
-                var lines = new List<string> { "# ResourceFinder layers, '#revealed' lines, then one '#layer' line per layer followed by its results" };
+                var lines = new List<string> { L.T("# ResourceFinder layers, '#revealed' lines, then one '#layer' line per layer followed by its results") };
                 foreach (var r in Discovery.Revealed) lines.Add("#revealed	" + r);
                 foreach (var l in All)
                 {

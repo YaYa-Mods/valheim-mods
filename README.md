@@ -1,25 +1,25 @@
 # YaYa's Valheim mods
 
 A set of BepInEx mods for Valheim, built from source against the game's own assemblies, no downloaded binaries,
-no external dependencies beyond BepInEx and Harmony. In-game UI is in **French**.
+no external dependencies beyond BepInEx and Harmony. The in-game UI follows the game language: **French** or **English** (any other language gets English). Each mod has its own README in `mods/<Mod>/` with keys, configuration and details.
 
 | Mod | What it does |
 |-----|--------------|
-| **Resource Finder** | Scanner window (F7) with a catalogue of ores, pickables, trees, locations and creatures. Finds the nearest ones in the known world, can generate unexplored zones to look further, pins results on the map, points at the target on screen (pill + minimap marker + glowing silhouette), **track mode** (F4) that chains to the next target when one is harvested or killed. Discovery by sight: what you look at or fight becomes visible in the catalogue. |
-| **Guide** | Progression guide: one chapter per boss, steps that check themselves from what the game records (crafted items, placed pieces, kills, explored locations…), an on-screen quest tracker (full / compact / hidden, F11), a journal window (F10), anti-spoiler locking of future chapters. Offerings, recipes and building costs are read from the game data, not hard-coded. |
-| **Mod Hub** | In-game configuration of every mod (F9), a “Mods” group in the radial menu, mod buttons in the inventory panel, mod key hints in the game's own key-hint bar. |
-| **Inventory** | Larger, scrollable inventory (up to 40 rows), sorting (category / name / quantity / weight), stacking, category filter toolbar, keep inventory and skills on death, tombstone recovery, bigger stacks and carry weight. |
-| **Craft From Chests** | Crafting stations and the crafting menu use materials from nearby chests. |
-| **Home Teleport** | F8: teleport to your bed (with confirmation). |
-| **Lumberjack** | Woodcutting skill matters: high level fells trees in one hit and auto-cuts logs. |
-| **Longer Food** | Food lasts longer (× factor, configurable). |
-| **No Durability** | Tools, weapons and armour never wear out. |
-| **Short Nights** | Shorter nights without changing the day length. |
-| **Movement** | Faster running, jogging and swimming. |
-| **Quick Start** | Skip the intro, auto-load a character and world. |
-| **Test Harness** | *(developers)* In-game integration tests with screenshots, run on a dedicated test character/world. |
+| [**Resource Finder**](mods/ResourceFinder/README.md) | Scanner window (F7) with a catalogue of ores, pickables, trees, locations and creatures. Finds the nearest ones in the known world, can generate unexplored zones to look further, pins results on the map, points at the target on screen (pill + minimap marker + glowing silhouette), **track mode** (F4) that chains to the next target when one is harvested or killed. Discovery by sight: what you look at or fight becomes visible in the catalogue. |
+| [**Guide**](mods/Guide/README.md) | Progression guide: one chapter per boss, steps that check themselves from what the game records (crafted items, placed pieces, kills, explored locations…), an on-screen quest tracker (full / compact / hidden, F11), a journal window (F10), anti-spoiler locking of future chapters. Offerings, recipes and building costs are read from the game data, not hard-coded. |
+| [**Mod Hub**](mods/ModHub/README.md) | In-game configuration of every mod (F9), a “Mods” group in the radial menu, mod buttons in the inventory panel, mod key hints in the game's own key-hint bar. |
+| [**Inventory**](mods/Inventory/README.md) | Larger, scrollable inventory (up to 40 rows), sorting (category / name / quantity / weight), stacking, category filter toolbar, keep inventory and skills on death, tombstone recovery, bigger stacks and carry weight. |
+| [**Craft From Chests**](mods/CraftFromChests/README.md) | Crafting stations and the crafting menu use materials from nearby chests. |
+| [**Home Teleport**](mods/HomeTeleport/README.md) | F8: teleport to your bed (with confirmation). |
+| [**Lumberjack**](mods/Lumberjack/README.md) | Woodcutting skill matters: high level fells trees in one hit and auto-cuts logs. |
+| [**Longer Food**](mods/LongerFood/README.md) | Food lasts longer (× factor, configurable). |
+| [**No Durability**](mods/NoDurability/README.md) | Tools, weapons and armour never wear out. |
+| [**Short Nights**](mods/ShortNights/README.md) | Shorter nights without changing the day length. |
+| [**Movement**](mods/Movement/README.md) | Faster running, jogging and swimming. |
+| [**Quick Start**](mods/QuickStart/README.md) | Skip the intro, auto-load a character and world. |
+| [**Test Harness**](mods/TestHarness/README.md) | *(developers)* In-game integration tests with screenshots, run on a dedicated test character/world. |
 
-All mods share `mods/Common` (IMGUI theme using the game's own fonts, gamepad navigation) and talk to each other only by
+All mods share `mods/Common` (IMGUI theme using the game's own fonts, gamepad navigation, the French/English text table) and talk to each other only by
 reflection (`RadialEntries()`, `InventoryEntries()`, `KeyHints()`, `SearchLabel()`), so every DLL works alone.
 
 ## Building
@@ -39,8 +39,8 @@ upstream repositories into `tools/`, which is git-ignored).
 ## Tests
 
 `tools/run-tests.ps1 -Quick` launches the game on a dedicated **test character and world** (`ModTester` / `ModTestWorld`,
-local saves, created automatically), runs the harness (~55 checks: gamepad navigation, map pins, creature search,
-inventory, guide, catalogue audit against the game's placement tables, track mode…), captures screenshots into
+local saves, created automatically), runs the harness (~70 checks: gamepad navigation, map pins, creature search,
+inventory, guide, catalogue audit against the game's placement tables, track mode, localisation…), captures screenshots into
 `BepInEx/config`, then closes the game without saving. The harness refuses to run on any other character or world.
 
 ## License
@@ -51,7 +51,7 @@ MIT, see `LICENSE`.
 
 ## En français
 
-Douze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du jeu. Interface en français.
+Douze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du jeu. Interface en français ou en anglais selon la langue du jeu. Chaque mod a son propre README dans `mods/<Mod>/`.
 
 - **Resource Finder** (F7) : scanner de ressources, lieux et créatures ; épingles sur la carte ; cible à l'écran ;
   mode **Traque** (F4) qui enchaîne les cibles ; découverte par la vue.

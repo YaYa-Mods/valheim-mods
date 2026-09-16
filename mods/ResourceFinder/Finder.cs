@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
+using ModsCommon;
 
 namespace ResourceFinder
 {
@@ -187,7 +188,7 @@ namespace ResourceFinder
             _prefabIdx = 0;
             _iterIndex = 0;
             State = _prefabNamesToSearch.Count > 0 ? Phase.SearchingKnown : Phase.Done;
-            Status = State == Phase.Done ? "" : "Recherche dans le monde connu…";
+            Status = State == Phase.Done ? "" : L.T("Recherche dans le monde connu…");
             if (State == Phase.Done) Finish();
         }
 
@@ -196,7 +197,7 @@ namespace ResourceFinder
             Capturing = false;
             Captured.Clear();
             _pending.Clear();
-            if (State == Phase.Scanning) { State = Phase.Done; CoveredRadius = ScanRadius; Status = $"Scan arrêté à {ScanRadius:0} m."; SortResults(); }
+            if (State == Phase.Scanning) { State = Phase.Done; CoveredRadius = ScanRadius; Status = L.F("Scan arrêté à {0:0} m.", ScanRadius); SortResults(); }
         }
 
         /// <summary>À appeler chaque image. Fait un peu de travail et rend la main.</summary>
@@ -299,7 +300,7 @@ namespace ResourceFinder
             _biomeMask = ComputeBiomeMask();
             _targetRadius = toR;
             State = Phase.Scanning;
-            Status = "Scan des zones inconnues…";
+            Status = L.T("Scan des zones inconnues…");
         }
 
         /// <summary>
@@ -369,7 +370,7 @@ namespace ResourceFinder
                 if (!TryGenerate(z)) _pending.Add(z);
             }
 
-            Status = $"Scan… {ScanRadius:0} m, {ZonesGenerated} zones générées, {ZonesFiltered} ignorées (biome), {Results.Count} trouvé(s)";
+            Status = L.F("Scan… {0:0} m, {1} zones générées, {2} ignorées (biome), {3} trouvé(s)", ScanRadius, ZonesGenerated, ZonesFiltered, Results.Count);
 
             // Arrêt : assez de résultats et plus rien en attente, ou fin du rayon.
             bool enough = Enough(ScanRadius);
@@ -399,7 +400,7 @@ namespace ResourceFinder
                 Capturing = false;
                 Plugin.Log.LogError($"Génération fantôme de la zone {zone.x},{zone.y} échouée : {ex}");
                 State = Phase.Done;
-                Status = "Erreur pendant le scan (voir LogOutput.log).";
+                Status = L.T("Erreur pendant le scan (voir LogOutput.log).");
                 return true;
             }
             Capturing = false;
@@ -481,10 +482,10 @@ namespace ResourceFinder
             State = Phase.Done;
             SortResults();
             Status = Results.Count == 0
-                ? (CoveredRadius > 0f ? $"Rien trouvé dans un rayon de {CoveredRadius:0} m." : "Rien trouvé dans le monde connu.")
-                : $"{Results.Count} trouvé(s)" + (CoveredRadius > 0f ? $" (jusqu'à {CoveredRadius:0} m, {ZonesGenerated} zones générées)" : "") + ".";
-            if (InDungeons > 0) Status += $" {InDungeons} dans des donjons (ignorés : passez par l'entrée).";
-            if (!_hasStaticPrefabs && _hashes.Count > 0) Status += Results.Count == 0 ? " Créature : rien de chargé autour de vous, seules celles présentes dans le monde sont détectées." : " Créatures : seules celles présentes dans le monde sont détectées.";
+                ? (CoveredRadius > 0f ? L.F("Rien trouvé dans un rayon de {0:0} m.", CoveredRadius) : L.T("Rien trouvé dans le monde connu."))
+                : L.F("{0} trouvé(s)", Results.Count) + (CoveredRadius > 0f ? L.F(" (jusqu'à {0:0} m, {1} zones générées)", CoveredRadius, ZonesGenerated) : "") + ".";
+            if (InDungeons > 0) Status += L.F(" {0} dans des donjons (ignorés : passez par l'entrée).", InDungeons);
+            if (!_hasStaticPrefabs && _hashes.Count > 0) Status += Results.Count == 0 ? L.T(" Créature : rien de chargé autour de vous, seules celles présentes dans le monde sont détectées.") : L.T(" Créatures : seules celles présentes dans le monde sont détectées.");
         }
     }
 }

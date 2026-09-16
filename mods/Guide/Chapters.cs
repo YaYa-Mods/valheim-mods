@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static Guide.Need;
 using static Heightmap.Biome;
+using ModsCommon;
 
 namespace Guide
 {
@@ -31,9 +32,9 @@ namespace Guide
         private static Step OfferingStep(string id, string location, string fallbackItem, int fallbackCount, string detail, string finder, int multiplier = 1)
         {
             Facts.Offering Off() { var o = Facts.OfferingOf(location); return o.Valid ? o : new Facts.Offering { Item = fallbackItem, Count = fallbackCount, Valid = true }; }
-            return new Step(id, Required, $"Rapporter {fallbackCount * multiplier} × {fallbackItem}", detail,
+            return new Step(id, Required, L.F("Rapporter {0} × {1}", fallbackCount * multiplier, fallbackItem), detail,
                 c => { var o = Off(); return Have(c, o.Item, o.Count * multiplier); }, finder,
-                titleFunc: () => { var o = Off(); return $"Rapporter {o.Count * multiplier} × {Facts.ItemLabel(o.Item)}"; })
+                titleFunc: () => { var o = Off(); return L.F("Rapporter {0} × {1}", o.Count * multiplier, Facts.ItemLabel(o.Item)); })
             { IconFunc = () => Off().Item, Volatile = true }; // état du moment : se décoche si on les dépose ou les perd
         }
 
@@ -203,7 +204,7 @@ namespace Guide
                     new Step("biome", Required, "Explorer le Nord profond", "Tout au nord, en bateau. Blizzards, glace, jötnars.", c => Status.Bool(c.BiomeKnown(DeepNorth))),
                     new Step("invasion", Required, "Mettre fin aux invasions de jötnars", "L'événement « Des jötnars vous envahissent » installe de la glace noire dans vos terres (prairies, forêt, marais, montagne, plaines). Détruisez le noyau de glace noire : il laisse un sang haineux.", c => Have(c, "HatefulBlood", 1)),
                     new Step("blood", Required, "Rapporter 6 × sang haineux", "3 pour ouvrir la porte de l'antre, 3 pour l'autel du roi.", c => { var o = Facts.OfferingOf("DN_Bossroom"); int n = o.Valid ? o.Count * 2 : 6; return Have(c, o.Valid ? o.Item : "HatefulBlood", n); },
-                        titleFunc: () => { var o = Facts.OfferingOf("DN_Bossroom"); return o.Valid ? $"Rapporter {o.Count * 2} × {Facts.ItemLabel(o.Item)}" : "Rapporter 6 × sang haineux"; }),
+                        titleFunc: () => { var o = Facts.OfferingOf("DN_Bossroom"); return o.Valid ? L.F("Rapporter {0} × {1}", o.Count * 2, Facts.ItemLabel(o.Item)) : "Rapporter 6 × sang haineux"; }),
                     new Step("lair", Required, "Trouver l'antre du roi", "Le scanner connaît son emplacement.", c => Status.Bool(c.LocationExplored("DN_Bossroom")), "Boss du Nord profond"),
                     new Step("morkhalla", Optional, "Morkhalla, la forteresse des jötnars", "Sa porte demande une clé d'or sanglant : lâchée par les sorcières jötnars (rare) ou forgée (or + moule de clés, forge noire, puis fonderie de givre).", c => Status.Bool(c.LocationExplored("MorkBorg")), "Or (trolls pétrifiés)"),
                     new Step("frostwood", Optional, "Bois de givre et noyaux de givre", "Nouveaux matériaux du Nord : pins enneigés, fryslings.", c => Status.Count((c.PickedUp("Frostwood") >= 1 ? 1 : 0) + (c.PickedUp("FrostCore") >= 1 ? 1 : 0), 2)),

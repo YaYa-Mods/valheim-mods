@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using ModsCommon;
 
 namespace Guide
 {
@@ -54,6 +55,14 @@ namespace Guide
         private static readonly Dictionary<string, Offering> s_offerings = new Dictionary<string, Offering>();
         private static readonly Dictionary<string, string> s_recipeText = new Dictionary<string, string>();
         private static readonly Dictionary<string, string> s_pieceText = new Dictionary<string, string>();
+        private static string s_textLang;
+        /// <summary>Les textes de recettes mélangent noms du jeu et mots du mod : un changement de langue les recalcule.</summary>
+        private static void InvalidateOnLanguageChange()
+        {
+            string lang = (Localization.instance != null ? Localization.instance.GetSelectedLanguage() : "") + (L.IsFrench ? "/fr" : "/en");
+            if (lang == s_textLang) return;
+            s_textLang = lang; s_recipeText.Clear(); s_pieceText.Clear();
+        }
 
         public static string Loc(string token) => string.IsNullOrEmpty(token) ? "" : Localization.instance.Localize(token);
 
@@ -99,6 +108,7 @@ namespace Guide
         /// <summary>« Établi niv. 2 : 10 bois, 8 restes de cuir » pour un objet fabricable, sinon vide.</summary>
         public static string RecipeText(string prefab)
         {
+            InvalidateOnLanguageChange();
             if (s_recipeText.TryGetValue(prefab, out var t)) return t;
             t = "";
             try
@@ -109,7 +119,7 @@ namespace Guide
                 if (recipe != null)
                 {
                     var sb = new StringBuilder();
-                    sb.Append(recipe.m_craftingStation != null ? Loc(recipe.m_craftingStation.m_name) + (recipe.m_minStationLevel > 1 ? $" niv. {recipe.m_minStationLevel}" : "") : "à la main");
+                    sb.Append(recipe.m_craftingStation != null ? Loc(recipe.m_craftingStation.m_name) + (recipe.m_minStationLevel > 1 ? L.F(" niv. {0}", recipe.m_minStationLevel) : "") : L.T("à la main"));
                     sb.Append(" : ");
                     sb.Append(string.Join(", ", recipe.m_resources.Where(r => r.m_resItem != null && r.m_amount > 0 && !r.m_resItem.name.StartsWith("Upgrader")).Select(r => $"{r.m_amount} {Loc(r.m_resItem.m_itemData.m_shared.m_name)}")));
                     if (recipe.m_amount > 1) sb.Append($" (×{recipe.m_amount})");
@@ -124,6 +134,7 @@ namespace Guide
         /// <summary>« Établi : 20 pierre, 5 noyau de surtling » pour une construction, sinon vide.</summary>
         public static string PieceText(string prefab)
         {
+            InvalidateOnLanguageChange();
             if (s_pieceText.TryGetValue(prefab, out var t)) return t;
             t = "";
             try
@@ -132,7 +143,7 @@ namespace Guide
                 var piece = go != null ? go.GetComponent<Piece>() : null;
                 if (piece != null)
                 {
-                    t = (piece.m_craftingStation != null ? Loc(piece.m_craftingStation.m_name) : "sans station") + " : " +
+                    t = (piece.m_craftingStation != null ? Loc(piece.m_craftingStation.m_name) : L.T("sans station")) + " : " +
                         string.Join(", ", piece.m_resources.Where(r => r.m_resItem != null && r.m_amount > 0 && !r.m_resItem.name.StartsWith("Upgrader")).Select(r => $"{r.m_amount} {Loc(r.m_resItem.m_itemData.m_shared.m_name)}"));
                 }
             }

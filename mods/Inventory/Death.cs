@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
+using ModsCommon;
 
 namespace InventoryMod
 {
@@ -98,7 +99,7 @@ namespace InventoryMod
             }
             if (recoveredItems > 0)
             {
-                player.Message(MessageHud.MessageType.Center, $"{recoveredItems} objet(s) récupéré(s) de votre tombe");
+                player.Message(MessageHud.MessageType.Center, L.F("{0} objet(s) récupéré(s) de votre tombe", recoveredItems));
                 Plugin.Log.LogInfo($"Tombes récupérées à distance : {tombs}, objets : {recoveredItems}");
             }
         }

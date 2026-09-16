@@ -43,9 +43,9 @@ namespace ModHub
         private void Awake()
         {
             s_instance = this; Log = Logger;
-            ToggleKey = Config.Bind("General", "ToggleKey", KeyCode.F9, "Touche qui ouvre/ferme le hub de configuration.");
-            WelcomeHint = Config.Bind("General", "WelcomeHint", true, "Rappel des accès aux mods (touches ou roue d'action) quelques secondes après l'arrivée dans le monde, une fois par session.");
-            ShowKeyHints = Config.Bind("General", "ShowKeyHints", true, "Aides de touches des mods dans le panneau d'aides du jeu (en bas à droite), quand le jeu n'en affiche pas lui-même.");
+            ToggleKey = Config.Bind("General", "ToggleKey", KeyCode.F9, L.T("Touche qui ouvre/ferme le hub de configuration."));
+            WelcomeHint = Config.Bind("General", "WelcomeHint", true, L.T("Rappel des accès aux mods (touches ou roue d'action) quelques secondes après l'arrivée dans le monde, une fois par session."));
+            ShowKeyHints = Config.Bind("General", "ShowKeyHints", true, L.T("Aides de touches des mods dans le panneau d'aides du jeu (en bas à droite), quand le jeu n'en affiche pas lui-même."));
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             Harmony.CreateAndPatchAll(typeof(Radial), Guid);
             Harmony.CreateAndPatchAll(typeof(InventoryButtons), Guid);
@@ -66,7 +66,7 @@ namespace ModHub
                 {
                     _welcomed = true;
                     p.Message(MessageHud.MessageType.TopLeft, ZInput.IsGamepadActive()
-                        ? "Mods : roue d'action → Mods (scanner, guide, lit, config)"
+                        ? L.T("Mods : roue d'action → Mods (scanner, guide, lit, config)")
                         : $"Mods : F7 scanner · F8 lit · {ToggleKey.Value} config · F10 guide · F11 suivi");
                 }
             }
@@ -132,7 +132,7 @@ namespace ModHub
             EnsureStyles();
             HandleKeyCapture();
             CommitSliders();
-            _window = GUILayout.Window(GetHashCode(), _window, DrawWindow, "Configuration des mods");
+            _window = GUILayout.Window(GetHashCode(), _window, DrawWindow, L.T("Configuration des mods"));
             Theme.End(prev);
         }
 
@@ -181,10 +181,10 @@ namespace ModHub
             }
             _pad.EndScrollView();
             GUILayout.Space(6);
-            GUILayout.Label("<color=#7cc35a>●</color> activé   <color=#b04a3a>●</color> désactivé   <color=#555>●</color> toujours actif", _desc);
+            GUILayout.Label(L.T("<color=#7cc35a>●</color> activé   <color=#b04a3a>●</color> désactivé   <color=#555>●</color> toujours actif"), _desc);
             GUILayout.BeginHorizontal();
-            if (_pad.Button("Tout désactiver")) SetAllEnabled(plugins, false);
-            if (_pad.Button("Tout réactiver")) SetAllEnabled(plugins, true);
+            if (_pad.Button(L.T("Tout désactiver"))) SetAllEnabled(plugins, false);
+            if (_pad.Button(L.T("Tout réactiver"))) SetAllEnabled(plugins, true);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
@@ -199,9 +199,9 @@ namespace ModHub
 
             GUILayout.Space(6);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Les changements sont appliqués et enregistrés immédiatement. « défaut » remet un réglage à sa valeur d'origine.", _desc);
+            GUILayout.Label(L.T("Les changements sont appliqués et enregistrés immédiatement. « défaut » remet un réglage à sa valeur d'origine."), _desc);
             GUILayout.FlexibleSpace();
-            if (_pad.Button(Pad.Active ? "Fermer  (B)" : "Fermer  (Échap)", GUILayout.Width(140))) WindowOpen = false;
+            if (_pad.Button(Pad.Active ? L.T("Fermer  (B)") : L.T("Fermer  (Échap)"), GUILayout.Width(140))) WindowOpen = false;
             GUILayout.EndHorizontal();
             Pad.Hints(_desc);
             _pad.EndWindow();
@@ -217,14 +217,14 @@ namespace ModHub
             if (en != null)
             {
                 bool v = (bool)en.BoxedValue;
-                bool nv = _pad.Toggle(v, v ? "Mod activé" : "Mod désactivé", GUILayout.Width(150));
+                bool nv = _pad.Toggle(v, v ? L.T("Mod activé") : L.T("Mod désactivé"), GUILayout.Width(150));
                 if (nv != v) en.BoxedValue = nv;
             }
             // Remise à zéro en deux temps : un premier appui arme « Confirmer ? » pendant 3 s (pas de perte par mégarde)
             bool armed = _resetArmedFor == p && Time.unscaledTime < _resetArmedUntil;
-            if (_pad.Button(armed ? "<color=#f5a847>Confirmer la remise à zéro ?</color>" : "Tout remettre par défaut", GUILayout.Width(230)))
+            if (_pad.Button(armed ? L.T("<color=#f5a847>Confirmer la remise à zéro ?</color>") : L.T("Tout remettre par défaut"), GUILayout.Width(230)))
             {
-                if (armed) { foreach (var e in entries) e.BoxedValue = e.DefaultValue; _textBuffers.Clear(); _resetArmedFor = null; Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, p.Metadata.Name + " : réglages par défaut"); }
+                if (armed) { foreach (var e in entries) e.BoxedValue = e.DefaultValue; _textBuffers.Clear(); _resetArmedFor = null; Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, p.Metadata.Name + L.T(" : réglages par défaut")); }
                 else { _resetArmedFor = p; _resetArmedUntil = Time.unscaledTime + 3f; }
             }
             GUILayout.EndHorizontal();
@@ -232,7 +232,7 @@ namespace ModHub
             if (!Pad.Active)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Filtrer :", GUILayout.Width(60));
+                GUILayout.Label(L.T("Filtrer :"), GUILayout.Width(60));
                 _filter = GUILayout.TextField(_filter, GUILayout.Width(280));
                 if (_pad.Button("×", GUILayout.Width(28))) _filter = "";
                 GUILayout.EndHorizontal();
@@ -272,7 +272,7 @@ namespace ModHub
                 var e = EnabledEntry(p);
                 if (e != null) { e.BoxedValue = value; n++; }
             }
-            var msg = value ? $"Mods réactivés ({n})" : $"MODS DÉSACTIVÉS ({n}), jeu vanilla (usure, poids, piles...)";
+            var msg = value ? L.F("Mods réactivés ({0})", n) : L.F("MODS DÉSACTIVÉS ({0}), jeu vanilla (usure, poids, piles...)", n);
             Player.m_localPlayer?.Message(MessageHud.MessageType.Center, msg);
         }
 
@@ -281,10 +281,10 @@ namespace ModHub
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             bool modified = !Equals(entry.BoxedValue, entry.DefaultValue);
-            GUILayout.Label((modified ? "<color=#f5a847>●</color> " : "") + entry.Definition.Key, _key, GUILayout.Width(230));
+            GUILayout.Label((modified ? L.T("<color=#f5a847>●</color> ") : "") + entry.Definition.Key, _key, GUILayout.Width(230));
             DrawEditor(entry);
             GUILayout.FlexibleSpace();
-            if (_pad.Button("défaut", GUILayout.Width(62))) { entry.BoxedValue = entry.DefaultValue; _textBuffers.Remove(entry); } // (le glyphe ↺ n'existe pas dans la police du jeu)
+            if (_pad.Button(L.T("défaut"), GUILayout.Width(62))) { entry.BoxedValue = entry.DefaultValue; _textBuffers.Remove(entry); } // (le glyphe ↺ n'existe pas dans la police du jeu)
             GUILayout.EndHorizontal();
             if (!string.IsNullOrEmpty(entry.Description?.Description))
                 GUILayout.Label(entry.Description.Description, _desc);
@@ -300,7 +300,7 @@ namespace ModHub
             if (type == typeof(bool))
             {
                 bool v = (bool)entry.BoxedValue;
-                bool nv = _pad.Toggle(v, v ? " activé" : " désactivé");
+                bool nv = _pad.Toggle(v, v ? L.T(" activé") : L.T(" désactivé"));
                 if (nv != v) entry.BoxedValue = nv;
                 return;
             }
@@ -308,7 +308,7 @@ namespace ModHub
             if (type == typeof(KeyCode))
             {
                 bool capturing = _capturingKey == entry;
-                if (_pad.Button(capturing ? "Appuyez sur une touche… (Échap : annuler)" : entry.BoxedValue.ToString(), GUILayout.Width(260)))
+                if (_pad.Button(capturing ? L.T("Appuyez sur une touche… (Échap : annuler)") : entry.BoxedValue.ToString(), GUILayout.Width(260)))
                     _capturingKey = capturing ? null : entry;
                 return;
             }

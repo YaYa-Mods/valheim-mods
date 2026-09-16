@@ -1,4 +1,5 @@
 using System;
+using ModsCommon;
 using System.Collections.Generic;
 using static Heightmap.Biome;
 
@@ -46,11 +47,11 @@ namespace ResourceFinder
         {
             switch (c)
             {
-                case Category.Minerai: return "Minerais";
-                case Category.Cueillette: return "Cueillette";
-                case Category.Arbre: return "Arbres";
-                case Category.Lieu: return "Lieux";
-                default: return "Créatures";
+                case Category.Minerai: return L.T("Minerais");
+                case Category.Cueillette: return L.T("Cueillette");
+                case Category.Arbre: return L.T("Arbres");
+                case Category.Lieu: return L.T("Lieux");
+                default: return L.T("Créatures");
             }
         }
 

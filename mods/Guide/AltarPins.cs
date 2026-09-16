@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using ModsCommon;
 
 namespace Guide
 {
@@ -33,9 +34,9 @@ namespace Guide
                 var pos = kv.Value.m_position;
                 if (!checks.IsExplored(pos)) continue;
                 if (HasPinNear(map, pos, 40f)) { s_doneThisSession.Add(chapter.Id); return; }
-                map.AddPin(pos, Minimap.PinType.Boss, chapter.AltarLabel ?? chapter.DisplayTitle, true, false, 0L);
+                map.AddPin(pos, Minimap.PinType.Boss, chapter.DisplayAltarLabel ?? chapter.DisplayTitle, true, false, 0L);
                 s_doneThisSession.Add(chapter.Id);
-                Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Guide : " + (chapter.AltarLabel ?? "autel") + " épinglé sur la carte");
+                Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, L.T("Guide : ") + (chapter.DisplayAltarLabel ?? L.T("autel")) + L.T(" épinglé sur la carte"));
                 Plugin.Log.LogInfo($"Épingle posée : {chapter.AltarLabel} {pos}");
                 return;
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BepInEx.Bootstrap;
 using HarmonyLib;
 using UnityEngine;
+using ModsCommon;
 using Valheim.UI;
 
 namespace ModHub
@@ -58,6 +59,7 @@ namespace ModHub
                     string label = entry.Label, icon = null;
                     int bar = label.IndexOf('|');
                     if (bar >= 0) { icon = label.Substring(bar + 1); label = label.Substring(0, bar); }
+                    label = L.T(label); // libellé dans la langue du jeu (la clé reste le français)
                     var action = entry.Action;
 
                     var e = UnityEngine.Object.Instantiate(RadialData.SO.EmoteElement);

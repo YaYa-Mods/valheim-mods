@@ -3,6 +3,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using ModsCommon;
 
 namespace InventoryMod
 {
@@ -37,30 +38,30 @@ namespace InventoryMod
         private void Awake()
         {
             Log = Logger;
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod (poids, piles, lignes).");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod (poids, piles, lignes)."));
             Enabled.SettingChanged += (_, __) => Patches.ReapplyStacks();
-            NoWeightLimit = Config.Bind("General", "NoWeightLimit", true, "Plus de limite de poids (jamais surchargé).");
+            NoWeightLimit = Config.Bind("General", "NoWeightLimit", true, L.T("Plus de limite de poids (jamais surchargé)."));
             MaxStackSize = Config.Bind("General", "MaxStackSize", 9999,
-                new ConfigDescription("Taille max des piles pour tous les items empilables. 0 = vanilla.", new AcceptableValueRange<int>(0, 99999)));
+                new ConfigDescription(L.T("Taille max des piles pour tous les items empilables. 0 = vanilla."), new AcceptableValueRange<int>(0, 99999)));
             InventoryRows = Config.Bind("General", "InventoryRows", 20,
-                new ConfigDescription("Lignes d'inventaire appliquées à l'apparition du personnage (vanilla 4 + achats chez les marchands, plafond du jeu 9 : " +
-                                      "au-delà, la grille défile). Réduit seulement si les lignes retirées sont vides.", new AcceptableValueRange<int>(4, Grid.MaxRowsSupported)));
+                new ConfigDescription(L.T("Lignes d'inventaire appliquées à l'apparition du personnage (vanilla 4 + achats chez les marchands, plafond du jeu 9 : ") +
+                                      L.T("au-delà, la grille défile). Réduit seulement si les lignes retirées sont vides."), new AcceptableValueRange<int>(4, Grid.MaxRowsSupported)));
             VisibleRows = Config.Bind("General", "VisibleRows", 9,
-                new ConfigDescription("Lignes visibles à la fois dans le panneau ; le reste défile (molette, stick droit).", new AcceptableValueRange<int>(4, 9)));
+                new ConfigDescription(L.T("Lignes visibles à la fois dans le panneau ; le reste défile (molette, stick droit)."), new AcceptableValueRange<int>(4, 9)));
             SortModeCfg = Config.Bind("General", "SortMode", Grid.SortMode.Categorie,
-                "Tri de l'inventaire (bouton « Trier… » dans l'inventaire, ou menu radial). Categorie = les groupes de la roue d'action " +
-                "(consommables, armes et outils, armure et accessoires, puis matériaux, trophées, divers) ; Nom ; Quantite ; Poids.");
+                L.T("Tri de l'inventaire (bouton « Trier… » dans l'inventaire, ou menu radial). Categorie = les groupes de la roue d'action ") +
+                L.T("(consommables, armes et outils, armure et accessoires, puis matériaux, trophées, divers) ; Nom ; Quantite ; Poids."));
             FilterStyle = Config.Bind("General", "FilterStyle", Grid.FilterMode.Masquer,
-                "Quand une catégorie est choisie dans la barre d'outils : Masquer = seuls les objets de la catégorie restent visibles (les autres cases paraissent vides, sans clic possible) ; Estomper = les autres restent visibles, atténués.");
+                L.T("Quand une catégorie est choisie dans la barre d'outils : Masquer = seuls les objets de la catégorie restent visibles (les autres cases paraissent vides, sans clic possible) ; Estomper = les autres restent visibles, atténués."));
             KeepInventoryOnDeath = Config.Bind("Death", "KeepInventoryOnDeath", true,
-                "À la mort, tout l'inventaire reste sur vous (pas de pierre tombale). Même effet que la clé interne DeathKeepInventory du jeu.");
+                L.T("À la mort, tout l'inventaire reste sur vous (pas de pierre tombale). Même effet que la clé interne DeathKeepInventory du jeu."));
             KeepSkillsOnDeath = Config.Bind("Death", "KeepSkillsOnDeath", true,
-                "À la mort, aucune baisse de compétences (le jeu retire 5 % de chaque compétence, hors période de grâce).");
+                L.T("À la mort, aucune baisse de compétences (le jeu retire 5 % de chaque compétence, hors période de grâce)."));
             RecoverTombstones = Config.Bind("Death", "RecoverTombstones", true,
-                "À l'apparition, vos pierres tombales encore dans le monde sont vidées dans votre inventaire à distance, puis supprimées.");
+                L.T("À l'apparition, vos pierres tombales encore dans le monde sont vidées dans votre inventaire à distance, puis supprimées."));
             BackupEnabled = Config.Bind("Safety", "BackupEnabled", true,
-                "Copie de secours de l'inventaire dans les données du personnage à chaque sauvegarde ; au chargement, ce qui a été " +
-                "perdu (pile tronquée, objet détruit) est restauré. Survit au retrait du mod.");
+                L.T("Copie de secours de l'inventaire dans les données du personnage à chaque sauvegarde ; au chargement, ce qui a été ") +
+                L.T("perdu (pile tronquée, objet détruit) est restauré. Survit au retrait du mod."));
 
             MaxStackSize.SettingChanged += (_, __) => Patches.ReapplyStacks();
             InventoryRows.SettingChanged += (_, __) => Patches.ApplyRows(Player.m_localPlayer);

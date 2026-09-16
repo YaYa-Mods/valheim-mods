@@ -38,11 +38,11 @@ namespace HomeTeleport
         {
             Log = Logger;
             s_instance = this;
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod.");
-            Key = Config.Bind("General", "Key", KeyCode.F8, "Touche : rentrer au lit (point d'apparition). Aussi dans le menu radial, groupe Mods.");
-            Confirm = Config.Bind("General", "Confirm", true, "Demander confirmation avant de partir (touche à nouveau ou A pour confirmer, Échap ou B pour annuler).");
-            BlockWhenTargeted = Config.Bind("General", "BlockWhenTargeted", true, "Refuser la téléportation quand un ennemi vous prend pour cible.");
-            Cooldown = Config.Bind("General", "Cooldown", 0f, new ConfigDescription("Délai minimum (secondes) entre deux retours. 0 = aucun.", new AcceptableValueRange<float>(0f, 3600f)));
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod."));
+            Key = Config.Bind("General", "Key", KeyCode.F8, L.T("Touche : rentrer au lit (point d'apparition). Aussi dans le menu radial, groupe Mods."));
+            Confirm = Config.Bind("General", "Confirm", true, L.T("Demander confirmation avant de partir (touche à nouveau ou A pour confirmer, Échap ou B pour annuler)."));
+            BlockWhenTargeted = Config.Bind("General", "BlockWhenTargeted", true, L.T("Refuser la téléportation quand un ennemi vous prend pour cible."));
+            Cooldown = Config.Bind("General", "Cooldown", 0f, new ConfigDescription(L.T("Délai minimum (secondes) entre deux retours. 0 = aucun."), new AcceptableValueRange<float>(0f, 3600f)));
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             Log.LogInfo($"Home Teleport chargé (touche {Key.Value})");
         }
@@ -63,7 +63,7 @@ namespace HomeTeleport
         /// <summary>Aides de touches (panneau du jeu, via Mod Hub).</summary>
         public static List<KeyValuePair<string, KeyCode>> KeyHints() => !Enabled.Value ? new List<KeyValuePair<string, KeyCode>>() : new List<KeyValuePair<string, KeyCode>>
         {
-            new KeyValuePair<string, KeyCode>("Rentrer au lit", Key.Value),
+            new KeyValuePair<string, KeyCode>(L.T("Rentrer au lit"), Key.Value),
         };
 
         public static List<KeyValuePair<string, Action>> RadialEntries() => new List<KeyValuePair<string, Action>>
@@ -89,9 +89,9 @@ namespace HomeTeleport
         {
             where = null;
             if (player.IsTeleporting() || player.IsDead() || player.InCutscene()) return false;
-            if (BlockWhenTargeted.Value && player.IsTargeted()) { player.Message(MessageHud.MessageType.Center, "Impossible : un ennemi vous prend pour cible"); return false; }
+            if (BlockWhenTargeted.Value && player.IsTargeted()) { player.Message(MessageHud.MessageType.Center, L.T("Impossible : un ennemi vous prend pour cible")); return false; }
             float since = Time.time - s_lastTeleport;
-            if (Cooldown.Value > 0f && since < Cooldown.Value) { player.Message(MessageHud.MessageType.Center, $"Retour possible dans {Cooldown.Value - since:0} s"); return false; }
+            if (Cooldown.Value > 0f && since < Cooldown.Value) { player.Message(MessageHud.MessageType.Center, L.F("Retour possible dans {0:0} s", Cooldown.Value - since)); return false; }
             Destination(out where);
             return true;
         }
@@ -100,10 +100,10 @@ namespace HomeTeleport
         private static Vector3 Destination(out string where)
         {
             var profile = Game.instance.GetPlayerProfile();
-            if (profile.HaveCustomSpawnPoint()) { where = "votre lit"; return profile.GetCustomSpawnPoint(); }
+            if (profile.HaveCustomSpawnPoint()) { where = L.T("votre lit"); return profile.GetCustomSpawnPoint(); }
             var target = PlayerProfile.m_originalSpawnPoint;
             if (ZoneSystem.instance != null && ZoneSystem.instance.GetLocationIcon(Game.instance.m_StartLocation, out var start)) target = start;
-            where = "les pierres sacrificielles (pas de lit)";
+            where = L.T("les pierres sacrificielles (pas de lit)");
             return target;
         }
 
@@ -118,7 +118,7 @@ namespace HomeTeleport
             if (player.TeleportTo(target + Vector3.up * 0.3f, player.transform.rotation, true))
             {
                 s_lastTeleport = Time.time;
-                player.Message(MessageHud.MessageType.Center, "Retour vers " + where);
+                player.Message(MessageHud.MessageType.Center, L.T("Retour vers ") + where);
                 Log.LogInfo($"Téléportation vers {where} : {target}");
             }
         }
@@ -131,7 +131,7 @@ namespace HomeTeleport
             if (_pad.ConsumeSkipRepaint()) return;
             var prev = Theme.Begin();
             Theme.Fill(new Rect(0f, 0f, Theme.ScreenSize.x, Theme.ScreenSize.y), new Color(0f, 0f, 0f, 0.45f)); // le jeu s'assombrit derrière la question
-            _window = GUILayout.Window(GetHashCode(), _window, DrawDialog, "Rentrer au lit ?");
+            _window = GUILayout.Window(GetHashCode(), _window, DrawDialog, L.T("Rentrer au lit ?"));
             Theme.End(prev);
         }
 
@@ -163,14 +163,14 @@ namespace HomeTeleport
             GUILayout.BeginHorizontal();
             if (Icon != null) { GUILayout.Label(GUIContent.none, GUILayout.Width(40f), GUILayout.Height(40f)); GUI.DrawTexture(GUILayoutUtility.GetLastRect(), Icon, ScaleMode.ScaleToFit, true); GUILayout.Space(8f); }
             GUILayout.BeginVertical();
-            GUILayout.Label($"Vous allez être téléporté vers <b>{_where}</b>" + (_distance < 8f ? ", vous y êtes déjà." : $", à <color=#f5a847>{_distance:0} m</color> d'ici."), Theme.Muted);
-            GUILayout.Label(Pad.Active ? "<color=#7cc35a><b>A</b></color> partir    <color=#e0524a><b>B</b></color> rester" : $"{Key.Value} ou Entrée : partir   ·   Échap : rester", Theme.Muted);
+            GUILayout.Label(L.F("Vous allez être téléporté vers <b>{0}</b>", L.T(_where)) + (_distance < 8f ? L.T(", vous y êtes déjà.") : L.F(", à <color=#f5a847>{0:0} m</color> d'ici.", _distance)), Theme.Muted);
+            GUILayout.Label(Pad.Active ? L.T("<color=#7cc35a><b>A</b></color> partir    <color=#e0524a><b>B</b></color> rester") : L.F("{0} ou Entrée : partir   ·   Échap : rester", Key.Value), Theme.Muted);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
             GUILayout.BeginHorizontal();
-            if (_pad.Button("Partir", GUILayout.Height(34))) { DialogOpen = false; Teleport(); }
-            if (_pad.Button("Rester", GUILayout.Height(34))) DialogOpen = false;
+            if (_pad.Button(L.T("Partir"), GUILayout.Height(34))) { DialogOpen = false; Teleport(); }
+            if (_pad.Button(L.T("Rester"), GUILayout.Height(34))) DialogOpen = false;
             GUILayout.EndHorizontal();
             _pad.EndWindow();
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
+using ModsCommon;
 
 namespace Guide
 {
@@ -39,18 +40,19 @@ namespace Guide
         public Step(string id, Need need, string title, string detail, Func<Checks, Status> check, string finder = null, string recipe = null, string piece = null, Func<string> titleFunc = null)
         { Id = id; Need = need; Title = title; Detail = detail; Check = check; Finder = finder; Recipe = recipe; Piece = piece; TitleFunc = titleFunc; }
 
-        public string DisplayTitle { get { try { return TitleFunc?.Invoke() ?? Title; } catch { return Title; } } }
+        public string DisplayTitle { get { try { return L.T(TitleFunc?.Invoke() ?? Title); } catch { return L.T(Title); } } }
 
-        private string _detailCache;
+        private string _detailCache; private bool _detailCacheFrench;
         public string DisplayDetail
         {
             get
             {
-                if (_detailCache != null) return _detailCache;
+                if (_detailCache != null && _detailCacheFrench == L.IsFrench) return _detailCache;
                 string extra = Recipe != null ? Facts.RecipeText(Recipe) : Piece != null ? Facts.PieceText(Piece) : "";
-                string d = extra.Length == 0 ? (Detail ?? "") : (string.IsNullOrEmpty(Detail) ? "" : Detail + "  ") + "<color=#f5a847>▸</color> " + extra;
+                string detail = L.T(Detail);
+                string d = extra.Length == 0 ? (detail ?? "") : (string.IsNullOrEmpty(detail) ? "" : detail + "  ") + "<color=#f5a847>▸</color> " + extra;
                 // Les recettes ne sont connues qu'une fois ObjectDB chargée : on ne fige le texte qu'à ce moment-là.
-                if (ObjectDB.instance != null && ZNetScene.instance != null) _detailCache = d;
+                if (ObjectDB.instance != null && ZNetScene.instance != null) { _detailCache = d; _detailCacheFrench = L.IsFrench; }
                 return d;
             }
         }
@@ -69,7 +71,10 @@ namespace Guide
         public string AltarLabel; // nom de l'épingle posée sur la carte
         public string Icon;       // prefab d'objet (trophée du boss) affiché devant le titre
         public List<Step> Steps = new List<Step>();
-        public string DisplayTitle { get { try { return TitleFunc?.Invoke() ?? Title; } catch { return Title; } } }
+        public string DisplayTitle { get { try { return L.T(TitleFunc?.Invoke() ?? Title); } catch { return L.T(Title); } } }
+        public string DisplayIntro => L.T(Intro);
+        public string DisplayReward => L.T(Reward);
+        public string DisplayAltarLabel => L.T(AltarLabel);
     }
 
     /// <summary>

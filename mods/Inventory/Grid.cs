@@ -4,6 +4,7 @@ using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
+using ModsCommon;
 
 namespace InventoryMod
 {
@@ -124,7 +125,7 @@ namespace InventoryMod
             s_catButtons.Clear();
 
             int row = 0;
-            s_stackTool = MakeTool(gui, row++, Icon("@stack.png"), "Empiler : fusionner les piles d'un même objet", () => Stack(Player.m_localPlayer));
+            s_stackTool = MakeTool(gui, row++, Icon("@stack.png"), L.T("Empiler : fusionner les piles d'un même objet"), () => Stack(Player.m_localPlayer));
             s_sortTool = MakeTool(gui, row++, Icon("@sort.png"), "", () =>
             {
                 var modes = (SortMode[])Enum.GetValues(typeof(SortMode));
@@ -142,7 +143,7 @@ namespace InventoryMod
                     if (FocusFamily >= 0) { Plugin.SortModeCfg.Value = SortMode.Categorie; Sort(Player.m_localPlayer, SortMode.Categorie); }
                     else Changed(Player.m_localPlayer?.GetInventory());
                     // À la manette il n'y a pas d'info-bulle : le choix est confirmé à l'écran
-                    Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, FocusFamily >= 0 ? "Catégorie : " + FamilyLabel(FocusFamily) : "Toutes les catégories");
+                    Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, FocusFamily >= 0 ? L.T("Catégorie : ") + FamilyLabel(FocusFamily) : L.T("Toutes les catégories"));
                     RefreshTools();
                 }));
             }
@@ -236,7 +237,7 @@ namespace InventoryMod
         {
             if (s_sortTool?.Go != null)
             {
-                s_sortTool.Tip.m_text = "Tri : " + ModeLabel(Plugin.SortModeCfg.Value) + "  (cliquer pour changer)";
+                s_sortTool.Tip.m_text = L.T("Tri : ") + ModeLabel(Plugin.SortModeCfg.Value) + L.T("  (cliquer pour changer)");
                 s_sortTool.Icon.sprite = Icon(SortIconName(Plugin.SortModeCfg.Value)); // l'icône dit le mode courant
             }
             for (int i = 0; i < s_catButtons.Count; i++)
@@ -245,7 +246,7 @@ namespace InventoryMod
                 int fam = i - 1;
                 bool selected = fam == FocusFamily && (fam < 0 || Plugin.SortModeCfg.Value == SortMode.Categorie);
                 t.Bg.sprite = selected ? s_bgSelectedSprite : s_bgSprite; t.Bg.color = Color.white;
-                t.Tip.m_text = fam < 0 ? "Toutes les catégories" : FamilyLabel(fam) + (selected ? "  (sélectionnée : trié en premier, le reste estompé)" : "  (trier en premier, estomper le reste)");
+                t.Tip.m_text = fam < 0 ? L.T("Toutes les catégories") : FamilyLabel(fam) + (selected ? L.T("  (sélectionnée : trié en premier, le reste estompé)") : L.T("  (trier en premier, estomper le reste)"));
                 if (t.Icon.sprite == null) { t.Icon.sprite = FamilyIcon(fam); t.Icon.gameObject.SetActive(t.Icon.sprite != null); }
             }
             if (Player.m_localPlayer != null) Changed(Player.m_localPlayer.GetInventory()); // rafraîchit l'estompage
@@ -350,7 +351,7 @@ namespace InventoryMod
                 if (1 + slot / width >= height && slot < items.Count) { Plugin.Log.LogWarning("Tri : plus de place que d'objets ?"); break; }
             }
             Changed(inv);
-            player.Message(MessageHud.MessageType.TopLeft, "Inventaire trié : " + ModeLabel(mode));
+            player.Message(MessageHud.MessageType.TopLeft, L.T("Inventaire trié : ") + ModeLabel(mode));
         }
 
         internal static string ModeLabel(SortMode m)
@@ -358,9 +359,9 @@ namespace InventoryMod
             switch (m)
             {
                 case SortMode.Nom: return "nom";
-                case SortMode.Quantite: return "quantité";
+                case SortMode.Quantite: return L.T("quantité");
                 case SortMode.Poids: return "poids";
-                default: return "catégorie (roue)";
+                default: return L.T("catégorie (roue)");
             }
         }
 
@@ -371,7 +372,7 @@ namespace InventoryMod
 
         internal static string FamilyLabel(int f)
         {
-            if (f < 0) return "Toutes les catégories";
+            if (f < 0) return L.T("Toutes les catégories");
             try
             {
                 var so = Valheim.UI.RadialData.SO;
@@ -382,7 +383,7 @@ namespace InventoryMod
                 }
             }
             catch { }
-            return f < s_familyLabels.Length ? s_familyLabels[f] : "Divers";
+            return L.T(f < s_familyLabels.Length ? s_familyLabels[f] : "Divers");
         }
 
         /// <summary>Estompe les objets hors de la catégorie mise en avant (grille du joueur seulement).</summary>
@@ -450,7 +451,7 @@ namespace InventoryMod
             }
             foreach (var it in toRemove) inv.RemoveItem(it);
             Changed(inv);
-            player.Message(MessageHud.MessageType.TopLeft, merged > 0 ? $"Piles fusionnées ({toRemove.Count} case(s) libérée(s))" : "Rien à empiler");
+            player.Message(MessageHud.MessageType.TopLeft, merged > 0 ? L.F("Piles fusionnées ({0} case(s) libérée(s))", toRemove.Count) : L.T("Rien à empiler"));
         }
 
         private static readonly System.Reflection.MethodInfo s_changed = AccessTools.Method(typeof(Inventory), "Changed", new[] { typeof(bool), typeof(bool) });

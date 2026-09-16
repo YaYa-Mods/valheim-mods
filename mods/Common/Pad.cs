@@ -242,7 +242,7 @@ namespace ModsCommon
         /// <summary>Ligne d'aide en bas de fenêtre (seulement quand la manette est active).</summary>
         public static void Hints(GUIStyle style, string keyboardHints = null)
         {
-            if (Active) GUILayout.Label(HintsText, style);
+            if (Active) GUILayout.Label(L.T(HintsText), style);
             else if (keyboardHints != null) GUILayout.Label(keyboardHints, style);
         }
     }

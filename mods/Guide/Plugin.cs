@@ -51,17 +51,17 @@ namespace Guide
         {
             Log = Logger;
             s_instance = this;
-            Enabled = Config.Bind("General", "Enabled", true, "Active le guide (suivi à l'écran et fenêtre).");
-            ToggleKey = Config.Bind("General", "ToggleKey", KeyCode.F10, "Touche qui ouvre/ferme le guide complet.");
-            Notify = Config.Bind("General", "Notify", true, "Message à l'écran quand une étape est accomplie.");
-            HideFuture = Config.Bind("General", "HideFuture", true, "Anti-spoiler : les chapitres non atteints sont masqués (titre, étapes, récompense) jusqu'à la victoire sur le boss précédent. Chaque chapitre peut être révélé à la main.");
-            AltarPin = Config.Bind("General", "AltarPin", true, "Épingle automatiquement l'autel du chapitre courant sur la carte dès qu'il se trouve en zone explorée (rien n'est dévoilé : seulement ce que vous avez déjà vu).");
-            ShowTracker = Config.Bind("Tracker", "ShowTracker", true, "Afficher l'objectif courant et ses prochaines étapes à l'écran.");
-            Mode = Config.Bind("Tracker", "Mode", TrackerMode.Complet, "Suivi à l'écran : Complet (objectif, barre, prochaines étapes), Reduit (une ligne : objectif et prochaine étape), Masque. Touche TrackerKey ou roue d'action → Mods pour passer de l'un à l'autre ; il se déploie quelques secondes quand une étape est accomplie.");
-            TrackerKey = Config.Bind("Tracker", "TrackerKey", KeyCode.F11, "Touche qui fait tourner le suivi : complet → réduit → masqué.");
-            TrackerSteps = Config.Bind("Tracker", "Steps", 4, new ConfigDescription("Nombre d'étapes affichées sous l'objectif.", new AcceptableValueRange<int>(1, 8)));
-            TrackerX = Config.Bind("Tracker", "X", -350f, new ConfigDescription("Position X du suivi (unités 1080p ; négatif = depuis le bord droit).", new AcceptableValueRange<float>(-1920f, 1920f)));
-            TrackerY = Config.Bind("Tracker", "Y", 290f, new ConfigDescription("Position Y du suivi (unités 1080p, depuis le haut).", new AcceptableValueRange<float>(0f, 1080f)));
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le guide (suivi à l'écran et fenêtre)."));
+            ToggleKey = Config.Bind("General", "ToggleKey", KeyCode.F10, L.T("Touche qui ouvre/ferme le guide complet."));
+            Notify = Config.Bind("General", "Notify", true, L.T("Message à l'écran quand une étape est accomplie."));
+            HideFuture = Config.Bind("General", "HideFuture", true, L.T("Anti-spoiler : les chapitres non atteints sont masqués (titre, étapes, récompense) jusqu'à la victoire sur le boss précédent. Chaque chapitre peut être révélé à la main."));
+            AltarPin = Config.Bind("General", "AltarPin", true, L.T("Épingle automatiquement l'autel du chapitre courant sur la carte dès qu'il se trouve en zone explorée (rien n'est dévoilé : seulement ce que vous avez déjà vu)."));
+            ShowTracker = Config.Bind("Tracker", "ShowTracker", true, L.T("Afficher l'objectif courant et ses prochaines étapes à l'écran."));
+            Mode = Config.Bind("Tracker", "Mode", TrackerMode.Complet, L.T("Suivi à l'écran : Complet (objectif, barre, prochaines étapes), Reduit (une ligne : objectif et prochaine étape), Masque. Touche TrackerKey ou roue d'action → Mods pour passer de l'un à l'autre ; il se déploie quelques secondes quand une étape est accomplie."));
+            TrackerKey = Config.Bind("Tracker", "TrackerKey", KeyCode.F11, L.T("Touche qui fait tourner le suivi : complet → réduit → masqué."));
+            TrackerSteps = Config.Bind("Tracker", "Steps", 4, new ConfigDescription(L.T("Nombre d'étapes affichées sous l'objectif."), new AcceptableValueRange<int>(1, 8)));
+            TrackerX = Config.Bind("Tracker", "X", -350f, new ConfigDescription(L.T("Position X du suivi (unités 1080p ; négatif = depuis le bord droit)."), new AcceptableValueRange<float>(-1920f, 1920f)));
+            TrackerY = Config.Bind("Tracker", "Y", 290f, new ConfigDescription(L.T("Position Y du suivi (unités 1080p, depuis le haut)."), new AcceptableValueRange<float>(0f, 1080f)));
             if (Mathf.Approximately(TrackerX.Value, -330f)) TrackerX.Value = -350f; // ancien défaut (suivi de 310 px) : suit l'élargissement à 330 px
             Progress.StepCompleted += OnStepCompleted;
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
@@ -78,10 +78,10 @@ namespace Guide
             Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"Guide : ✓ {s.DisplayTitle}");
             if (s.Id == "kill")
             {
-                Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"Chapitre terminé : {c.DisplayTitle}");
+                Player.m_localPlayer.Message(MessageHud.MessageType.Center, L.F("Chapitre terminé : {0}", c.DisplayTitle));
                 // Le chapitre suivant devient l'objectif : on l'annonce et le suivi se déploie dessus
                 var next = Progress.Current();
-                if (next != null && next != c && !Progress.ChapterDone(next)) { Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "Nouvel objectif : " + next.DisplayTitle); _expandUntil = Time.unscaledTime + 10f; _trackerNextRefresh = 0f; }
+                if (next != null && next != c && !Progress.ChapterDone(next)) { Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, L.T("Nouvel objectif : ") + next.DisplayTitle); _expandUntil = Time.unscaledTime + 10f; _trackerNextRefresh = 0f; }
             }
         }
 
@@ -113,7 +113,7 @@ namespace Guide
         {
             new KeyValuePair<string, Action>("Guide de progression|@guide.png", () => { if (Enabled.Value) Toggle(); }),
             // Le suivi HUD se masque/affiche d'un geste (libellé selon l'état au moment où la roue se construit)
-            new KeyValuePair<string, Action>("Suivi : " + ModeLabel(NextMode(Mode.Value)) + "|@tracker.png", CycleTracker),
+            new KeyValuePair<string, Action>(L.T("Suivi : ") + ModeLabel(NextMode(Mode.Value)) + "|@tracker.png", CycleTracker),
         };
         public static List<KeyValuePair<string, Action>> InventoryEntries() => new List<KeyValuePair<string, Action>>
         {
@@ -121,13 +121,13 @@ namespace Guide
         };
 
         private static TrackerMode NextMode(TrackerMode m) => m == TrackerMode.Complet ? TrackerMode.Reduit : m == TrackerMode.Reduit ? TrackerMode.Masque : TrackerMode.Complet;
-        private static string ModeLabel(TrackerMode m) => m == TrackerMode.Complet ? "complet" : m == TrackerMode.Reduit ? "réduit" : "masqué";
+        private static string ModeLabel(TrackerMode m) => m == TrackerMode.Complet ? L.T("complet") : m == TrackerMode.Reduit ? L.T("réduit") : L.T("masqué");
         /// <summary>Complet → réduit → masqué (touche ou roue d'action), avec confirmation à l'écran.</summary>
         internal static void CycleTracker()
         {
             Mode.Value = NextMode(Mode.Value);
             if (s_instance != null) s_instance._expandUntil = 0f;
-            Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, "Suivi du guide : " + ModeLabel(Mode.Value));
+            Player.m_localPlayer?.Message(MessageHud.MessageType.TopLeft, L.T("Suivi du guide : ") + ModeLabel(Mode.Value));
         }
         private bool _showLocked; // liste complète des chapitres verrouillés dépliée
         private bool _trackerWasShown, _trackerWasCompact; private float _trackerShownAt;
@@ -157,7 +157,7 @@ namespace Guide
             {
                 bool ok = (bool)s_searchLabel.Invoke(null, new object[] { label });
                 // La fenêtre se ferme : le joueur voit tout de suite la pastille HUD qui pointe la cible
-                if (ok && s_instance != null) { s_instance.Close(); Player.m_localPlayer?.Message(MessageHud.MessageType.Center, "Cible : " + label); }
+                if (ok && s_instance != null) { s_instance.Close(); Player.m_localPlayer?.Message(MessageHud.MessageType.Center, L.T("Cible : ") + label); }
             }
             catch (Exception ex) { Log.LogWarning("Cibler : " + ex.Message); }
         }
@@ -204,7 +204,7 @@ namespace Guide
             }
             _trackerWasShown = showTracker;
             if (WindowOpen && !_pad.ConsumeSkipRepaint())
-                _window = GUILayout.Window(GetHashCode(), _window, DrawWindow, "Guide de progression");
+                _window = GUILayout.Window(GetHashCode(), _window, DrawWindow, L.T("Guide de progression"));
             Theme.End(prev);
         }
 
@@ -223,7 +223,7 @@ namespace Guide
             return true;
         }
 
-        private static string NeedTag(Need n) => n == Need.Required ? "" : n == Need.Advised ? "conseillé" : "optionnel";
+        private static string NeedTag(Need n) => n == Need.Required ? "" : n == Need.Advised ? L.T("conseillé") : "optionnel";
 
         private void DrawTracker(bool compact)
         {
@@ -267,7 +267,7 @@ namespace Guide
             {
                 // Mode réduit : la prochaine étape seulement
                 if (next.Count > 0) StepLine(chapter, next[0], true, false);
-                else Theme.ShadowLabel(Progress.ChapterDone(chapter) ? "Chapitre terminé" : "Tout est prêt : au combat !", _trackerLine);
+                else Theme.ShadowLabel(Progress.ChapterDone(chapter) ? L.T("Chapitre terminé") : L.T("Tout est prêt : au combat !"), _trackerLine);
                 GUILayout.EndVertical();
                 GUILayout.EndArea();
                 return;
@@ -277,7 +277,7 @@ namespace Guide
             if (_recentStep != null && _recentChapter == chapter && Time.unscaledTime - _recentTime < 5f) StepLine(chapter, _recentStep, false, true);
             else _recentStep = null;
             for (int i = 0; i < next.Count; i++) StepLine(chapter, next[i], i == 0, false);
-            if (next.Count == 0) Theme.ShadowLabel(Progress.ChapterDone(chapter) ? "Chapitre terminé" : "Tout est prêt : au combat !", _trackerLine);
+            if (next.Count == 0) Theme.ShadowLabel(Progress.ChapterDone(chapter) ? L.T("Chapitre terminé") : L.T("Tout est prêt : au combat !"), _trackerLine);
             GUILayout.Space(2f);
             GUILayout.EndVertical();
             GUILayout.EndArea();
@@ -341,7 +341,7 @@ namespace Guide
             GUILayout.BeginHorizontal();
             // ---- chapitres
             GUILayout.BeginVertical(GUI.skin.box, GUILayout.Width(300f), GUILayout.ExpandHeight(true));
-            GUILayout.Label("Chapitres", _h1);
+            GUILayout.Label(L.T("Chapitres"), _h1);
             _chapterScroll = _pad.BeginScrollView(_chapterScroll, GUILayout.ExpandHeight(true));
             int n = 1; int lockedShown = 0;
             foreach (var c in Chapters.All)
@@ -355,7 +355,7 @@ namespace Guide
                     {
                         int rest = 0; for (int k = Chapters.All.IndexOf(c); k < Chapters.All.Count; k++) if (!Progress.IsUnlocked(Chapters.All[k]) && Chapters.All[k] != _selected) rest++;
                         GUILayout.BeginHorizontal(); Theme.SpriteLayout(null, 30f);
-                        if (_pad.Button($"… {rest} chapitre(s) à venir", _chapterRow, GUILayout.Height(30))) _showLocked = true;
+                        if (_pad.Button(L.F("… {0} chapitre(s) à venir", rest), _chapterRow, GUILayout.Height(30))) _showLocked = true;
                         GUILayout.EndHorizontal();
                     }
                     n++; continue;
@@ -378,11 +378,11 @@ namespace Guide
             }
             _pad.EndScrollView();
             GUILayout.Space(4);
-            if (Progress.PinnedChapter == null) GUILayout.Label("Suivi automatique : le premier boss non vaincu.", _small);
-            else if (_pad.Button("Revenir au suivi automatique")) Progress.Pin(null);
+            if (Progress.PinnedChapter == null) GUILayout.Label(L.T("Suivi automatique : le premier boss non vaincu."), _small);
+            else if (_pad.Button(L.T("Revenir au suivi automatique"))) Progress.Pin(null);
             // Réglages du suivi HUD à portée de main : mode et position (préréglages)
             GUILayout.Space(6);
-            GUILayout.Label("Suivi à l'écran", _h2);
+            GUILayout.Label(L.T("Suivi à l'écran"), _h2);
             GUILayout.BeginHorizontal();
             foreach (TrackerMode m in Enum.GetValues(typeof(TrackerMode)))
                 if (_pad.Toggle(Mode.Value == m, ModeLabel(m), Theme.Skin.toggle, GUILayout.Width(86f)) && Mode.Value != m) { Mode.Value = m; _expandUntil = 0f; }
@@ -392,7 +392,7 @@ namespace Guide
                 if (i % 2 == 0) GUILayout.BeginHorizontal();
                 var p = s_presets[i];
                 bool sel = Mathf.Approximately(TrackerX.Value, p.Value.x) && Mathf.Approximately(TrackerY.Value, p.Value.y);
-                if (_pad.Toggle(sel, p.Key, Theme.Skin.toggle, GUILayout.Width(132f)) && !sel) { TrackerX.Value = p.Value.x; TrackerY.Value = p.Value.y; }
+                if (_pad.Toggle(sel, L.T(p.Key), Theme.Skin.toggle, GUILayout.Width(132f)) && !sel) { TrackerX.Value = p.Value.x; TrackerY.Value = p.Value.y; }
                 if (i % 2 == 1) GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
@@ -406,18 +406,18 @@ namespace Guide
             {
                 // Anti-spoiler : un chapitre non atteint ne montre ni titre, ni étapes, ni récompense.
                 int idx = Chapters.All.IndexOf(ch);
-                GUILayout.Label($"Chapitre {idx + 1}, verrouillé", _h1);
-                GUILayout.Label("Vous le découvrirez en terminant le chapitre précédent : c'est une progression, le guide ne dévoile rien d'avance.", _small);
+                GUILayout.Label(L.F("Chapitre {0}, verrouillé", idx + 1), _h1);
+                GUILayout.Label(L.T("Vous le découvrirez en terminant le chapitre précédent : c'est une progression, le guide ne dévoile rien d'avance."), _small);
                 GUILayout.Space(10);
-                GUILayout.Label("Vous pouvez quand même le révéler, cela dévoile le boss, ses préparatifs et ce qu'il débloque.", _small);
-                if (_pad.Button("Révéler ce chapitre (spoiler)", GUILayout.Width(280))) Progress.Reveal(ch);
+                GUILayout.Label(L.T("Vous pouvez quand même le révéler, cela dévoile le boss, ses préparatifs et ce qu'il débloque."), _small);
+                if (_pad.Button(L.T("Révéler ce chapitre (spoiler)"), GUILayout.Width(280))) Progress.Reveal(ch);
                 GUILayout.FlexibleSpace();
                 GUILayout.EndVertical();
                 GUILayout.EndHorizontal();
                 GUILayout.Space(6);
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
-                if (_pad.Button(Pad.Active ? "Fermer  (B)" : $"Fermer  ({ToggleKey.Value})", GUILayout.Width(140))) Close();
+                if (_pad.Button(Pad.Active ? L.T("Fermer  (B)") : L.F("Fermer  ({0})", ToggleKey.Value), GUILayout.Width(140))) Close();
                 GUILayout.EndHorizontal();
                 Pad.Hints(_small);
                 _pad.EndWindow();
@@ -429,16 +429,16 @@ namespace Guide
             if (chSprite != null) { Theme.SpriteLayout(chSprite, 34f); GUILayout.Space(6f); }
             GUILayout.Label(ch.DisplayTitle, _h1, GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
-            if (ch != current && _pad.Button("Suivre ce chapitre", GUILayout.Width(170))) Progress.Pin(ch.Id);
-            if (!string.IsNullOrEmpty(ch.Finder) && FinderAvailable() && _pad.Button("Cibler l'autel", GUILayout.Width(130))) Target(ch.Finder);
+            if (ch != current && _pad.Button(L.T("Suivre ce chapitre"), GUILayout.Width(170))) Progress.Pin(ch.Id);
+            if (!string.IsNullOrEmpty(ch.Finder) && FinderAvailable() && _pad.Button(L.T("Cibler l'autel"), GUILayout.Width(130))) Target(ch.Finder);
             GUILayout.EndHorizontal();
-            GUILayout.Label(ch.Intro, _small);
+            GUILayout.Label(ch.DisplayIntro, _small);
             // Barre d'avancement du chapitre, comme sur le suivi HUD
             int chDone = 0; foreach (var s in ch.Steps) if (Progress.Get(ch, s).Done) chDone++;
             GUILayout.BeginHorizontal();
             GUILayout.Label(GUIContent.none, GUILayout.ExpandWidth(true), GUILayout.Height(18f));
             if (Event.current.type == EventType.Repaint) { var br = GUILayoutUtility.GetLastRect(); Theme.ProgressBar(new Rect(br.x, br.y + 5f, br.width, 8f), ch.Steps.Count > 0 ? (float)chDone / ch.Steps.Count : 0f); }
-            GUILayout.Label(chDone + "/" + ch.Steps.Count + " étapes", _nowrap, GUILayout.Width(90f));
+            GUILayout.Label(chDone + "/" + ch.Steps.Count + L.T(" étapes"), _nowrap, GUILayout.Width(90f));
             GUILayout.EndHorizontal();
             GUILayout.Space(6);
 
@@ -448,7 +448,7 @@ namespace Guide
             Need? lastNeed = null;
             foreach (var s in OrderedSteps(ch)) // tri stable : obligatoires, puis conseillées, puis optionnelles
             {
-                if (lastNeed != s.Need) { lastNeed = s.Need; GUILayout.Label(s.Need == Need.Required ? "Obligatoire" : s.Need == Need.Advised ? "Conseillé" : "Optionnel", _h2); }
+                if (lastNeed != s.Need) { lastNeed = s.Need; GUILayout.Label(L.T(s.Need == Need.Required ? "Obligatoire" : s.Need == Need.Advised ? "Conseillé" : "Optionnel"), _h2); }
                 var st = Progress.Get(ch, s);
                 bool skipped = Progress.IsSkipped(ch, s);
                 GUILayout.BeginVertical(GUI.skin.box);
@@ -460,10 +460,10 @@ namespace Guide
                 if (skipped) { var mr = GUILayoutUtility.GetRect(16f, 20f, GUILayout.Width(16f), GUILayout.Height(20f)); if (Event.current.type == EventType.Repaint) Theme.DrawDiamond(new Rect(mr.x + 2f, mr.y + 4f, 12f, 12f), new Color(0.45f, 0.43f, 0.40f), false); }
                 else Marker(s.Need == Need.Required, st.Done);
                 string prog = st.Progress.Length > 0 && !st.Done ? $"  <color=#f5a847>{st.Progress}</color>" : "";
-                GUILayout.Label($"{s.DisplayTitle}{prog}" + (s.Volatile ? "  <size=12><color=#cfcabf>état du moment</color></size>" : ""), st.Done ? _stepDone : _step, GUILayout.ExpandWidth(true));
+                GUILayout.Label(s.DisplayTitle + prog + (s.Volatile ? "  <size=12><color=#cfcabf>" + L.T("état du moment") + "</color></size>" : ""), st.Done ? _stepDone : _step, GUILayout.ExpandWidth(true));
 
-                if (!st.Done && !string.IsNullOrEmpty(s.Finder) && FinderAvailable() && _pad.Button("Cibler", GUILayout.Width(70))) Target(s.Finder);
-                if (!st.Done && s.Need != Need.Required && _pad.Button(skipped ? "Rétablir" : "Ignorer", GUILayout.Width(80))) Progress.SetSkipped(ch, s, !skipped);
+                if (!st.Done && !string.IsNullOrEmpty(s.Finder) && FinderAvailable() && _pad.Button(L.T("Cibler"), GUILayout.Width(70))) Target(s.Finder);
+                if (!st.Done && s.Need != Need.Required && _pad.Button(L.T(skipped ? "Rétablir" : "Ignorer"), GUILayout.Width(80))) Progress.SetSkipped(ch, s, !skipped);
                 GUILayout.EndHorizontal();
                 if (!string.IsNullOrEmpty(s.DisplayDetail)) GUILayout.Label(s.DisplayDetail, _small);
                 GUILayout.EndVertical();
@@ -471,17 +471,17 @@ namespace Guide
                 if (s == nextStep && Event.current.type == EventType.Repaint) { var r = GUILayoutUtility.GetLastRect(); Theme.Fill(new Rect(r.x, r.y + 3f, 3f, r.height - 6f), Theme.Accent); }
             }
             _pad.EndScrollView();
-            GUILayout.Label("<b>Récompense :</b> " + (Progress.ChapterDone(ch) || !HideFuture.Value ? ch.Reward : "à découvrir en vainquant le boss."), _small);
+            GUILayout.Label(L.T("<b>Récompense :</b> ") + (Progress.ChapterDone(ch) || !HideFuture.Value ? ch.DisplayReward : L.T("à découvrir en vainquant le boss.")), _small);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
             GUILayout.Space(6);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Losange plein : obligatoire · creux : conseillé/optionnel · coche : fait, les étapes se cochent toutes seules d'après ce que le jeu enregistre.", _small);
+            GUILayout.Label(L.T("Losange plein : obligatoire · creux : conseillé/optionnel · coche : fait, les étapes se cochent toutes seules d'après ce que le jeu enregistre."), _small);
             GUILayout.FlexibleSpace();
-            if (_pad.Button(Pad.Active ? "Fermer  (B)" : $"Fermer  ({ToggleKey.Value})", GUILayout.Width(140))) Close();
+            if (_pad.Button(Pad.Active ? L.T("Fermer  (B)") : L.F("Fermer  ({0})", ToggleKey.Value), GUILayout.Width(140))) Close();
             GUILayout.EndHorizontal();
-            Pad.Hints(_small, $"<b>Échap</b> ou <b>{ToggleKey.Value}</b> fermer    <b>{TrackerKey.Value}</b> mode du suivi    <b>Cibler</b> lance le scanner et ferme le guide");
+            Pad.Hints(_small, L.F("<b>Échap</b> ou <b>{0}</b> fermer    <b>{1}</b> mode du suivi    <b>Cibler</b> lance le scanner et ferme le guide", ToggleKey.Value, TrackerKey.Value));
             _pad.EndWindow();
             GUI.DragWindow();
         }

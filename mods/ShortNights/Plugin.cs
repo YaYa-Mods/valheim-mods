@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using ModsCommon;
 
 namespace ShortNights
 {
@@ -25,11 +26,11 @@ namespace ShortNights
 
         private void Awake()
         {
-            Enabled = Config.Bind("General", "Enabled", true, "Active le mod (nuit raccourcie).");
+            Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod (nuit raccourcie)."));
             NightFraction = Config.Bind("General", "NightFraction", 0.15f,
                 new ConfigDescription(
-                    "Part du cycle jour/nuit occupée par la nuit. Vanilla : 0.30 (9 min sur 30). " +
-                    "0.15 = nuit deux fois plus courte (4,5 min), le jour récupère le temps gagné.",
+                    L.T("Part du cycle jour/nuit occupée par la nuit. Vanilla : 0.30 (9 min sur 30). ") +
+                    L.T("0.15 = nuit deux fois plus courte (4,5 min), le jour récupère le temps gagné."),
                     new AcceptableValueRange<float>(0.02f, 0.30f)));
 
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
