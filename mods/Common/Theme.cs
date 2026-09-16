@@ -78,10 +78,12 @@ namespace ModsCommon
         }
 
         /// <summary>Réserve une case carrée dans le layout courant et y dessine le sprite.</summary>
-        public static void SpriteLayout(Sprite sprite, float size)
+        /// <summary>Icône dans une mise en page ; rowHeight : hauteur de la ligne où la centrer verticalement (0 = sa propre taille).</summary>
+        public static void SpriteLayout(Sprite sprite, float size, float rowHeight = 0f)
         {
-            var r = GUILayoutUtility.GetRect(size, size, GUILayout.Width(size), GUILayout.Height(size));
-            if (Event.current.type == EventType.Repaint) DrawSprite(r, sprite);
+            float h = Mathf.Max(size, rowHeight);
+            var r = GUILayoutUtility.GetRect(size, h, GUILayout.Width(size), GUILayout.Height(h));
+            if (Event.current.type == EventType.Repaint) DrawSprite(new Rect(r.x, r.y + (h - size) * 0.5f, size, size), sprite);
         }
 
         /// <summary>Barre de progression fine : piste sombre, remplissage accent.</summary>

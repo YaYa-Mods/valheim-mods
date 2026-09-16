@@ -355,7 +355,7 @@ namespace Guide
                     if (lockedShown == 2)
                     {
                         int rest = 0; for (int k = Chapters.All.IndexOf(c); k < Chapters.All.Count; k++) if (!Progress.IsUnlocked(Chapters.All[k]) && Chapters.All[k] != _selected) rest++;
-                        GUILayout.BeginHorizontal(); Theme.SpriteLayout(null, 30f);
+                        GUILayout.BeginHorizontal(); Theme.SpriteLayout(null, 30f, 30f);
                         if (_pad.Button(L.F("… {0} chapitre(s) à venir", rest), _chapterRow, GUILayout.Height(30))) _showLocked = true;
                         GUILayout.EndHorizontal();
                     }
@@ -367,15 +367,9 @@ namespace Guide
                 int cd = 0; if (unlocked) foreach (var s in c.Steps) if (Progress.Get(c, s).Done) cd++;
                 string count = unlocked ? $"  <size=12><color=#cfcabf>{cd}/{c.Steps.Count}</color></size>" : "";
                 GUILayout.BeginHorizontal();
-                Theme.SpriteLayout(unlocked ? Facts.ChapterIcon(c) : null, 30f); // trophée du boss (rien tant que le chapitre est verrouillé : pas de spoiler)
+                Theme.SpriteLayout(unlocked ? Facts.ChapterIcon(c) : null, 30f, 36f); // trophée du boss (rien tant que le chapitre est verrouillé : pas de spoiler)
                 if (_pad.Toggle(sel, $"{mark}{n++}. {title}{count}", _chapterRow, GUILayout.Height(36)) && !sel) { _selected = c; _stepScroll = Vector2.zero; }
                 GUILayout.EndHorizontal();
-                // Fine barre d'avancement au bas de chaque chapitre atteint
-                if (unlocked && Event.current.type == EventType.Repaint)
-                {
-                    var rr = GUILayoutUtility.GetLastRect();
-                    Theme.ProgressBar(new Rect(rr.x + 10f, rr.yMax - 6f, rr.width - 20f, 3f), c.Steps.Count > 0 ? (float)cd / c.Steps.Count : 0f, done ? new Color(0.55f, 0.75f, 0.45f) : sel ? new Color(1f, 1f, 1f, 0.9f) : (Color?)null);
-                }
             }
             _pad.EndScrollView();
             GUILayout.Space(4);
@@ -458,7 +452,7 @@ namespace Guide
                 GUILayout.BeginHorizontal();
                 // Icône de l'objet ou de la construction concernés (lue dans ObjectDB / ZNetScene, en cache)
                 var stepIcon = Facts.StepIcon(s);
-                Theme.SpriteLayout(stepIcon, 26f); GUILayout.Space(4f); // case réservée même sans icône : les titres restent alignés
+                Theme.SpriteLayout(stepIcon, 26f, 30f); GUILayout.Space(4f); // case réservée même sans icône : les titres restent alignés
                 // Marqueur dessiné (coche verte / losange plein ou creux / rond gris si ignoré), même langage que le suivi HUD
                 if (skipped) { var mr = GUILayoutUtility.GetRect(16f, 20f, GUILayout.Width(16f), GUILayout.Height(20f)); if (Event.current.type == EventType.Repaint) Theme.DrawDiamond(new Rect(mr.x + 2f, mr.y + 4f, 12f, 12f), new Color(0.45f, 0.43f, 0.40f), false); }
                 else Marker(s.Need == Need.Required, st.Done);
