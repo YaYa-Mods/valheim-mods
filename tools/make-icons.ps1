@@ -148,3 +148,32 @@ New-Icon "$root\mods\ResourceFinder\Icons\track.png" {
     $g.DrawArc($pen, 14, 14, 100, 100, 300, 120)
     $g.DrawLine($pen, 100, 78, 112, 100); $g.DrawLine($pen, 100, 78, 78, 84)
 }
+
+# Catégories de l'inventaire : même langage graphique (trait clair) que les icônes de groupe du jeu,
+# pour les trois familles que le jeu n'illustre pas (matériaux, trophées, divers).
+# Lingots empilés (matériaux)
+New-Icon "$root\mods\Inventory\Icons\cat_materials.png" {
+    param($g, $pen, $brush, $pass)
+    $g.DrawPolygon($pen, [System.Drawing.Point[]]@([System.Drawing.Point]::new(30, 84), [System.Drawing.Point]::new(42, 66), [System.Drawing.Point]::new(86, 66), [System.Drawing.Point]::new(98, 84)))
+    $g.DrawPolygon($pen, [System.Drawing.Point[]]@([System.Drawing.Point]::new(18, 110), [System.Drawing.Point]::new(30, 92), [System.Drawing.Point]::new(62, 92), [System.Drawing.Point]::new(74, 110)))
+    $g.DrawPolygon($pen, [System.Drawing.Point[]]@([System.Drawing.Point]::new(58, 110), [System.Drawing.Point]::new(70, 92), [System.Drawing.Point]::new(102, 92), [System.Drawing.Point]::new(114, 110)))
+    $g.DrawPolygon($pen, [System.Drawing.Point[]]@([System.Drawing.Point]::new(44, 58), [System.Drawing.Point]::new(56, 40), [System.Drawing.Point]::new(84, 40), [System.Drawing.Point]::new(96, 58)))
+}
+
+# Bois de cerf sur écusson (trophées)
+New-Icon "$root\mods\Inventory\Icons\cat_trophies.png" {
+    param($g, $pen, $brush, $pass)
+    $g.DrawLine($pen, 64, 96, 64, 62)
+    $g.DrawLine($pen, 64, 62, 42, 40); $g.DrawLine($pen, 42, 40, 42, 22); $g.DrawLine($pen, 42, 40, 24, 32)
+    $g.DrawLine($pen, 64, 62, 86, 40); $g.DrawLine($pen, 86, 40, 86, 22); $g.DrawLine($pen, 86, 40, 104, 32)
+    $g.DrawArc($pen, 40, 84, 48, 32, 0, 180)
+}
+
+# Sacoche (divers)
+New-Icon "$root\mods\Inventory\Icons\cat_misc.png" {
+    param($g, $pen, $brush, $pass)
+    $g.DrawRectangle($pen, 26, 52, 76, 58)
+    $g.DrawArc($pen, 44, 24, 40, 44, 180, 180)
+    $g.DrawLine($pen, 26, 72, 102, 72)
+    if ($pass -eq 1) { $g.FillEllipse($brush, 58, 76, 12, 12) }
+}

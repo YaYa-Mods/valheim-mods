@@ -133,7 +133,7 @@ namespace InventoryMod
                 Sort(Player.m_localPlayer, Plugin.SortModeCfg.Value);
                 RefreshTools();
             });
-            row++; // petit espace
+            MakeSeparator(gui, row++); // trait fin : au-dessus les actions, en dessous les filtres par catégorie
             for (int f = -1; f < s_familyLabels.Length; f++)
             {
                 int fam = f;
@@ -150,13 +150,27 @@ namespace InventoryMod
             RefreshTools();
         }
 
+        /// <summary>Trait de séparation dans la colonne d'outils, à la place d'une simple case vide.</summary>
+        private static void MakeSeparator(InventoryGui gui, int row)
+        {
+            var go = new GameObject("ModToolSeparator", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(gui.m_player, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f); rt.pivot = new Vector2(0f, 1f);
+            rt.anchoredPosition = new Vector2(26f + ToolSize * 0.15f, -8f - row * (ToolSize + ToolGap) - ToolSize * 0.5f);
+            rt.sizeDelta = new Vector2(ToolSize * 0.7f, 2f);
+            var img = go.GetComponent<Image>();
+            img.color = new Color(0.62f, 0.46f, 0.22f, 0.75f);
+            img.raycastTarget = false;
+        }
+
         private static ToolButton MakeTool(InventoryGui gui, int row, Sprite icon, string tip, Action action)
         {
             var go = new GameObject("ModTool_" + row, typeof(RectTransform), typeof(Image), typeof(Button), typeof(UITooltip));
             go.transform.SetParent(gui.m_player, false);
             var rt = go.GetComponent<RectTransform>();
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f); rt.pivot = new Vector2(0f, 1f);
-            rt.anchoredPosition = new Vector2(16f, -8f - row * (ToolSize + ToolGap));
+            rt.anchoredPosition = new Vector2(26f, -8f - row * (ToolSize + ToolGap)); // écartée du cadre de l'inventaire
             rt.sizeDelta = new Vector2(ToolSize, ToolSize);
             var bg = go.GetComponent<Image>();
             bg.sprite = s_bgSprite; bg.type = Image.Type.Sliced; bg.color = s_bgNormal;
@@ -227,9 +241,10 @@ namespace InventoryMod
                 case 0: return ItemIcon("CookedMeat");
                 case 1: return ItemIcon("AxeBronze");
                 case 2: return ItemIcon("HelmetBronze");
-                case 3: return ItemIcon("Wood");
-                case 4: return ItemIcon("TrophyBoar");
-                default: return ItemIcon("Coins");
+                // Même langage graphique que les icônes de groupe du jeu (trait clair) plutôt que des vignettes d'objets
+                case 3: return Icon("@cat_materials.png");
+                case 4: return Icon("@cat_trophies.png");
+                default: return Icon("@cat_misc.png");
             }
         }
 
