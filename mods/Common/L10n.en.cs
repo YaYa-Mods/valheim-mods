@@ -325,6 +325,7 @@ namespace ModsCommon
             { "Couches sur la carte", "Map layers" },
             { "positions connues, conservées entre les sessions", "known positions, kept between sessions" },
             { "Résultats", "Results" },
+            { "{0} les plus proches sur {1}", "{0} nearest of {1}" },
             { "Catalogue", "Catalogue" },
             { "Recherche", "Search" },
             { "Chercher", "Search" },

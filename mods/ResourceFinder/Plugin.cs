@@ -582,7 +582,9 @@ namespace ResourceFinder
         private void DrawResults(Vector3 from)
         {
             GUILayout.BeginVertical(_panel, GUILayout.ExpandHeight(true));
-            GUILayout.Label(L.T("Résultats") + $"  <size=12><color=#cfcabf>({_shown.Count})</color></size>", _h1);
+            // Le scan peut avoir trouvé plus que ce qu'on affiche (liste bornée aux plus proches) : on le dit au lieu de laisser deux chiffres se contredire
+            string shownCount = _finder.Results.Count > _shown.Count ? L.F("{0} les plus proches sur {1}", _shown.Count, _finder.Results.Count) : _shown.Count.ToString();
+            GUILayout.Label(L.T("Résultats") + $"  <size=12><color=#cfcabf>({shownCount})</color></size>", _h1);
             _resultScroll = _pad.BeginScrollView(_resultScroll, GUILayout.ExpandHeight(true));
             foreach (var r in _shown)
             {
