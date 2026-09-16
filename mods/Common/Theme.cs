@@ -334,7 +334,7 @@ namespace ModsCommon
             // Fenêtre
             skin.window.normal.background = panel; skin.window.onNormal.background = panel;
             skin.window.border = new RectOffset(10, 10, 10, 10);
-            skin.window.padding = new RectOffset(14, 14, 30, 12);
+            skin.window.padding = new RectOffset(18, 18, 34, 16);
             skin.window.normal.textColor = Accent; skin.window.onNormal.textColor = Accent;
             skin.window.fontSize = s_title != null ? 20 : 15; skin.window.fontStyle = s_title != null ? FontStyle.Normal : FontStyle.Bold;
             if (s_title != null) skin.window.font = s_title;
@@ -351,7 +351,7 @@ namespace ModsCommon
             skin.button.active.background = btnActive; skin.button.focused.background = btn;
             skin.button.onNormal.background = btnOn; skin.button.onHover.background = btnOn;
             skin.button.onActive.background = btnActive; skin.button.onFocused.background = btnOn;
-            skin.button.border = b; skin.button.padding = new RectOffset(10, 10, 6, 6); skin.button.margin = new RectOffset(3, 3, 3, 3);
+            skin.button.border = b; skin.button.padding = new RectOffset(10, 10, 6, 6); skin.button.margin = new RectOffset(4, 4, 4, 4);
             skin.button.fontSize = 13;
             foreach (var s in new[] { skin.button.normal, skin.button.hover, skin.button.active, skin.button.focused,
                                       skin.button.onNormal, skin.button.onHover, skin.button.onActive, skin.button.onFocused })
@@ -362,7 +362,7 @@ namespace ModsCommon
             skin.toggle.focused.background = btn;
             skin.toggle.onNormal.background = btnOn; skin.toggle.onHover.background = btnOn; skin.toggle.onActive.background = btnActive;
             skin.toggle.onFocused.background = btnOn;
-            skin.toggle.border = b; skin.toggle.padding = new RectOffset(10, 10, 6, 6); skin.toggle.margin = new RectOffset(3, 3, 3, 3);
+            skin.toggle.border = b; skin.toggle.padding = new RectOffset(10, 10, 6, 6); skin.toggle.margin = new RectOffset(4, 4, 4, 4);
             skin.toggle.overflow = new RectOffset(); skin.toggle.fontSize = 13; skin.toggle.alignment = TextAnchor.MiddleCenter;
             foreach (var s in new[] { skin.toggle.normal, skin.toggle.hover, skin.toggle.active, skin.toggle.focused,
                                       skin.toggle.onNormal, skin.toggle.onHover, skin.toggle.onActive, skin.toggle.onFocused })

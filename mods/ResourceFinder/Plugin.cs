@@ -324,6 +324,7 @@ namespace ResourceFinder
         private readonly List<ResourceEntry> _visibleEntries = new List<ResourceEntry>();
         private float _clearArmedUntil;
         private readonly Dictionary<ResourceEntry, string> _rowText = new Dictionary<ResourceEntry, string>();
+        private readonly Dictionary<ResourceEntry, string> _rowTextOn = new Dictionary<ResourceEntry, string>(); // ligne sélectionnée : textes secondaires sombres
         private readonly Dictionary<Category, string> _catHeader = new Dictionary<Category, string>(); // « Cueillette  (5) » figé à chaque rafraîchissement
         private readonly List<ResourceEntry> _hiddenEntries = new List<ResourceEntry>();
         private bool _anyRevealed;
@@ -340,10 +341,11 @@ namespace ResourceFinder
             _small.normal.textColor = Theme.MutedColor;
             _h1 = new GUIStyle(Theme.H1); _h2 = new GUIStyle(Theme.H2); // Norsebold, comme partout
             _rowLabel = new GUIStyle(Theme.Skin.toggle) { alignment = TextAnchor.MiddleLeft, fontSize = 14 };
-            _rowLabel.padding = new RectOffset(10, 10, 0, 0); _rowLabel.margin = new RectOffset(3, 3, 2, 2);
+            _rowLabel.padding = new RectOffset(12, 12, 0, 0); _rowLabel.margin = new RectOffset(4, 4, 4, 4);
             _rowHidden = new GUIStyle(_rowLabel); _rowHidden.normal.textColor = Theme.MutedColor; _rowHidden.hover.textColor = Theme.MutedColor;
-            _panel = new GUIStyle(Theme.Skin.box) { padding = new RectOffset(12, 12, 8, 10) };
-            _h1.margin = new RectOffset(0, 0, 0, 6); _h2.margin = new RectOffset(0, 0, 8, 2);
+            _panel = new GUIStyle(Theme.Skin.box) { padding = new RectOffset(14, 14, 10, 14), margin = new RectOffset(0, 0, 0, 12) };
+            _h1.margin = new RectOffset(0, 0, 0, 10); _h2.margin = new RectOffset(0, 0, 14, 4);
+            _small.margin = new RectOffset(4, 4, 2, 6);
             _badge = new GUIStyle(Theme.Skin.label) { fontSize = 12, alignment = TextAnchor.MiddleCenter };
             _badge.normal.textColor = Theme.Accent;
             _tab = new GUIStyle(Theme.Skin.button) { fontSize = 13 };
@@ -359,9 +361,9 @@ namespace ResourceFinder
         {
             _nextCatalogRefresh = 0f; RefreshCatalog();
             int categories = 0; var seen = new HashSet<Category>(); foreach (var e in _visibleEntries) if (seen.Add(e.Category)) categories++;
-            float left = 120f + _visibleEntries.Count * 36f + categories * 28f + (_hiddenEntries.Count > 0 ? 44f : 0f) + (_showHidden ? _hiddenEntries.Count * 36f : 0f);
+            float left = 140f + _visibleEntries.Count * 42f + categories * 34f + (_hiddenEntries.Count > 0 ? 56f : 0f) + (_showHidden ? _hiddenEntries.Count * 42f : 0f);
             int results = Mathf.Min(_finder.Results.Count, Mathf.Max(1, ResultCount.Value));
-            float right = 130f + 70f + results * 36f + 60f + Mathf.Clamp(60f + Layers.All.Count * 36f, 90f, 230f);
+            float right = 140f + 80f + results * 42f + 70f + Mathf.Clamp(64f + Layers.All.Count * 38f, 96f, 240f);
             float h = Mathf.Clamp(Mathf.Max(left, right) + 120f, 520f, 920f);
             _window = Theme.CenteredWindow(1300f, h);
         }
@@ -389,7 +391,7 @@ namespace ResourceFinder
             }
             _catHeader.Clear();
             // Texte de chaque ligne figé ici : libellé + « révélé » + nombre d'épingles déjà posées pour cette ressource
-            _rowText.Clear(); _anyRevealed = false;
+            _rowText.Clear(); _rowTextOn.Clear(); _anyRevealed = false;
             foreach (var e in _visibleEntries)
             {
                 bool revealedOnly = HideUndiscovered.Value && !Discovery.IsDiscovered(e);
@@ -397,10 +399,10 @@ namespace ResourceFinder
                 var layer = Layers.Get(e.Label);
                 int pins = layer != null ? layer.Results.Count : 0;
                 string biomes = Discovery.BiomeText(e);
-                _rowText[e] = L.T(e.Label)
-                    + (revealedOnly ? L.T("   <size=12><color=#f5a847>révélé</color></size>") : "")
-                    + (biomes.Length > 0 ? L.T("   <size=12><color=#9a9488>") + biomes + "</color></size>" : "")
-                    + (pins > 0 ? L.T("   <size=12><color=#cfcabf>") + pins + L.T(" sur la carte</color></size>") : "");
+                string revealed = revealedOnly ? "   <size=12>{0}" + L.T("révélé") + "</color></size>" : "";
+                string extra = (biomes.Length > 0 ? "   <size=12>{1}" + biomes + "</color></size>" : "") + (pins > 0 ? "   <size=12>{1}" + pins + L.T(" sur la carte") + "</color></size>" : "");
+                _rowText[e] = L.T(e.Label) + revealed.Replace("{0}", "<color=#f5a847>") + extra.Replace("{1}", "<color=#c9c2b4>");
+                _rowTextOn[e] = L.T(e.Label) + revealed.Replace("{0}", "<color=#3a2a10>") + extra.Replace("{1}", "<color=#4a3a22>");
             }
             foreach (Category c in Enum.GetValues(typeof(Category)))
             {
@@ -423,7 +425,7 @@ namespace ResourceFinder
             DrawCatalog();
             GUILayout.EndVertical();
 
-            GUILayout.Space(10);
+            GUILayout.Space(16);
 
             // ------------------------------------------------ colonne droite : recherche, résultats, couches
             GUILayout.BeginVertical();
@@ -435,7 +437,7 @@ namespace ResourceFinder
             GUILayout.EndHorizontal();
 
             // ------------------------------------------------ pied
-            GUILayout.Space(10);
+            GUILayout.Space(6);
             GUILayout.BeginHorizontal();
             if (_pad.Button(L.T("Cible : la plus proche"))) _target = Nearest(_finder.Results, from);
             if (_pad.Button(L.T("Effacer la recherche"))) { _finder.Cancel(); _finder.Results.Clear(); _target = null; Tracking = false; }
@@ -472,7 +474,7 @@ namespace ResourceFinder
                 if (_pad.Toggle(sel, Catalog.CategoryLabel(c), _tab) && !sel) { _category = (int)c; _nextCatalogRefresh = 0f; _catalogScroll = Vector2.zero; }
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(6);
+            GUILayout.Space(10);
 
             // Recherche libre (clavier seulement : à la manette on choisit dans la liste)
             if (!Pad.Active)
@@ -488,7 +490,7 @@ namespace ResourceFinder
                 GUILayout.EndHorizontal();
                 GUILayout.Label(L.T("Nom du catalogue (cuivre, or, autel…) ou nom interne du jeu (copper, Pickable_, Crypt)."), _small);
             }
-            GUILayout.Space(4);
+            GUILayout.Space(8);
 
             _catalogScroll = _pad.BeginScrollView(_catalogScroll, GUILayout.ExpandHeight(true));
             Category? lastCat = null;
@@ -497,10 +499,10 @@ namespace ResourceFinder
                 if (_category < 0 && lastCat != e.Category) { lastCat = e.Category; GUILayout.Label(_catHeader[e.Category], _h2); }
                 bool revealedOnly = HideUndiscovered.Value && !Discovery.IsDiscovered(e);
                 GUILayout.BeginHorizontal();
-                Icons.DrawLayout(Icons.ForEntry(e), 28f);
+                Icons.DrawLayout(Icons.ForEntry(e), 28f, 42f);
                 // La ressource en cours de recherche reste surlignée dans le catalogue
                 bool isCurrent = e == _currentEntry && _finder.State != Finder.Phase.Idle;
-                if (_pad.Toggle(isCurrent, _rowText.TryGetValue(e, out var rowText) ? rowText : e.Label, _rowLabel, GUILayout.ExpandWidth(true), GUILayout.Height(34)) != isCurrent) StartSearch(e); // recliquer = relancer
+                if (_pad.Toggle(isCurrent, (isCurrent ? _rowTextOn : _rowText).TryGetValue(e, out var rowText) ? rowText : L.T(e.Label), _rowLabel, GUILayout.ExpandWidth(true), GUILayout.Height(34)) != isCurrent) StartSearch(e); // recliquer = relancer
                 if (revealedOnly) { if (_pad.Button("×", GUILayout.Width(34), GUILayout.Height(34))) Layers.SetRevealed(e.Label, false); }
                 else if (_anyRevealed) GUILayout.Space(40); // colonne du « × » réservée : les lignes gardent la même largeur
                 GUILayout.EndHorizontal();
@@ -509,14 +511,14 @@ namespace ResourceFinder
 
             if (_hiddenEntries.Count > 0)
             {
-                GUILayout.Space(10);
+                GUILayout.Space(14);
                 _showHidden = _pad.Toggle(_showHidden, L.F(" Non découverts ({0}), révéler brise l'immersion", _hiddenEntries.Count));
                 if (_showHidden)
                 {
                     foreach (var e in _hiddenEntries)
                     {
                         GUILayout.BeginHorizontal();
-                        Icons.DrawLayout(Icons.ForEntry(e), 28f);
+                        Icons.DrawLayout(Icons.ForEntry(e), 28f, 42f);
                         GUILayout.Label(L.T(e.Label), _rowHidden, GUILayout.ExpandWidth(true), GUILayout.Height(34));
                         if (_pad.Button(L.T("Révéler"), GUILayout.Width(90), GUILayout.Height(34))) Layers.SetRevealed(e.Label, true);
                         GUILayout.EndHorizontal();
@@ -578,10 +580,11 @@ namespace ResourceFinder
             {
                 GUILayout.BeginHorizontal();
                 bool isTarget = r == _target;
-                Icons.DrawLayout(r.IsLocation ? Icons.ForEntry(_currentEntry) : (Icons.ForPrefab(r.Prefab) ?? Icons.ForEntry(_currentEntry)), 28f);
+                Icons.DrawLayout(r.IsLocation ? Icons.ForEntry(_currentEntry) : (Icons.ForPrefab(r.Prefab) ?? Icons.ForEntry(_currentEntry)), 28f, 42f);
                 _pickInfo.TryGetValue(r, out var info);
                 // Toute la ligne est le bouton « cibler » (un seul élément à parcourir à la manette) ; la ligne ciblée reste surlignée
-                string row = (isTarget ? L.T("<color=#f5a847>►</color>  ") : "") + $"<b>{r.Distance(from):0} m</b> <color=#cfcabf>{Compass(from, r.Pos)}</color>   {DisplayName(r)}<color=#cfcabf>{info}</color>";
+                string sec = isTarget ? "#4a3a22" : "#c9c2b4";
+                string row = (isTarget ? "<color=#3a2a10>►</color>  " : "") + $"<b>{r.Distance(from):0} m</b> <color={sec}>{Compass(from, r.Pos)}</color>   {DisplayName(r)}<color={sec}>{info}</color>";
                 if (_pad.Toggle(isTarget, row, _rowLabel, GUILayout.ExpandWidth(true), GUILayout.Height(34)) && !isTarget) _target = r;
                 // Clic droit sur la ligne = grande carte centrée dessus (souris)
                 if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition)) { _target = r; Close(); ShowOnMap(r.Pos); Event.current.Use(); }
@@ -605,7 +608,7 @@ namespace ResourceFinder
             foreach (var l in Layers.All)
             {
                 GUILayout.BeginHorizontal();
-                Icons.DrawLayout(l.Icon(), 24f);
+                Icons.DrawLayout(l.Icon(), 26f, 38f);
                 GUILayout.Label($"{L.T(l.Label)}  <color=#d6d1c6>({l.Results.Count})</color>", GUILayout.ExpandWidth(true), GUILayout.Height(30));
                 bool vis = _pad.Toggle(l.Visible, L.T(l.Visible ? "Visible" : "Masquée"), GUILayout.Width(90), GUILayout.Height(30));
                 if (vis != l.Visible) Layers.SetVisible(l, vis);

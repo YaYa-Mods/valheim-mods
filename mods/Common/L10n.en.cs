@@ -291,6 +291,8 @@ namespace ModsCommon
             { "Fermer  ({0})", "Close  ({0})" },
             { "Obligatoire", "Required" },
             { "Chapitres", "Chapters" },
+            { "révélé", "revealed" },
+            { " sur la carte", " on the map" },
             { "# Lieux (ZoneSystem.m_locations)", "# Locations (ZoneSystem.m_locations)" },
             { "Optionnel", "Optional" },
             { "Ignorer", "Skip" },

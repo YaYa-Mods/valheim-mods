@@ -123,10 +123,12 @@ namespace ResourceFinder
         }
 
         /// <summary>Réserve une case carrée dans le layout courant et y dessine l'icône.</summary>
-        public static void DrawLayout(Sprite sprite, float size)
+        /// <summary>Icône dans une mise en page ; rowHeight : hauteur de la ligne (marges comprises) dans laquelle la centrer verticalement.</summary>
+        public static void DrawLayout(Sprite sprite, float size, float rowHeight = 0f)
         {
-            var r = GUILayoutUtility.GetRect(size, size, GUILayout.Width(size), GUILayout.Height(size));
-            if (Event.current.type == EventType.Repaint) Draw(r, sprite);
+            float h = Mathf.Max(size, rowHeight);
+            var r = GUILayoutUtility.GetRect(size, h, GUILayout.Width(size), GUILayout.Height(h));
+            if (Event.current.type == EventType.Repaint) Draw(new Rect(r.x, r.y + (h - size) * 0.5f, size, size), sprite);
         }
     }
 }
