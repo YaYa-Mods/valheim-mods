@@ -44,6 +44,7 @@ namespace HomeTeleport
             BlockWhenTargeted = Config.Bind("General", "BlockWhenTargeted", true, L.T("Refuser la téléportation quand un ennemi vous prend pour cible."));
             Cooldown = Config.Bind("General", "Cooldown", 0f, new ConfigDescription(L.T("Délai minimum (secondes) entre deux retours. 0 = aucun."), new AcceptableValueRange<float>(0f, 3600f)));
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
+            ScrollGuard.Install(Guid, () => DialogOpen);
             Log.LogInfo($"Home Teleport chargé (touche {Key.Value})");
         }
 

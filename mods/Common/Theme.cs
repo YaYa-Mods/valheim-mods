@@ -341,10 +341,11 @@ namespace ModsCommon
             skin.window.alignment = TextAnchor.UpperCenter;
 
             // Boîtes et libellés
-            skin.box.normal.background = box; skin.box.border = b; skin.box.padding = new RectOffset(8, 8, 6, 6);
+            skin.box.normal.background = box; skin.box.border = b; skin.box.padding = new RectOffset(12, 12, 10, 10);
+            skin.box.margin = new RectOffset(0, 0, 0, 8); // deux boîtes empilées ne se touchent jamais
             skin.box.normal.textColor = Text;
             skin.label.normal.textColor = Text; skin.label.fontSize = 13; skin.label.richText = true;
-            skin.label.padding = new RectOffset(2, 2, 3, 3);
+            skin.label.padding = new RectOffset(2, 2, 3, 3); skin.label.margin = new RectOffset(4, 4, 4, 4);
 
             // Boutons
             skin.button.normal.background = btn; skin.button.hover.background = btnHover;
@@ -383,9 +384,10 @@ namespace ModsCommon
 
             // Barres de défilement
             skin.verticalScrollbar.normal.background = track; skin.verticalScrollbar.fixedWidth = 10;
+            skin.verticalScrollbar.margin = new RectOffset(8, 0, 0, 0); // le contenu ne colle pas à la barre
             skin.verticalScrollbarThumb.normal.background = Bordered(new Color(0.40f, 0.34f, 0.24f, 1f), new Color(0.30f, 0.26f, 0.20f, 1f));
             skin.verticalScrollbarThumb.fixedWidth = 10;
-            skin.scrollView.normal.background = Solid(new Color(0, 0, 0, 0.25f)); skin.scrollView.padding = new RectOffset(4, 4, 4, 4);
+            skin.scrollView.normal.background = Solid(new Color(0, 0, 0, 0.25f)); skin.scrollView.padding = new RectOffset(8, 8, 8, 8);
 
             s_skin = skin;
         }

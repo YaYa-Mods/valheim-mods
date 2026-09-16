@@ -49,6 +49,7 @@ namespace ModHub
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             Harmony.CreateAndPatchAll(typeof(Radial), Guid);
             Harmony.CreateAndPatchAll(typeof(InventoryButtons), Guid);
+            ScrollGuard.Install(Guid, () => WindowOpen); // molette : faire défiler la liste, pas zoomer la caméra
             Logger.LogInfo($"Mod Hub chargé (touche {ToggleKey.Value})");
         }
 
@@ -228,7 +229,7 @@ namespace ModHub
                 else { _resetArmedFor = p; _resetArmedUntil = Time.unscaledTime + 3f; }
             }
             GUILayout.EndHorizontal();
-            GUILayout.Label(p.Instance.Config.ConfigFilePath, _desc);
+            GUILayout.Label(ShortConfigPath(p.Instance.Config.ConfigFilePath), _desc); // chemin relatif : une capture d'écran ne montre pas l'arborescence du joueur
             if (!Pad.Active)
             {
                 GUILayout.BeginHorizontal();
@@ -237,7 +238,7 @@ namespace ModHub
                 if (_pad.Button("×", GUILayout.Width(28))) _filter = "";
                 GUILayout.EndHorizontal();
             }
-            GUILayout.Space(4);
+            GUILayout.Space(8);
 
             _entryScroll = _pad.BeginScrollView(_entryScroll, GUILayout.ExpandHeight(true));
             foreach (var group in CachedSections(p, entries))
@@ -249,9 +250,18 @@ namespace ModHub
                 GUILayout.Label(group.Key, _section);
                 foreach (var entry in shown) DrawEntry(entry);
                 GUILayout.EndVertical();
-                GUILayout.Space(4);
+                GUILayout.Space(10);
             }
             _pad.EndScrollView();
+        }
+
+        /// <summary>Chemin du .cfg réduit à « BepInEx/config/… » : rien du dossier d'installation du joueur à l'écran.</summary>
+        private static string ShortConfigPath(string full)
+        {
+            if (string.IsNullOrEmpty(full)) return "";
+            string norm = full.Replace('\\', '/');
+            int i = norm.IndexOf("/BepInEx/", StringComparison.OrdinalIgnoreCase);
+            return i >= 0 ? norm.Substring(i + 1) : System.IO.Path.GetFileName(norm);
         }
 
         private bool Matches(ConfigEntryBase e)
@@ -287,8 +297,11 @@ namespace ModHub
             if (_pad.Button(L.T("défaut"), GUILayout.Width(62))) { entry.BoxedValue = entry.DefaultValue; _textBuffers.Remove(entry); } // (le glyphe ↺ n'existe pas dans la police du jeu)
             GUILayout.EndHorizontal();
             if (!string.IsNullOrEmpty(entry.Description?.Description))
+            {
+                GUILayout.Space(2);
                 GUILayout.Label(entry.Description.Description, _desc);
-            GUILayout.Space(6);
+            }
+            GUILayout.Space(14);
             GUILayout.EndVertical();
         }
 

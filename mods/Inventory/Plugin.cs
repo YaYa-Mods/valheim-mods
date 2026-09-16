@@ -71,6 +71,7 @@ namespace InventoryMod
             Harmony.CreateAndPatchAll(typeof(Backup), Guid);
             Harmony.CreateAndPatchAll(typeof(Death), Guid);
             Harmony.CreateAndPatchAll(typeof(Grid), Guid);
+            ScrollGuard.Install(Guid, () => Enabled.Value && InventoryGui.IsVisible()); // molette : faire défiler la grille agrandie
             Log.LogInfo($"Inventory chargé (poids illimité={NoWeightLimit.Value}, piles={MaxStackSize.Value}, lignes={InventoryRows.Value})");
         }
 

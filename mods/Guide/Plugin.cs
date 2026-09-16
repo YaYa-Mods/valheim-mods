@@ -65,6 +65,7 @@ namespace Guide
             if (Mathf.Approximately(TrackerX.Value, -330f)) TrackerX.Value = -350f; // ancien défaut (suivi de 310 px) : suit l'élargissement à 330 px
             Progress.StepCompleted += OnStepCompleted;
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
+            ScrollGuard.Install(Guid, () => WindowOpen); // molette : faire défiler la liste, pas zoomer la caméra
             Log.LogInfo($"Guide chargé ({Chapters.All.Count} chapitres, touche {ToggleKey.Value})");
         }
 
@@ -448,7 +449,7 @@ namespace Guide
             Need? lastNeed = null;
             foreach (var s in OrderedSteps(ch)) // tri stable : obligatoires, puis conseillées, puis optionnelles
             {
-                if (lastNeed != s.Need) { lastNeed = s.Need; GUILayout.Label(L.T(s.Need == Need.Required ? "Obligatoire" : s.Need == Need.Advised ? "Conseillé" : "Optionnel"), _h2); }
+                if (lastNeed != s.Need) { if (lastNeed != null) GUILayout.Space(8); lastNeed = s.Need; GUILayout.Label(L.T(s.Need == Need.Required ? "Obligatoire" : s.Need == Need.Advised ? "Conseillé" : "Optionnel"), _h2); GUILayout.Space(2); }
                 var st = Progress.Get(ch, s);
                 bool skipped = Progress.IsSkipped(ch, s);
                 GUILayout.BeginVertical(GUI.skin.box);
@@ -465,12 +466,13 @@ namespace Guide
                 if (!st.Done && !string.IsNullOrEmpty(s.Finder) && FinderAvailable() && _pad.Button(L.T("Cibler"), GUILayout.Width(70))) Target(s.Finder);
                 if (!st.Done && s.Need != Need.Required && _pad.Button(L.T(skipped ? "Rétablir" : "Ignorer"), GUILayout.Width(80))) Progress.SetSkipped(ch, s, !skipped);
                 GUILayout.EndHorizontal();
-                if (!string.IsNullOrEmpty(s.DisplayDetail)) GUILayout.Label(s.DisplayDetail, _small);
+                if (!string.IsNullOrEmpty(s.DisplayDetail)) { GUILayout.Space(2); GUILayout.Label(s.DisplayDetail, _small); }
                 GUILayout.EndVertical();
                 // La prochaine étape à faire porte un liseré accentué à gauche (même repère que le suivi HUD)
                 if (s == nextStep && Event.current.type == EventType.Repaint) { var r = GUILayoutUtility.GetLastRect(); Theme.Fill(new Rect(r.x, r.y + 3f, 3f, r.height - 6f), Theme.Accent); }
             }
             _pad.EndScrollView();
+            GUILayout.Space(10);
             GUILayout.Label(L.T("<b>Récompense :</b> ") + (Progress.ChapterDone(ch) || !HideFuture.Value ? ch.DisplayReward : L.T("à découvrir en vainquant le boss.")), _small);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();

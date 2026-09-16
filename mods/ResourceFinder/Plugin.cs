@@ -97,6 +97,7 @@ namespace ResourceFinder
                 L.T("Les autres peuvent être révélés un par un dans la fenêtre."));
 
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
+            ScrollGuard.Install(Guid, () => WindowOpen); // molette : faire défiler la liste, pas zoomer la caméra
             Log.LogInfo($"Resource Finder chargé (touche {ToggleKey.Value})");
         }
 
@@ -363,7 +364,7 @@ namespace ResourceFinder
             int categories = 0; var seen = new HashSet<Category>(); foreach (var e in _visibleEntries) if (seen.Add(e.Category)) categories++;
             float left = 140f + _visibleEntries.Count * 42f + categories * 34f + (_hiddenEntries.Count > 0 ? 56f : 0f) + (_showHidden ? _hiddenEntries.Count * 42f : 0f);
             int results = Mathf.Min(_finder.Results.Count, Mathf.Max(1, ResultCount.Value));
-            float right = 140f + 80f + results * 42f + 70f + Mathf.Clamp(64f + Layers.All.Count * 38f, 96f, 240f);
+            float right = 150f + 90f + results * 42f + 80f + Mathf.Clamp(88f + Layers.All.Count * 42f, 124f, 260f);
             float h = Mathf.Clamp(Mathf.Max(left, right) + 120f, 520f, 920f);
             _window = Theme.CenteredWindow(1300f, h);
         }
@@ -601,7 +602,7 @@ namespace ResourceFinder
         private void DrawLayers(Vector3 from, bool fill)
         {
             if (fill) GUILayout.BeginVertical(_panel, GUILayout.ExpandHeight(true));
-            else GUILayout.BeginVertical(_panel, GUILayout.Height(Mathf.Clamp(64f + Layers.All.Count * 38f, 96f, 240f)));
+            else GUILayout.BeginVertical(_panel, GUILayout.Height(Mathf.Clamp(88f + Layers.All.Count * 42f, 124f, 260f)));
             GUILayout.Label(L.T("Couches sur la carte") + $"  <size=12><color=#cfcabf>({Layers.All.Count}), " + L.T("positions connues, conservées entre les sessions") + "</color></size>", _h1);
             _layerScroll = _pad.BeginScrollView(_layerScroll);
             Layer toRemove = null;

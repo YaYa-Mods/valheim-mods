@@ -2,6 +2,7 @@
   <ItemGroup>
     <Compile Include="..\Common\L10n.cs" />
     <Compile Include="..\Common\L10n.en.cs" />
+    <Compile Include="..\Common\ScrollGuard.cs" />
     <Compile Include="..\Common\Theme.cs" />
     <EmbeddedResource Include="Icons/*.png" LogicalName="%(Filename)%(Extension)" />
   </ItemGroup>
