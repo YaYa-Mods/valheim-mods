@@ -118,10 +118,20 @@ namespace ModHub
         }
 
         private static readonly List<KeyValuePair<string, KeyCode>> s_collected = new List<KeyValuePair<string, KeyCode>>();
+        /// <summary>Ordre d'affichage : ce qui sert le plus souvent en jeu d'abord, sinon l'ordre de chargement des plugins (arbitraire).</summary>
+        private static readonly string[] s_hintOrder = { "vmods.resourcefinder", "vmods.guide", "vmods.hometeleport", "vmods.inventory" };
+        private static int HintRank(string guid)
+        {
+            int i = Array.IndexOf(s_hintOrder, guid);
+            return i >= 0 ? i : s_hintOrder.Length;
+        }
+
         private static List<KeyValuePair<string, KeyCode>> Collect()
         {
             s_collected.Clear();
-            foreach (var info in Chainloader.PluginInfos.Values)
+            var plugins = new List<BepInEx.PluginInfo>(Chainloader.PluginInfos.Values);
+            plugins.Sort((a, b) => HintRank(a.Metadata.GUID).CompareTo(HintRank(b.Metadata.GUID)));
+            foreach (var info in plugins)
             {
                 if (info.Instance == null) continue;
                 var m = info.Instance.GetType().GetMethod("KeyHints", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);

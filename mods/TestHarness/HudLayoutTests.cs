@@ -102,6 +102,31 @@ namespace TestHarness
             xCfg.Value = prevX; yCfg.Value = prevY; modeCfg.BoxedValue = prevMode;
             yield return new WaitForSecondsRealtime(0.3f);
 
+            // ---- colonne d'outils de l'inventaire : elle ne doit recouvrir aucun élément du panneau du jeu
+            InventoryGui.instance.Show(null, 1);
+            yield return new WaitForSecondsRealtime(0.8f);
+            var gameParts = new List<KeyValuePair<string, Rect>>();
+            var gui = InventoryGui.instance;
+            Add(gameParts, "tout prendre", gui.m_takeAllButton);
+            Add(gameParts, "tout empiler", gui.m_stackAllButton);
+            Add(gameParts, "poids", gui.m_weight);
+            Add(gameParts, "grille du joueur", gui.m_player != null ? gui.m_player.GetComponentInChildren<UnityEngine.UI.Image>() : null);
+            var tools = new List<KeyValuePair<string, Rect>>();
+            foreach (var t in gui.m_player.GetComponentsInChildren<RectTransform>(false))
+                if (t.name.StartsWith("ModTool", StringComparison.Ordinal)) Add(tools, t.name, t);
+            Plugin.Log.LogInfo($"[TEST] outils de l'inventaire : {tools.Count}, éléments du jeu relevés : {string.Join(", ", gameParts.Select(p => p.Key))}");
+            var clash = new List<string>();
+            foreach (var t in tools)
+                foreach (var g in gameParts)
+                    if (g.Key != "grille du joueur" && g.Value.Overlaps(t.Value)) clash.Add($"{t.Key} sur {g.Key}");
+            h.Check("Inventaire.colonne d'outils dégagée", tools.Count >= 8 && clash.Count == 0, $"{tools.Count} outils, chevauchements : {(clash.Count == 0 ? "aucun" : string.Join(" + ", clash))}");
+            bool onScreenTools = tools.TrueForAll(t => t.Value.xMax <= Screen.width && t.Value.xMin >= 0f && t.Value.yMin >= 0f && t.Value.yMax <= Screen.height);
+            h.Check("Inventaire.colonne d'outils entièrement à l'écran", onScreenTools, string.Join(", ", tools.Select(t => $"{t.Key} {t.Value.x:0},{t.Value.y:0}")));
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "inventory_toolbar.png"));
+            yield return new WaitForSecondsRealtime(0.6f);
+            gui.Hide();
+            yield return new WaitForSecondsRealtime(0.4f);
+
             // ---- pastille du scanner : tous les cas de bord, avec et sans panneau à éviter
             var place = Asm("ResourceFinder").GetType("ResourceFinder.Plugin").GetMethod("PlacePill", BindingFlags.NonPublic | BindingFlags.Static);
             if (place == null) { h.Check("Pastille.fonction de placement", false, "PlacePill introuvable"); yield break; }

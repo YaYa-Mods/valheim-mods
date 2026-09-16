@@ -321,7 +321,7 @@ namespace ResourceFinder
 
         // ------------------------------------------------------------------ interface
 
-        private GUIStyle _h1, _h2, _rowLabel, _rowHidden, _panel, _badge, _tab;
+        private GUIStyle _h1, _h2, _rowLabel, _rowHidden, _panel, _badge, _tab, _foldLine;
         private int _category = -1;          // -1 = tout
         private readonly List<ResourceEntry> _visibleEntries = new List<ResourceEntry>();
         private float _clearArmedUntil;
@@ -345,6 +345,9 @@ namespace ResourceFinder
             _rowLabel = new GUIStyle(Theme.Skin.toggle) { alignment = TextAnchor.MiddleLeft, fontSize = 14 };
             _rowLabel.padding = new RectOffset(12, 12, 0, 0); _rowLabel.margin = new RectOffset(4, 4, 4, 4);
             _rowHidden = new GUIStyle(_rowLabel); _rowHidden.normal.textColor = Theme.MutedColor; _rowHidden.hover.textColor = Theme.MutedColor;
+            _foldLine = new GUIStyle(Theme.Skin.label) { fontSize = 13, alignment = TextAnchor.MiddleLeft, wordWrap = false };
+            _foldLine.normal.textColor = Theme.MutedColor; _foldLine.hover.textColor = Theme.Accent; _foldLine.onNormal.textColor = Theme.Accent; _foldLine.onHover.textColor = Theme.Accent;
+            _foldLine.padding = new RectOffset(4, 4, 4, 4);
             _panel = new GUIStyle(Theme.Skin.box) { padding = new RectOffset(14, 14, 10, 14), margin = new RectOffset(0, 0, 0, 12) };
             _h1.margin = new RectOffset(0, 0, 0, 10); _h2.margin = new RectOffset(0, 0, 14, 4);
             _small.margin = new RectOffset(4, 4, 2, 6);
@@ -515,7 +518,8 @@ namespace ResourceFinder
             if (_hiddenEntries.Count > 0)
             {
                 GUILayout.Space(14);
-                _showHidden = _pad.Toggle(_showHidden, L.F(" Non découverts ({0}), révéler brise l'immersion", _hiddenEntries.Count));
+                // Ligne discrète plutôt qu'un gros bouton : c'est un repli, pas une action courante
+                _showHidden = _pad.Toggle(_showHidden, (_showHidden ? "▾ " : "▸ ") + L.F("Non découverts ({0}), révéler brise l'immersion", _hiddenEntries.Count), _foldLine);
                 if (_showHidden)
                 {
                     foreach (var e in _hiddenEntries)

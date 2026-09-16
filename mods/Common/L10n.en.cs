@@ -22,6 +22,7 @@ namespace ModsCommon
             { " Créature : rien de chargé autour de vous, seules celles présentes dans le monde sont détectées.", " Creature: nothing loaded around you; only creatures present in the world are detected." },
             { " Créatures : seules celles présentes dans le monde sont détectées.", " Creatures: only those present in the world are detected." },
             { " Non découverts ({0}), révéler brise l'immersion", " Undiscovered ({0}), revealing breaks immersion" },
+            { "Non découverts ({0}), révéler brise l'immersion", "Undiscovered ({0}), revealing breaks immersion" },
             { " activé", " enabled" },
             { " désactivé", " disabled" },
             { " sur la carte</color></size>", " on the map</color></size>" },
