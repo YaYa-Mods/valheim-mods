@@ -1,0 +1,7 @@
+<!-- Copiez ce fichier en « Directory.Build.props.user » (ignoré par git) si Valheim n'est pas dans le dossier Steam par défaut,
+     ou définissez la variable d'environnement VALHEIM_DIR. -->
+<Project>
+  <PropertyGroup>
+    <ValheimDir>D:\Games\Steam\steamapps\common\Valheim</ValheimDir>
+  </PropertyGroup>
+</Project>

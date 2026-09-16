@@ -1,0 +1,20 @@
+# Sorties de compilation
+**/bin/
+**/obj/
+*.user
+.vs/
+
+# Sources amont (BepInEx, Doorstop) : dépôts séparés, voir tools/build-bepinex.ps1 / build-doorstop.ps1
+tools/BepInEx-src/
+tools/UnityDoorstop-src/
+tools/dist/
+
+# Données personnelles / locales : sauvegardes de mondes, captures d'écran, journal de développement, logs
+backups/
+docs/
+*.log
+Lancer Valheim.bat
+
+# Configurations BepInEx propres à la machine
+*.cfg
+mods/Directory.Build.props.user

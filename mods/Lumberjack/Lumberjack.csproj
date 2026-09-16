@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Lumberjack</AssemblyName>
+    <RootNamespace>Lumberjack</RootNamespace>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+</Project>

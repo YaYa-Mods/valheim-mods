@@ -1,0 +1,67 @@
+# YaYa's Valheim mods
+
+A set of BepInEx mods for Valheim, built from source against the game's own assemblies, no downloaded binaries,
+no external dependencies beyond BepInEx and Harmony. In-game UI is in **French**.
+
+| Mod | What it does |
+|-----|--------------|
+| **Resource Finder** | Scanner window (F7) with a catalogue of ores, pickables, trees, locations and creatures. Finds the nearest ones in the known world, can generate unexplored zones to look further, pins results on the map, points at the target on screen (pill + minimap marker + glowing silhouette), **track mode** (F4) that chains to the next target when one is harvested or killed. Discovery by sight: what you look at or fight becomes visible in the catalogue. |
+| **Guide** | Progression guide: one chapter per boss, steps that check themselves from what the game records (crafted items, placed pieces, kills, explored locations…), an on-screen quest tracker (full / compact / hidden, F11), a journal window (F10), anti-spoiler locking of future chapters. Offerings, recipes and building costs are read from the game data, not hard-coded. |
+| **Mod Hub** | In-game configuration of every mod (F9), a “Mods” group in the radial menu, mod buttons in the inventory panel, mod key hints in the game's own key-hint bar. |
+| **Inventory** | Larger, scrollable inventory (up to 40 rows), sorting (category / name / quantity / weight), stacking, category filter toolbar, keep inventory and skills on death, tombstone recovery, bigger stacks and carry weight. |
+| **Craft From Chests** | Crafting stations and the crafting menu use materials from nearby chests. |
+| **Home Teleport** | F8: teleport to your bed (with confirmation). |
+| **Lumberjack** | Woodcutting skill matters: high level fells trees in one hit and auto-cuts logs. |
+| **Longer Food** | Food lasts longer (× factor, configurable). |
+| **No Durability** | Tools, weapons and armour never wear out. |
+| **Short Nights** | Shorter nights without changing the day length. |
+| **Movement** | Faster running, jogging and swimming. |
+| **Quick Start** | Skip the intro, auto-load a character and world. |
+| **Test Harness** | *(developers)* In-game integration tests with screenshots, run on a dedicated test character/world. |
+
+All mods share `mods/Common` (IMGUI theme using the game's own fonts, gamepad navigation) and talk to each other only by
+reflection (`RadialEntries()`, `InventoryEntries()`, `KeyHints()`, `SearchLabel()`), so every DLL works alone.
+
+## Building
+
+Requirements: .NET SDK (8+), Valheim installed, BepInEx 5 installed in the game folder (`BepInEx/core`).
+
+```powershell
+# game folder: environment variable VALHEIM_DIR, or copy mods/Directory.Build.props.user.example
+#              to mods/Directory.Build.props.user and edit the path
+dotnet build mods/ResourceFinder -c Release -p:Deploy=true   # builds and copies the DLL to BepInEx/plugins
+tools/rebuild-all.ps1                                          # everything
+```
+
+BepInEx itself can be compiled from source with `tools/build-bepinex.ps1` / `tools/build-doorstop.ps1` (they clone the
+upstream repositories into `tools/`, which is git-ignored).
+
+## Tests
+
+`tools/run-tests.ps1 -Quick` launches the game on a dedicated **test character and world** (`ModTester` / `ModTestWorld`,
+local saves, created automatically), runs the harness (~55 checks: gamepad navigation, map pins, creature search,
+inventory, guide, catalogue audit against the game's placement tables, track mode…), captures screenshots into
+`BepInEx/config`, then closes the game without saving. The harness refuses to run on any other character or world.
+
+## License
+
+MIT, see `LICENSE`.
+
+---
+
+## En français
+
+Douze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du jeu. Interface en français.
+
+- **Resource Finder** (F7) : scanner de ressources, lieux et créatures ; épingles sur la carte ; cible à l'écran ;
+  mode **Traque** (F4) qui enchaîne les cibles ; découverte par la vue.
+- **Guide** (F10) : guide de progression par boss, étapes cochées automatiquement d'après le jeu, suivi de quête à
+  l'écran (F11 : complet / réduit / masqué), anti-spoiler.
+- **Mod Hub** (F9) : configuration en jeu, roue d'action, boutons dans l'inventaire, aides de touches.
+- **Inventory** : inventaire agrandi et défilant, tri, empilage, filtre par catégorie, mort sans perte (objets et
+  compétences).
+- **Craft From Chests**, **Home Teleport** (F8), **Lumberjack**, **Longer Food**, **No Durability**, **Short Nights**,
+  **Movement**, **Quick Start**.
+
+Compilation : `dotnet build mods/<Mod> -c Release -p:Deploy=true` (dossier du jeu : variable `VALHEIM_DIR` ou
+`mods/Directory.Build.props.user`). Tests en jeu : `tools/run-tests.ps1 -Quick` (personnage et monde de test dédiés).

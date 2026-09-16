@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="..\Common\Theme.cs" />
+    <Compile Include="..\Common\Pad.cs" />
+    <EmbeddedResource Include="Icons/*.png" LogicalName="%(Filename)%(Extension)" />
+  </ItemGroup>
+  <PropertyGroup>
+    <AssemblyName>HomeTeleport</AssemblyName>
+    <RootNamespace>HomeTeleport</RootNamespace>
+    <Version>1.1.0</Version>
+  </PropertyGroup>
+</Project>
