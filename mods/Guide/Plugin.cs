@@ -433,7 +433,9 @@ namespace Guide
             if (ch != current && _pad.Button(L.T("Suivre ce chapitre"), GUILayout.Width(170))) Progress.Pin(ch.Id);
             if (!string.IsNullOrEmpty(ch.Finder) && FinderAvailable() && _pad.Button(L.T("Cibler l'autel"), GUILayout.Width(130))) Target(ch.Finder);
             GUILayout.EndHorizontal();
+            GUILayout.Space(4);
             GUILayout.Label(ch.DisplayIntro, _small);
+            GUILayout.Space(8);
             // Barre d'avancement du chapitre, comme sur le suivi HUD
             int chDone = 0; foreach (var s in ch.Steps) if (Progress.Get(ch, s).Done) chDone++;
             GUILayout.BeginHorizontal();
@@ -441,7 +443,7 @@ namespace Guide
             if (Event.current.type == EventType.Repaint) { var br = GUILayoutUtility.GetLastRect(); Theme.ProgressBar(new Rect(br.x, br.y + 5f, br.width, 8f), ch.Steps.Count > 0 ? (float)chDone / ch.Steps.Count : 0f); }
             GUILayout.Label(chDone + "/" + ch.Steps.Count + L.T(" étapes"), _nowrap, GUILayout.Width(90f));
             GUILayout.EndHorizontal();
-            GUILayout.Space(6);
+            GUILayout.Space(12);
 
             var nextSteps = Progress.Next(ch, 1);
             var nextStep = nextSteps.Count > 0 ? nextSteps[0] : null;

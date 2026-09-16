@@ -334,7 +334,10 @@ namespace ModsCommon
             // Fenêtre
             skin.window.normal.background = panel; skin.window.onNormal.background = panel;
             skin.window.border = new RectOffset(10, 10, 10, 10);
-            skin.window.padding = new RectOffset(18, 18, 34, 16);
+            // IMGUI dessine le titre à la même hauteur que le début du contenu : la marge haute ouvre la bande du titre
+            // et contentOffset y remonte le texte, sinon titre et premier panneau se touchent.
+            skin.window.padding = new RectOffset(18, 18, 56, 18);
+            skin.window.contentOffset = new Vector2(0f, -40f);
             skin.window.normal.textColor = Accent; skin.window.onNormal.textColor = Accent;
             skin.window.fontSize = s_title != null ? 20 : 15; skin.window.fontStyle = s_title != null ? FontStyle.Normal : FontStyle.Bold;
             if (s_title != null) skin.window.font = s_title;
