@@ -351,6 +351,7 @@ namespace ModsCommon
             { "Masquer les épingles", "Hide the pins" },
             { "Afficher les épingles", "Show the pins" },
             { "Épingles du scanner effacées", "Scanner pins cleared" },
+            { "Effacer {0} épingle(s) du scanner ? Relancez pour confirmer.", "Clear {0} scanner pin(s)? Do it again to confirm." },
             { "Guidage arrêté (épingles conservées)", "Guidance stopped (pins kept)" },
             { "Traquer", "Track" },
             { "Traquer  ({0})", "Track  ({0})" },

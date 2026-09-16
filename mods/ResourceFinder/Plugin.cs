@@ -167,6 +167,15 @@ namespace ResourceFinder
             Player.m_localPlayer?.Message(MessageHud.MessageType.Center, L.T("Épingles du scanner effacées"));
         }
 
+        /// <summary>Depuis la roue d'action (pas de bouton « Confirmer ? » sous les yeux) : le premier appui prévient, le second efface.</summary>
+        private void ClearAllPinsConfirmed()
+        {
+            if (Time.unscaledTime < _clearArmedUntil) { ClearAllPins(); _clearArmedUntil = 0f; return; }
+            _clearArmedUntil = Time.unscaledTime + 5f;
+            int pins = 0; foreach (var l in Layers.All) pins += l.Results.Count;
+            Player.m_localPlayer?.Message(MessageHud.MessageType.Center, L.F("Effacer {0} épingle(s) du scanner ? Relancez pour confirmer.", pins));
+        }
+
         // Entrées du menu radial manette, lues par réflexion par Mod Hub : « libellé|icône » → action, l'icône étant
         // un prefab d'item ou « @fichier.png » embarqué dans cette DLL (dossier Icons).
         /// <summary>Aides de touches (panneau du jeu, via Mod Hub) : contextuelles, avec une cible, cible suivante et traque ; sinon ouvrir le scanner.</summary>
@@ -188,7 +197,7 @@ namespace ResourceFinder
             new KeyValuePair<string, Action>("Scanner de ressources|@scanner.png", () => { if (s_instance != null && Enabled.Value) { if (WindowOpen) s_instance.Close(); else s_instance.Open(); } }),
             new KeyValuePair<string, Action>("Cible suivante|@target.png", () => { if (s_instance != null && Enabled.Value && Player.m_localPlayer != null) s_instance.NextTarget(Player.m_localPlayer.transform.position); }),
             new KeyValuePair<string, Action>((Tracking ? "Arrêter la traque" : "Traquer") + "|@track.png", () => { if (s_instance != null && Enabled.Value) s_instance.ToggleTrack(); }),
-            new KeyValuePair<string, Action>("Effacer les épingles|@clear.png", () => { if (s_instance != null && Enabled.Value) s_instance.ClearAllPins(); }),
+            new KeyValuePair<string, Action>("Effacer les épingles|@clear.png", () => { if (s_instance != null && Enabled.Value) s_instance.ClearAllPinsConfirmed(); }),
         };
 
         /// <summary>Grande carte centrée sur un point, rapprochée (zoom borné par le jeu) pour voir tout de suite l'épingle et son entourage.</summary>

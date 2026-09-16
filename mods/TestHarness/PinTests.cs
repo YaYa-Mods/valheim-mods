@@ -103,6 +103,15 @@ namespace TestHarness
                 var rfInst = UnityEngine.Object.FindObjectOfType(rfT);
                 rfT.GetMethod("ClearAllPins", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(rfInst, null);
                 bool minePresent = Pins(map).Contains(mine);
+                // Depuis la roue : un seul appui ne doit rien effacer (pas de bouton « Confirmer ? » sous les yeux)
+                layersT.GetMethod("Merge").Invoke(null, new object[] { entry, list });
+                var confirmM = rfT.GetMethod("ClearAllPinsConfirmed", BindingFlags.NonPublic | BindingFlags.Instance);
+                int beforeRadial = all.Count;
+                confirmM.Invoke(rfInst, null);
+                bool keptAfterFirst = all.Count == beforeRadial;
+                confirmM.Invoke(rfInst, null);
+                h.Check("Épingles.roue d'action : confirmation demandée", beforeRadial > 0 && keptAfterFirst && all.Count == 0,
+                    $"couches {beforeRadial} → après 1 appui {(keptAfterFirst ? beforeRadial : all.Count)} → après 2 appuis {all.Count}");
                 h.Check("Épingles.effacer celles du mod, garder celles du joueur", layersBefore >= 1 && all.Count == 0 && minePresent,
                     $"couches {layersBefore}→{all.Count}, épingle joueur présente={minePresent}");
                 map.RemovePin(mine);
