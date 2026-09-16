@@ -6,6 +6,6 @@
   <PropertyGroup>
     <AssemblyName>LongerFood</AssemblyName>
     <RootNamespace>LongerFood</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 </Project>

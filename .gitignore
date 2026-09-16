@@ -8,6 +8,7 @@
 tools/BepInEx-src/
 tools/UnityDoorstop-src/
 tools/dist/
+dist/
 
 # Données personnelles / locales : sauvegardes de mondes, captures d'écran, journal de développement, logs
 backups/
