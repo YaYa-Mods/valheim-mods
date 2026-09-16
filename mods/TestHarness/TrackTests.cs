@@ -16,6 +16,19 @@ namespace TestHarness
     {
         private static Assembly Asm(string name) => AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetName().Name == name);
 
+        /// <summary>Le jeu affiche-t-il ses propres aides de touches ? (nos aides s'effacent devant elles, c'est voulu)</summary>
+        private static bool GameHintGroupActive()
+        {
+            var kh = KeyHints.instance;
+            if (kh == null) return false;
+            foreach (var name in new[] { "BuildHints", "CombatHints", "InventoryHints", "FishingHints", "RadialHints", "BarberHints" })
+            {
+                var g = kh.transform.Find(name);
+                if (g != null && g.gameObject.activeSelf) return true;
+            }
+            return false;
+        }
+
         public static IEnumerator Run(Plugin h, Player player)
         {
             var rfAsm = Asm("ResourceFinder");
@@ -61,6 +74,9 @@ namespace TestHarness
 
             // Aides de touches des mods dans le panneau du jeu : visibles quand le jeu n'affiche pas les siennes (mains vides)
             try { player.UnequipAllItems(); } catch { }
+            // Le panneau du jeu peut encore montrer ses propres aides (combat, construction) juste après : on laisse
+            // le temps qu'elles s'effacent, sinon on mesure l'état transitoire et non le comportement voulu.
+            for (int wait = 0; wait < 20 && GameHintGroupActive(); wait++) yield return new WaitForSecondsRealtime(0.25f);
             yield return new WaitForSecondsRealtime(1.2f);
             var modsHints = KeyHints.instance != null ? KeyHints.instance.transform.Find("ModsHints") : null;
             var texts = new List<string>();

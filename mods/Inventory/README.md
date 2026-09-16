@@ -18,6 +18,7 @@ A more comfortable inventory: bigger, sortable, filterable, and death without lo
   `FilterStyle`.
 - **Death**: keep the whole inventory (no tombstone) and keep your skills (the game normally removes 5% of each).
   Tombstones left in the world from before are emptied into your inventory on spawn and removed.
+- **Toolbar**: actions (sort, stack) then one button per category, in the same icon language as the game's action wheel. It disappears with the mod when you disable it, and the mouse wheel scrolls the grid instead of zooming the camera.
 - **Safety backup**: a copy of the inventory is written in the character data at every save; on load, anything lost
   (truncated stack, destroyed item) is restored. It survives removing the mod.
 

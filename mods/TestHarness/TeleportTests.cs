@@ -32,8 +32,6 @@ namespace TestHarness
             yield return new WaitForSecondsRealtime(1f);
             dialogF.SetValue(null, false);
             h.Check("HomeTeleport.confirmation avant départ", dialog && !player.IsTeleporting(), $"fenêtre={dialog}, téléportation lancée={player.IsTeleporting()}, ciblé={player.IsTargeted()}");
-            if (blockCfg != null) blockCfg.Value = blockPrev;
-
             var from = player.transform.position;
             t.GetMethod("GoHome", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
             float deadline = Time.time + 30f;
@@ -41,6 +39,7 @@ namespace TestHarness
             while (player.IsTeleporting() && Time.time < deadline) yield return null;
             yield return new WaitForSecondsRealtime(0.5f);
             float d = Vector3.Distance(player.transform.position, target);
+            if (blockCfg != null) blockCfg.Value = blockPrev; // rendu APRÈS le départ : une créature qui rôde bloquerait le retour
             h.Check("HomeTeleport.retour au lit", d < 6f, $"lit={profile.HaveCustomSpawnPoint()}, départ à {Vector3.Distance(from, target):0} m, arrivée à {d:0.#} m du point");
         }
     }

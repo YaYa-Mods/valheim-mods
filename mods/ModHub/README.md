@@ -15,6 +15,7 @@ One place to reach and configure every mod in game, without editing `.cfg` files
 - **Key hints**: the mods' shortcuts appear in the game's own key-hint panel (bottom right) when the game shows none of
   its own, so they never cover the game's hints. At most four are shown, and they follow the situation (for example
   "Next target" and "Track" only while a target exists).
+- **Disable everything**: the button gives the vanilla game back, panels included; re-enabling restores them.
 - **Welcome hint**: once per session, a few seconds after arriving in the world, a short reminder of how to reach the
   mods.
 

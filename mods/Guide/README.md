@@ -21,6 +21,7 @@ altar itself, recipes and building costs from the object database. The interface
   the Resource Finder scanner on the related catalogue entry (altar, crypt, village...) when that mod is installed.
 - **Anti-spoiler**: future chapters are locked (title, steps and reward hidden) until the previous boss is defeated.
   Any chapter can be revealed by hand.
+- **Ready-made positions**: below the map, top left, bottom left, bottom right. Each one is checked automatically against the game HUD (health and stamina bars, action bar, status effects, minimap, key hints) so a tracker never covers them, whatever the number of steps shown.
 - **Altar pin**: once the current chapter's altar lies in an explored part of the map, a boss pin is placed on it.
   Nothing is revealed that you have not seen.
 
@@ -46,7 +47,7 @@ Also in the action wheel (group Mods) and the inventory buttons (Mod Hub).
 | Tracker | Mode | Complet | Complet (full), Reduit (compact), Masque (hidden) |
 | Tracker | TrackerKey | F11 | Cycle the tracker mode |
 | Tracker | Steps | 4 | Steps shown under the objective |
-| Tracker | X, Y | -350, 290 | Tracker position (1080p units; negative X = from the right edge) |
+| Tracker | X, Y | -350, 290 | Tracker position (1080p units; negative X = from the right edge, negative Y = from the bottom, where the panel grows upwards and never covers the health bars) |
 
 ## Notes
 

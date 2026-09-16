@@ -891,10 +891,13 @@ namespace ResourceFinder
         // ---- place de la pastille : entièrement à l'écran, et à l'écart des panneaux des autres mods (suivi de quête…)
         private static MethodInfo[] s_hudRectProviders; private static float s_hudProvidersNext;
         private static readonly List<Rect> s_reserved = new List<Rect>();
+        private static int s_reservedFrame = -1; // OnGUI passe plusieurs fois par image : une seule interrogation par image
 
         /// <summary>Zones déjà occupées par les autres mods (convention : méthode statique publique « Rect[] HudRects() »).</summary>
         private static List<Rect> ReservedHudRects()
         {
+            if (s_reservedFrame == Time.frameCount) return s_reserved;
+            s_reservedFrame = Time.frameCount;
             if (Time.unscaledTime >= s_hudProvidersNext)
             {
                 s_hudProvidersNext = Time.unscaledTime + 5f;

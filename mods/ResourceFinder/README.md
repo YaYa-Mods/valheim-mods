@@ -62,6 +62,8 @@ Everything can also be changed in game with Mod Hub (F9).
 
 ## Notes
 
+- The mouse wheel scrolls the window's lists instead of zooming the camera, the way build mode frees it to rotate a piece.
+- The on-screen pill stays fully visible: near a screen edge it moves inward and shows an arrow towards the target, and it never lands on the creature name plate the game draws or on another mod's panel.
 - Dungeon interiors (crypts, caves, infested mines) are ignored: the entrance is what gets pinned.
 - The catalogue is checked against the game's own placement tables (spawn lists, vegetation, locations) by the test
   harness, so every entry can actually be found in a normal world.
@@ -79,6 +81,7 @@ proche. L'interface suit la langue du jeu.
   créatures) ou tapez un nom (nom du catalogue ou nom interne du jeu).
 - Le scanner cherche d'abord dans le **monde connu** ; s'il manque des résultats, un bouton propose de **chercher plus
   loin** en générant les zones inconnues (3 km par défaut), comme si vous y étiez passé.
+- La molette fait défiler les listes de la fenêtre sans zoomer la caméra ; la pastille à l'écran reste toujours entièrement lisible (flèche vers la cible quand elle est hors champ) et ne se pose ni sur le nom de créature du jeu ni sur un autre panneau.
 - Les résultats sont **épinglés sur la carte** (une couche par recherche, conservée entre les sessions) ; le plus proche
   est pointé à l'écran (pastille au-dessus de l'objet, repère au bord de la mini-carte, silhouette lumineuse).
 - **F6** : cible suivante sans ouvrir la fenêtre. Clic droit sur un résultat : le voir sur la grande carte.
