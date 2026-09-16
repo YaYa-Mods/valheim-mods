@@ -288,8 +288,9 @@ namespace ModsCommon
             return t;
         }
 
-        // Polices du jeu (assets Unity encore présents à côté des polices TMP) : Norsebold pour les titres, Averia Serif pour le texte
-        private static Font s_title, s_body;
+        // Polices du jeu (assets Unity encore présents à côté des polices TMP), relevées sur son interface : Norsebold pour les
+        // titres, AveriaSansLibre pour tout le texte courant (aides de touches, réglages, barre d'action) ; Averia Serif en secours.
+        private static Font s_title, s_body, s_fallback;
         private static bool s_fontsLooked;
         public static Font TitleFont { get { LookupFonts(); return s_title; } }
         public static Font BodyFont { get { LookupFonts(); return s_body; } }
@@ -303,8 +304,11 @@ namespace ModsCommon
                 {
                     if (f == null) continue;
                     if (f.name == "Norsebold") s_title = f;
-                    else if (f.name == "AveriaSerifLibre-Regular") s_body = f;
+                    else if (f.name == "AveriaSansLibre-Regular") s_body = f;
+                    else if (f.name == "AveriaSerifLibre-Regular") s_fallback = f;
                 }
+                if (s_body != null && !(s_body.HasCharacter('é') && s_body.HasCharacter('É') && s_body.HasCharacter('ç'))) s_body = null;
+                if (s_body == null) s_body = s_fallback;
             }
             catch { }
         }

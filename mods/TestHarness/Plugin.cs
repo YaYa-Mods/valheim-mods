@@ -252,6 +252,20 @@ namespace TestHarness
                 System.IO.File.WriteAllText(System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "keyhints.txt"), sbk.ToString());
             }
             catch (Exception ex) { Log.LogWarning("[TEST] keyhints : " + ex.Message); }
+            // Polices TMP réellement employées par l'interface du jeu : nom de police → exemples de textes qui l'utilisent
+            try
+            {
+                var byFont = new Dictionary<string, List<string>>();
+                foreach (var t in Resources.FindObjectsOfTypeAll<TMPro.TMP_Text>())
+                {
+                    if (t == null || t.font == null || string.IsNullOrEmpty(t.text) || !t.gameObject.scene.IsValid()) continue;
+                    if (!byFont.TryGetValue(t.font.name, out var l)) byFont[t.font.name] = l = new List<string>();
+                    if (l.Count < 12) l.Add(t.transform.parent != null ? t.transform.parent.name + "/" + t.name + "='" + t.text.Replace("\n", " ").Substring(0, Math.Min(25, t.text.Length)) + "'(" + t.fontSize + ")" : t.name);
+                }
+                foreach (var kv in byFont) Log.LogInfo($"[TEST] police TMP « {kv.Key} » : {kv.Value.Count}+ textes, ex. " + string.Join(" ; ", kv.Value));
+                Log.LogInfo("[TEST] TMP_FontAsset connus : " + string.Join(", ", Resources.FindObjectsOfTypeAll<TMPro.TMP_FontAsset>().Select(f => f.name + (f.sourceFontFile != null ? "(" + f.sourceFontFile.name + ")" : "")).Distinct()));
+            }
+            catch (Exception ex) { Log.LogWarning("[TEST] polices TMP : " + ex.Message); }
             try { Log.LogInfo("[TEST] polices Unity disponibles : " + string.Join(", ", Resources.FindObjectsOfTypeAll<Font>().Select(f => f.name + "(" + f.fontSize + ")").Distinct())); } catch (Exception ex) { Log.LogWarning("[TEST] polices : " + ex.Message); }
             if (Quick.Value)
             {
