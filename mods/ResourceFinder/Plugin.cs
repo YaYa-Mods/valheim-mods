@@ -571,7 +571,7 @@ namespace ResourceFinder
                     _finder.EstimateExtension(out int zones, out float secs);
                     string eta = secs < 90f ? $"{secs:0} s" : $"{secs / 60f:0.#} min";
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label(L.F("Seulement {0}/{1} dans {2:0} m.", _finder.Results.Count, ResultCount.Value, _finder.EffectiveRadius), _small);
+                    GUILayout.Label(L.F("Seulement {0}/{1} dans {2}.", _finder.Results.Count, ResultCount.Value, Finder.DistanceText(_finder.EffectiveRadius)), _small);
                     if (_pad.Button(L.F("Chercher plus loin (jusqu'à {0:0.#} km, ~{1} zones, ≈ {2})", ExtendedScanRadius.Value / 1000f, zones, eta))) _finder.Extend();
                     GUILayout.EndHorizontal();
                 }

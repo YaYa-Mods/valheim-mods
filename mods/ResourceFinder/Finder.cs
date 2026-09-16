@@ -59,6 +59,9 @@ namespace ResourceFinder
         public string Label { get; private set; } = "";
         public readonly List<Result> Results = new List<Result>();
         public string Status { get; private set; } = "";
+
+        /// <summary>Distance telle qu'on la lit en jeu : mètres jusqu'au kilomètre, puis kilomètres.</summary>
+        internal static string DistanceText(float m) => m >= 1000f ? $"{m / 1000f:0.0} km" : $"{m:0} m";
         public float ScanRadius { get; private set; }
         public int ZonesGenerated { get; private set; }
         public int ZonesSkipped { get; private set; }
@@ -197,7 +200,7 @@ namespace ResourceFinder
             Capturing = false;
             Captured.Clear();
             _pending.Clear();
-            if (State == Phase.Scanning) { State = Phase.Done; CoveredRadius = ScanRadius; Status = L.F("Scan arrêté à {0:0} m.", ScanRadius); SortResults(); }
+            if (State == Phase.Scanning) { State = Phase.Done; CoveredRadius = ScanRadius; Status = L.F("Scan arrêté à {0}.", DistanceText(ScanRadius)); SortResults(); }
         }
 
         /// <summary>À appeler chaque image. Fait un peu de travail et rend la main.</summary>
@@ -370,7 +373,9 @@ namespace ResourceFinder
                 if (!TryGenerate(z)) _pending.Add(z);
             }
 
-            Status = L.F("Scan… {0:0} m, {1} zones générées, {2} ignorées (biome), {3} trouvé(s)", ScanRadius, ZonesGenerated, ZonesFiltered, Results.Count);
+            // Lisible pour un joueur : distance atteinte et nombre de trouvailles ; le détail technique reste en retrait
+            Status = L.F("Scan… {0}, {1} trouvé(s)", DistanceText(ScanRadius), Results.Count)
+                   + L.F("  <size=12><color=#9a9488>({0} zones explorées)</color></size>", ZonesGenerated);
 
             // Arrêt : assez de résultats et plus rien en attente, ou fin du rayon.
             bool enough = Enough(ScanRadius);
@@ -482,7 +487,7 @@ namespace ResourceFinder
             State = Phase.Done;
             SortResults();
             Status = Results.Count == 0
-                ? (CoveredRadius > 0f ? L.F("Rien trouvé dans un rayon de {0:0} m.", CoveredRadius) : L.T("Rien trouvé dans le monde connu."))
+                ? (CoveredRadius > 0f ? L.F("Rien trouvé dans un rayon de {0}.", DistanceText(CoveredRadius)) : L.T("Rien trouvé dans le monde connu."))
                 : L.F("{0} trouvé(s)", Results.Count) + (CoveredRadius > 0f ? L.F(" (jusqu'à {0:0} m, {1} zones générées)", CoveredRadius, ZonesGenerated) : "") + ".";
             if (InDungeons > 0) Status += L.F(" {0} dans des donjons (ignorés : passez par l'entrée).", InDungeons);
             if (!_hasStaticPrefabs && _hashes.Count > 0) Status += Results.Count == 0 ? L.T(" Créature : rien de chargé autour de vous, seules celles présentes dans le monde sont détectées.") : L.T(" Créatures : seules celles présentes dans le monde sont détectées.");
