@@ -221,6 +221,7 @@ namespace ResourceFinder
                     var pin = map.AddPin(r.Pos, Minimap.PinType.Icon2, Plugin.PinNames.Value ? L.T(l.Label) : "", false, false, 0L, default(Splatform.PlatformUserID));
                     if (pin == null) continue;
                     if (icon != null) pin.m_icon = icon; // grande carte et mini-carte lisent m_icon
+                    pin.m_doubleSize = true; // à la taille normale l'icône fait ~7 px sur la grande carte : illisible, toutes les épingles se ressemblent
                     l.Pins[r] = pin;
                     if (r == s_animated) pin.m_animate = true; // la cible pulse même après une reconstruction des épingles
                 }

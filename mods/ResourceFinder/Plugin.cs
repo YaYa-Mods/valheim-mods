@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
@@ -803,9 +804,12 @@ namespace ResourceFinder
                     if (r != null && r.GetType().Name != "ParticleSystemRenderer") _glowRenderers.Add(r);
             }
             if (_glowRenderers.Count == 0) return;
-            float pulse = 0.55f + 0.45f * Mathf.Sin(Time.unscaledTime * 3.5f);
-            var glow = new Color(Theme.Accent.r * 1.6f * pulse, Theme.Accent.g * 1.2f * pulse, Theme.Accent.b * 0.6f * pulse, 1f);
-            var tint = Color.Lerp(Color.white, Theme.Accent, 0.35f * pulse);
+            // Émission mesurée : la cible doit ressortir dans la végétation sans être délavée en blanc (sa silhouette
+            // et sa texture restent reconnaissables, c'est ce qu'on cherche quand on chasse une biche dans un fourré).
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 3.5f);
+            float k = 0.35f + 0.33f * pulse;
+            var glow = new Color(Theme.Accent.r * k, Theme.Accent.g * k * 0.8f, Theme.Accent.b * k * 0.4f, 1f);
+            var tint = Color.Lerp(Color.white, Theme.Accent, 0.18f * pulse);
             for (int i = _glowRenderers.Count - 1; i >= 0; i--)
             {
                 var r = _glowRenderers[i];
@@ -869,6 +873,66 @@ namespace ResourceFinder
             Theme.Fill(new Rect(maxX - len, maxY - th, len, th), col); Theme.Fill(new Rect(maxX - th, maxY - len, th, len), col);
         }
 
+        // ---- place de la pastille : entièrement à l'écran, et à l'écart des panneaux des autres mods (suivi de quête…)
+        private static MethodInfo[] s_hudRectProviders; private static float s_hudProvidersNext;
+        private static readonly List<Rect> s_reserved = new List<Rect>();
+
+        /// <summary>Zones déjà occupées par les autres mods (convention : méthode statique publique « Rect[] HudRects() »).</summary>
+        private static List<Rect> ReservedHudRects()
+        {
+            if (Time.unscaledTime >= s_hudProvidersNext)
+            {
+                s_hudProvidersNext = Time.unscaledTime + 5f;
+                var found = new List<MethodInfo>();
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    if (asm == typeof(Plugin).Assembly) continue;
+                    try
+                    {
+                        foreach (var t in asm.GetTypes())
+                        {
+                            var m = t.GetMethod("HudRects", BindingFlags.Public | BindingFlags.Static, null, Type.EmptyTypes, null);
+                            if (m != null && m.ReturnType == typeof(Rect[])) found.Add(m);
+                        }
+                    }
+                    catch { } // assembly non inspectable : sans importance, on s'en passe
+                }
+                s_hudRectProviders = found.ToArray();
+            }
+            s_reserved.Clear();
+            if (s_hudRectProviders != null)
+                foreach (var m in s_hudRectProviders)
+                {
+                    try { var r = m.Invoke(null, null) as Rect[]; if (r != null) s_reserved.AddRange(r); } catch { }
+                }
+            return s_reserved;
+        }
+
+        /// <summary>Pastille entièrement à l'écran et hors des zones réservées : on la décale sous, puis sur, puis à côté de l'obstacle.</summary>
+        internal static Rect PlacePill(Rect rect, float sw, float sh, List<Rect> reserved)
+        {
+            const float m = 6f;
+            rect.x = Mathf.Clamp(rect.x, m, Mathf.Max(m, sw - rect.width - m));
+            rect.y = Mathf.Clamp(rect.y, m, Mathf.Max(m, sh - rect.height - m));
+            if (reserved == null || reserved.Count == 0) return rect;
+            for (int pass = 0; pass < 4; pass++)
+            {
+                bool moved = false;
+                foreach (var r in reserved)
+                {
+                    if (r.width <= 0f || !r.Overlaps(rect)) continue;
+                    float below = r.yMax + 8f, above = r.yMin - rect.height - 8f;
+                    if (below + rect.height <= sh - m) rect.y = below;
+                    else if (above >= m) rect.y = above;
+                    else if (r.xMin - rect.width - 8f >= m) rect.x = r.xMin - rect.width - 8f;
+                    else rect.x = Mathf.Min(r.xMax + 8f, Mathf.Max(m, sw - rect.width - m));
+                    moved = true;
+                }
+                if (!moved) break;
+            }
+            return rect;
+        }
+
         private void DrawHud()
         {
             if (_target == null) return;
@@ -920,23 +984,22 @@ namespace ResourceFinder
             // Pastille : icône + nom + distance, fond arrondi du thème, petit point/flèche vers la cible
             var icon = _hudIcon; float labelW = _hudLabelW, distW = _hudDistW;
             float iconW = icon != null ? 30f : 0f;
-            float w = 12f + iconW + (iconW > 0 ? 8f : 0f) + labelW + 10f + distW + 12f, h = 36f;
+            float arrowW = onScreen ? 0f : 24f; // hors écran : la flèche est DANS la pastille, elle ne peut donc pas sortir de l'écran
+            float w = 12f + arrowW + iconW + (iconW > 0 ? 8f : 0f) + labelW + 10f + distW + 12f, h = 36f;
             // Cible à l'écran : la pastille est AU-DESSUS du point (jamais dessus), la flèche ▼ entre les deux ; hors écran : centrée sur le bord
-            var rect = onScreen ? new Rect(p.x - w / 2f, p.y - h - 30f, w, h) : new Rect(p.x - w / 2f, p.y - h / 2f, w, h);
-            if (rect.y < 4f) rect.y = 4f;
+            // Créature : le jeu affiche déjà son nom et sa barre de vie juste au-dessus d'elle, la pastille passe par-dessus cette plaque
+            float lift = _currentEntry != null && _currentEntry.Category == Category.Creature ? 84f : 30f;
+            var rect = onScreen ? new Rect(p.x - w / 2f, p.y - h - lift, w, h) : new Rect(p.x - w / 2f, p.y - h / 2f, w, h);
+            rect = PlacePill(rect, sw, sh, ReservedHudRects());
             GUI.Box(rect, GUIContent.none, Theme.Veil); // même voile sans cadre que le suivi de quête
             float x = rect.x + 12f;
+            bool arrowFirst = arrow == "◀" || arrow == "▲"; // la flèche est du côté où se trouve la cible
+            if (!onScreen && arrowFirst) { GUI.Label(new Rect(x - 4f, rect.y, 24f, h), arrow, _hudArrow); x += arrowW; }
             if (icon != null) { Icons.Draw(new Rect(x, rect.y + 3f, 30f, 30f), icon); x += 38f; }
             Theme.ShadowLabel(new Rect(x, rect.y, labelW + 4f, h), label, _hudStyle); x += labelW + 10f;
             Theme.ShadowLabel(new Rect(x, rect.y, distW + 4f, h), distText, _hudDist);
-            if (onScreen) GUI.Label(new Rect(p.x - 10f, rect.yMax + 2f, 20f, 20f), "▼", _hudDist);
-            else
-            {
-                // flèche collée au bord, du côté de la cible
-                var a = new Rect(p.x - 12f, p.y - 12f, 24f, 24f);
-                if (arrow == "▲") a.y = rect.y - 24f; else if (arrow == "▼") a.y = rect.yMax; else if (arrow == "◀") a.x = rect.x - 24f; else a.x = rect.xMax;
-                GUI.Label(a, arrow, _hudArrow);
-            }
+            if (onScreen) GUI.Label(new Rect(Mathf.Clamp(p.x - 10f, 0f, sw - 20f), rect.yMax + 2f, 20f, 20f), "▼", _hudDist);
+            else if (!arrowFirst) GUI.Label(new Rect(rect.xMax - 26f, rect.y, 24f, h), arrow, _hudArrow);
         }
     }
 

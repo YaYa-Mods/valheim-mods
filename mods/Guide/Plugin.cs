@@ -61,7 +61,7 @@ namespace Guide
             TrackerKey = Config.Bind("Tracker", "TrackerKey", KeyCode.F11, L.T("Touche qui fait tourner le suivi : complet → réduit → masqué."));
             TrackerSteps = Config.Bind("Tracker", "Steps", 4, new ConfigDescription(L.T("Nombre d'étapes affichées sous l'objectif."), new AcceptableValueRange<int>(1, 8)));
             TrackerX = Config.Bind("Tracker", "X", -350f, new ConfigDescription(L.T("Position X du suivi (unités 1080p ; négatif = depuis le bord droit)."), new AcceptableValueRange<float>(-1920f, 1920f)));
-            TrackerY = Config.Bind("Tracker", "Y", 290f, new ConfigDescription(L.T("Position Y du suivi (unités 1080p, depuis le haut)."), new AcceptableValueRange<float>(0f, 1080f)));
+            TrackerY = Config.Bind("Tracker", "Y", 290f, new ConfigDescription(L.T("Position Y du suivi (unités 1080p ; négatif = depuis le bas de l'écran, le panneau grandit alors vers le haut et ne recouvre jamais les barres de vie)."), new AcceptableValueRange<float>(-1080f, 1080f)));
             if (Mathf.Approximately(TrackerX.Value, -330f)) TrackerX.Value = -350f; // ancien défaut (suivi de 310 px) : suit l'élargissement à 330 px
             Progress.StepCompleted += OnStepCompleted;
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
@@ -230,6 +230,9 @@ namespace Guide
         {
             var chapter = Progress.Current();
             float x = TrackerX.Value < 0 ? Theme.ScreenSize.x + TrackerX.Value : TrackerX.Value;
+            // Y négatif = ancré au bas de l'écran : le panneau grandit vers le haut, donc un chapitre à huit étapes ne
+            // descend jamais sur les barres de vie ni sur la barre d'action (hauteur du dernier rendu, stable d'une image à l'autre).
+            float y = TrackerY.Value < 0 ? Theme.ScreenSize.y + TrackerY.Value - Mathf.Max(LastTrackerRect.height, 40f) : TrackerY.Value;
             // La liste des prochaines étapes et le compte ne changent qu'à l'évaluation (1 s) : recalcul toutes les 0,5 s, pas à chaque passage OnGUI
             if (_trackerChapter != chapter || Time.unscaledTime >= _trackerNextRefresh)
             {
@@ -242,7 +245,7 @@ namespace Guide
             bool repaint = Event.current.type == EventType.Repaint;
 
             // Style « moderne » : pas de cadre, un voile sombre qui s'estompe vers le bas, textes ombrés, accents fins.
-            GUILayout.BeginArea(new Rect(x, TrackerY.Value, 340f, 400f));
+            GUILayout.BeginArea(new Rect(x, y, 340f, 400f));
             GUILayout.BeginVertical(Theme.Veil);
 
             // ---- en-tête : trophée, titre en Norse, compteur ; filet accent qui s'efface vers la droite
@@ -281,7 +284,20 @@ namespace Guide
             if (next.Count == 0) Theme.ShadowLabel(Progress.ChapterDone(chapter) ? L.T("Chapitre terminé") : L.T("Tout est prêt : au combat !"), _trackerLine);
             GUILayout.Space(2f);
             GUILayout.EndVertical();
+            // Encombrement réel du suivi (unités 1080p) : sert aux tests de position (aucun recouvrement du HUD du jeu)
+            if (repaint) { var used = GUILayoutUtility.GetLastRect(); LastTrackerRect = new Rect(x + used.x, y + used.y, used.width, used.height); s_trackerDrawnAt = Time.unscaledTime; }
             GUILayout.EndArea();
+        }
+
+        /// <summary>Dernier encombrement dessiné du suivi, en unités 1080p (vide tant qu'il n'a pas été affiché).</summary>
+        internal static Rect LastTrackerRect;
+        private static float s_trackerDrawnAt;
+
+        /// <summary>Zones de l'écran occupées par ce mod (unités 1080p) : les autres mods s'en écartent (convention par réflexion).</summary>
+        public static Rect[] HudRects()
+        {
+            if (Time.unscaledTime - s_trackerDrawnAt > 0.5f || LastTrackerRect.width <= 0f) return new Rect[0];
+            return new[] { LastTrackerRect };
         }
 
         /// <summary>Une ligne d'étape du suivi : marqueur dessiné, icône, titre ombré ; l'étape courante a un liseré et un texte plus clair.</summary>
@@ -328,8 +344,8 @@ namespace Guide
         {
             new KeyValuePair<string, Vector2>("Sous la carte", new Vector2(-350f, 290f)),
             new KeyValuePair<string, Vector2>("Haut gauche", new Vector2(20f, 130f)),
-            new KeyValuePair<string, Vector2>("Bas gauche", new Vector2(20f, 700f)),
-            new KeyValuePair<string, Vector2>("Bas droite", new Vector2(-350f, 700f)),
+            new KeyValuePair<string, Vector2>("Bas gauche", new Vector2(20f, -310f)),   // ancré en bas : au-dessus des barres de vie
+            new KeyValuePair<string, Vector2>("Bas droite", new Vector2(-350f, -310f)), // ancré en bas : au-dessus des aides de touches
         };
 
         private void DrawWindow(int id)

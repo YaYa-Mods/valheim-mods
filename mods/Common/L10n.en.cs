@@ -476,7 +476,7 @@ namespace ModsCommon
             { "Plus aucune usure sur les items (armes, outils, armures, torches).", "No more wear on items (weapons, tools, armour, torches)." },
             { "Plus de limite de poids (jamais surchargé).", "No more weight limit (never encumbered)." },
             { "Position X du suivi (unités 1080p ; négatif = depuis le bord droit).", "Tracker X position (1080p units; negative = from the right edge)." },
-            { "Position Y du suivi (unités 1080p, depuis le haut).", "Tracker Y position (1080p units, from the top)." },
+            { "Position Y du suivi (unités 1080p ; négatif = depuis le bas de l'écran, le panneau grandit alors vers le haut et ne recouvre jamais les barres de vie).", "Tracker Y position (1080p units; negative = from the bottom of the screen, the panel then grows upwards and never covers the health bars)." },
             { "Pourcentage des PV max d'un arbre enlevé au minimum par coup au niveau 100 de Bûcheron. ", "Percentage of a tree's max HP removed at least per hit at Woodcutting level 100. " },
             { "Quand une catégorie est choisie dans la barre d'outils : Masquer = seuls les objets de la catégorie restent visibles (les autres cases paraissent vides, sans clic possible) ; Estomper = les autres restent visibles, atténués.", "When a category is chosen in the toolbar: Masquer = only items of the category stay visible (other slots look empty, not clickable); Estomper = the others stay visible, dimmed." },
             { "Rappel des accès aux mods (touches ou roue d'action) quelques secondes après l'arrivée dans le monde, une fois par session.", "Reminder of how to reach the mods (keys or action wheel) a few seconds after arriving in the world, once per session." },

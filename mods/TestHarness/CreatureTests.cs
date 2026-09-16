@@ -171,12 +171,40 @@ namespace TestHarness
             yield return new WaitForSecondsRealtime(1f);
             rfT.GetMethod("StartSearch", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(rfInst, new[] { boarEntry });
             yield return new WaitForSecondsRealtime(1f);
+            // Une recherche réelle doit produire des épingles portant l'icône de la ressource (sinon toutes se ressemblent sur la carte)
+            try
+            {
+                var layersT = rfAsm.GetType("ResourceFinder.Layers");
+                var layerT = rfAsm.GetType("ResourceFinder.Layer");
+                var allLayers = (IList)layersT.GetField("All").GetValue(null);
+                object boarLayer = null;
+                foreach (var l in allLayers) if ((string)layerT.GetField("Label").GetValue(l) == "Sanglier") boarLayer = l;
+                var ic = boarLayer != null ? layerT.GetMethod("Icon").Invoke(boarLayer, null) as Sprite : null;
+                string iconPrefab = boarLayer != null ? (string)layerT.GetField("IconPrefab").GetValue(boarLayer) : "(pas de couche)";
+                h.Check("Créatures.icône des épingles de la carte", ic != null, $"couche « Sanglier », IconPrefab={iconPrefab}, icône={(ic != null ? ic.name : "null")}");
+            }
+            catch (Exception ex) { h.Check("Créatures.icône des épingles de la carte", false, ex.InnerException?.Message ?? ex.Message); }
             // Grande carte centrée sur la cible (ce que fait le bouton « Carte ») : les épingles du mod y sont visibles
             var tgt = rfT.GetField("_target", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(rfInst);
             if (tgt != null && Minimap.instance != null)
             {
                 rfT.GetMethod("ShowOnMap", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { (Vector3)tgt.GetType().GetField("Pos").GetValue(tgt) });
                 yield return new WaitForSecondsRealtime(1f);
+                // État exact des épingles au moment de la capture (c'est ce que l'œil voit sur la grande carte)
+                try
+                {
+                    var layerT2 = rfAsm.GetType("ResourceFinder.Layer");
+                    foreach (var l in (IList)rfAsm.GetType("ResourceFinder.Layers").GetField("All").GetValue(null))
+                    {
+                        foreach (var v in ((IDictionary)layerT2.GetField("Pins").GetValue(l)).Values)
+                        {
+                            var pd = v as Minimap.PinData;
+                            Plugin.Log.LogInfo($"[TEST] carte, épingle « {layerT2.GetField("Label").GetValue(l)} » : type={pd.m_type}, m_icon={(pd.m_icon != null ? pd.m_icon.name : "null")}, ui={PinTests.SpriteName(pd, "m_uiElement")}, icon={PinTests.SpriteName(pd, "m_iconElement")}");
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex) { Plugin.Log.LogWarning("[TEST] état des épingles : " + ex.Message); }
                 ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(Paths.ConfigPath, "finder_map.png"));
                 yield return new WaitForSecondsRealtime(1f);
                 Minimap.instance.SetMapMode(Minimap.MapMode.Small);
