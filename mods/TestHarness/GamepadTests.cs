@@ -136,12 +136,27 @@ namespace TestHarness
             var rfPad = rfT.GetField("_pad", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(rfInst);
             int Focus(object pad) => (int)pad.GetType().GetProperty("FocusIndex").GetValue(pad);
             int Count(object pad) => (int)pad.GetType().GetProperty("ItemCount").GetValue(pad);
-            int f0 = Focus(rfPad), n0 = Count(rfPad);
-            yield return Tap(GamepadButton.DpadDown);
-            int f1 = Focus(rfPad);
-            h.Check("Finder.focus croix bas", n0 > 3 && f1 != f0, $"contrôles={n0}, focus {f0}→{f1}");
-            yield return Tap(GamepadButton.B);
-            h.Check("Finder.B ferme", !(bool)rfOpenF.GetValue(null));
+            // Le scanner s'affiche soit dans le panneau du jeu (cloné du compendium), soit dans la fenêtre dessinée :
+            // la navigation testée n'est pas la même, on regarde ce qui est réellement à l'écran.
+            bool nativePanel = (bool)rfT.GetProperty("UseNativePanel", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null, null);
+            if (nativePanel)
+            {
+                var panel = GameObject.Find("ResourceFinderPanel");
+                int rows = panel != null ? panel.transform.GetComponentsInChildren<UnityEngine.UI.Button>(false).Length : 0;
+                h.Check("Finder.panneau du jeu affiché", panel != null && panel.activeInHierarchy && rows > 3, panel == null ? "panneau absent" : $"actif={panel.activeInHierarchy}, boutons={rows}");
+                rfT.GetMethod("Close", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(rfInst, null);
+                yield return new WaitForSecondsRealtime(0.4f);
+                h.Check("Finder.fermeture du panneau", !(bool)rfOpenF.GetValue(null) && (GameObject.Find("ResourceFinderPanel") == null));
+            }
+            else
+            {
+                int f0 = Focus(rfPad), n0 = Count(rfPad);
+                yield return Tap(GamepadButton.DpadDown);
+                int f1 = Focus(rfPad);
+                h.Check("Finder.focus croix bas", n0 > 3 && f1 != f0, $"contrôles={n0}, focus {f0}→{f1}");
+                yield return Tap(GamepadButton.B);
+                h.Check("Finder.B ferme", !(bool)rfOpenF.GetValue(null));
+            }
 
             // ---------------- Hub : sélection d'un mod avec croix + A ----------------
             hubT.GetMethod("Toggle", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);

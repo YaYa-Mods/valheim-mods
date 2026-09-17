@@ -35,6 +35,8 @@ namespace ResourceFinder
         internal static ConfigEntry<bool> AddMapPins, PinNames, MinimapMarker;
         internal static ConfigEntry<Highlight> HighlightStyle;
         internal static ConfigEntry<bool> HideUndiscovered;
+        internal enum Style { Natif, Classique }
+        internal static ConfigEntry<Style> PanelStyle;
         internal static ConfigEntry<int> MaxPinsPerLayer;
 
         internal static bool WindowOpen;
@@ -93,6 +95,8 @@ namespace ResourceFinder
             MaxPinsPerLayer = Config.Bind("Display", "MaxPinsPerLayer", 30,
                 new ConfigDescription(L.T("Nombre max de positions (donc d'épingles) conservées par couche : les plus proches. ") +
                                       L.T("Des milliers d'épingles ralentissent fortement le jeu."), new AcceptableValueRange<int>(3, 200)));
+            PanelStyle = Config.Bind("Display", "PanelStyle", Style.Natif,
+                L.T("Apparence de la fenêtre : Natif = le panneau du jeu (celui des trophées et des compétences, cloné avec ses sprites et ses polices) ; Classique = la fenêtre dessinée par le mod."));
             HideUndiscovered = Config.Bind("Display", "HideUndiscovered", true,
                 L.T("Immersion : ne proposer que les ressources dont vous avez déjà eu le matériau en main et les lieux dont vous avez visité le biome. ") +
                 L.T("Les autres peuvent être révélés un par un dans la fenêtre."));
@@ -155,8 +159,143 @@ namespace ResourceFinder
 
         private bool _focusSearch;
         private Result _animatedTarget;
-        private void Open() { WindowOpen = true; _pad.OnOpened(); FitWindow(); _focusSearch = !Pad.Active; }
-        private void Close() { WindowOpen = false; }
+        // ---- fenêtre : panneau du jeu (cloné du compendium) par défaut, fenêtre dessinée en repli
+        private static readonly NativeWindow s_panel = new NativeWindow();
+        private static Plugin Instance => s_instance;
+        /// <summary>Le panneau natif est-il utilisé ? (faux si le jeu ne l'expose pas : on retombe sur la fenêtre dessinée)</summary>
+        internal static bool UseNativePanel => PanelStyle.Value == Style.Natif && s_panel.Built;
+
+        private void Open()
+        {
+            WindowOpen = true;
+            if (PanelStyle.Value == Style.Natif && s_panel.Ensure()) { s_panel.Open(); RefreshPanel(); return; }
+            _pad.OnOpened(); FitWindow(); _focusSearch = !Pad.Active;
+        }
+
+        private void Close()
+        {
+            WindowOpen = false;
+            if (s_panel.Visible) s_panel.Close();
+        }
+
+        /// <summary>Le panneau natif s'est fermé tout seul (bouton du jeu, clic à côté).</summary>
+        internal static void NativeClosed() { WindowOpen = false; }
+
+        private void RefreshPanel() { if (s_panel.Visible) { RefreshCatalog(); s_panel.Rebuild(); } }
+
+        // ------------------------------------------------------------------ contenu lu par le panneau natif
+        internal static IEnumerable<ResourceEntry> VisibleCatalogEntries()
+        {
+            var p = Instance;
+            if (p == null) yield break;
+            string filter = Normalize(s_panel.SearchText ?? "");
+            foreach (var e in p._visibleEntries)
+                if (filter.Length == 0 || Normalize(L.T(e.Label)).Contains(filter) || Normalize(e.Label).Contains(filter))
+                    yield return e;
+        }
+
+        /// <summary>Entrée validée dans le champ de recherche du panneau : on lance la meilleure correspondance.</summary>
+        internal static void SearchTextFromPanel(string text)
+        {
+            var p = Instance;
+            if (p == null || string.IsNullOrWhiteSpace(text)) return;
+            var entry = ResolveSearch(text);
+            if (entry != null) { p.StartSearch(entry); p.RefreshPanel(); }
+        }
+
+        /// <summary>Ligne du catalogue pour le panneau du jeu : nom, biomes en retrait, nombre d'épingles posées.</summary>
+        internal static string RowLabel(ResourceEntry e)
+        {
+            var sb = new System.Text.StringBuilder(L.T(e.Label));
+            string biomes = Discovery.BiomeText(e);
+            if (biomes.Length > 0) sb.Append("   <size=70%><color=#bdb6a8>").Append(biomes).Append("</color></size>");
+            var layer = Layers.Get(e.Label);
+            if (layer != null && layer.Results.Count > 0) sb.Append("  <size=70%><color=#ffb75c>").Append(layer.Results.Count).Append("</color></size>");
+            return sb.ToString();
+        }
+
+        internal static bool IsCurrentEntry(ResourceEntry e) => Instance != null && Instance._currentEntry == e && Instance._finder.State != Finder.Phase.Idle;
+
+        internal static void SearchFromPanel(ResourceEntry e)
+        {
+            Instance?.StartSearch(e);
+            Instance?.RefreshPanel();
+        }
+
+        internal static string DetailTitle()
+        {
+            var p = Instance;
+            if (p == null || p._finder.State == Finder.Phase.Idle) return L.T("Recherche");
+            return L.T(p._finder.Label);
+        }
+
+        internal static string DetailBody()
+        {
+            var p = Instance;
+            if (p == null) return "";
+            if (p._finder.State == Finder.Phase.Idle)
+                return L.T("Choisissez une ressource dans le catalogue. Les résultats sont épinglés sur la carte et le plus proche est pointé à l'écran.");
+            var sb = new System.Text.StringBuilder();
+            sb.Append(p._finder.Status);
+            if (p._currentEntry != null && p._currentEntry.Category == Category.Creature && p._finder.State == Finder.Phase.Done && p._finder.Results.Count == 0)
+            {
+                string where = Discovery.BiomeText(p._currentEntry);
+                sb.Append('\n').Append(where.Length > 0
+                    ? L.F("Vit dans : <b>{0}</b>, allez-y, elle sera détectée une fois la zone chargée.", where)
+                    : L.T("Cette créature n'apparaît que par événement ou dans certains lieux (pas de zone de spawn libre)."));
+            }
+            return sb.ToString();
+        }
+
+        internal static IEnumerable<Result> ShownResults()
+        {
+            var p = Instance;
+            if (p == null) yield break;
+            var from = Player.m_localPlayer != null ? Player.m_localPlayer.transform.position : Vector3.zero;
+            p._nextUiRefresh = 0f; // le panneau demande la liste maintenant : pas d'attente du prochain rafraîchissement
+            p.RefreshUiCache(from);
+            foreach (var r in p._shown) yield return r;
+        }
+
+        internal static string ResultLabel(Result r)
+        {
+            var p = Instance;
+            var from = Player.m_localPlayer != null ? Player.m_localPlayer.transform.position : Vector3.zero;
+            p._pickInfo.TryGetValue(r, out var info);
+            return $"{r.Distance(from):0} m  {Compass(from, r.Pos)}   {DisplayName(r)}{info}";
+        }
+
+        internal static Sprite ResultIcon(Result r)
+        {
+            var p = Instance;
+            if (p == null) return null;
+            return r.IsLocation ? Icons.ForEntry(p._currentEntry) : (Icons.ForPrefab(r.Prefab) ?? Icons.ForEntry(p._currentEntry));
+        }
+
+        internal static bool IsTarget(Result r) => Instance != null && Instance._target == r;
+
+        /// <summary>Actions proposées en bas du panneau (mêmes boutons que ceux du jeu).</summary>
+        internal static IEnumerable<KeyValuePair<string, Action>> PanelActions()
+        {
+            var p = Instance;
+            if (p == null) yield break;
+            if (p._finder.State != Finder.Phase.Idle)
+            {
+                yield return new KeyValuePair<string, Action>(L.T("Cible : la plus proche"),
+                    () => { var from = Player.m_localPlayer != null ? Player.m_localPlayer.transform.position : Vector3.zero; p._target = Nearest(p._finder.Results, from); });
+                yield return new KeyValuePair<string, Action>(Tracking ? L.T("Arrêter la traque") : L.T("Traquer"), () => p.ToggleTrack());
+            }
+            if (Layers.All.Count > 0)
+                yield return new KeyValuePair<string, Action>(L.T("Effacer les épingles"), () => p.ClearAllPinsConfirmed());
+        }
+
+        internal static void TargetFromPanel(Result r)
+        {
+            var p = Instance;
+            if (p == null) return;
+            p._target = r;
+            p.RefreshPanel();
+        }
 
         /// <summary>Efface toutes les épingles posées par le mod (couches, recherche courante, cible). Les épingles du joueur restent.</summary>
         private void ClearAllPins()
@@ -388,7 +527,7 @@ namespace ResourceFinder
             var prev = Theme.Begin();
             EnsureStyles();
             if (ShowHud.Value && !WindowOpen && !Hud.IsUserHidden() && !(Minimap.instance != null && Minimap.IsOpen())) { DrawHud(); DrawMinimapMarker(); }
-            if (WindowOpen && !_pad.ConsumeSkipRepaint())
+            if (WindowOpen && !UseNativePanel && !_pad.ConsumeSkipRepaint())
                 _window = GUILayout.Window(GetHashCode(), _window, DrawWindow, L.T("Scanner de ressources"));
             Theme.End(prev);
         }

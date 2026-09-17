@@ -281,6 +281,7 @@ namespace TestHarness
                 yield return Safe("TrackTests", TrackTests.Run(this, Player.m_localPlayer));
                 yield return Safe("HudLayoutTests", HudLayoutTests.Run(this, Player.m_localPlayer));
                 yield return Safe("ToggleTests", ToggleTests.Run(this, Player.m_localPlayer));
+                yield return Safe("NativeUiProbe", NativeUiProbe.Run(this, Player.m_localPlayer));
                 yield return Safe("ScrollTests", ScrollTests.Run(this, Player.m_localPlayer));
                 yield return Safe("L10nTests", L10nTests.Run(this, Player.m_localPlayer));
                 L10nTests.Restore();
@@ -529,6 +530,7 @@ namespace TestHarness
             yield return Safe("TrackTests", TrackTests.Run(this, player));
             yield return Safe("HudLayoutTests", HudLayoutTests.Run(this, player));
             yield return Safe("ToggleTests", ToggleTests.Run(this, player));
+            yield return Safe("NativeUiProbe", NativeUiProbe.Run(this, player));
             yield return Safe("ScrollTests", ScrollTests.Run(this, player));
             yield return Safe("L10nTests", L10nTests.Run(this, player));
             L10nTests.Restore();
