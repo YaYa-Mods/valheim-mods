@@ -41,8 +41,10 @@ try {
     while ((Get-Date) -lt $deadline) {
         Start-Sleep -Seconds 5
         if ($p.HasExited) { Write-Host "Le jeu s'est ferme avant la fin des tests." -ForegroundColor Yellow; break }
-        if ((Test-Path "$V\BepInEx\LogOutput.log") -and (Select-String -Path "$V\BepInEx\LogOutput.log" -Pattern "\[TEST\] ===== fin|rien n.est charg|REFUS|impossible . pr.parer" -Quiet)) { break }
+        if ((Test-Path "$V\BepInEx\LogOutput.log") -and (Select-String -Path "$V\BepInEx\LogOutput.log" -CaseSensitive -Pattern "\[TEST\] ===== fin|\[TEST\] REFUS|rien n.est charg|impossible . pr.parer" -Quiet)) { break }
     }
+    # Arret sans ligne « fin » : le jeu s'est ferme tout seul, ou le delai de 600 s est passe (machine chargee) ; la raison est dite dans la sortie
+    if (-not (Select-String -Path "$V\BepInEx\LogOutput.log" -CaseSensitive -Pattern "\[TEST\] ===== fin" -Quiet)) { Write-Output ("[TEST] ARRET sans ligne de fin : " + $(if ($p.HasExited) { 'le jeu s''est ferme de lui-meme' } else { 'delai de 600 s depasse, jeu tue' })) }
     Start-Sleep -Seconds 2
     Get-Process valheim -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Seconds 2

@@ -228,14 +228,30 @@ namespace TestHarness
             }
         }
 
+        // Chien de garde : un fil à part signale toutes les 30 s un test qui ne progresse plus (image figée = boucle sans fin
+        // dans un mod ; les messages du fil arrivent quand même dans le journal), avec la dernière étape connue.
+        private static string s_lastStep = "(début)"; private static DateTime s_lastStepAt = DateTime.UtcNow; private static System.Threading.Timer s_watchdog;
+        internal static void Step(string what) { s_lastStep = what; s_lastStepAt = DateTime.UtcNow; }
+        private static void StartWatchdog()
+        {
+            if (s_watchdog != null) return;
+            s_watchdog = new System.Threading.Timer(_ =>
+            {
+                var idle = DateTime.UtcNow - s_lastStepAt;
+                if (idle.TotalSeconds > 40) Log.LogWarning($"[TEST] chien de garde : rien depuis {idle.TotalSeconds:0} s, dernière étape « {s_lastStep} »");
+            }, null, 30000, 30000);
+        }
+
         internal void Check(string name, bool ok, string detail = "")
         {
+            Step(name);
             if (ok) _pass++; else _fail++;
             Log.LogInfo($"[TEST] {(ok ? "PASS" : "FAIL")} {name}{(string.IsNullOrEmpty(detail) ? "" : ", " + detail)}");
         }
 
         private IEnumerator RunAll()
         {
+            StartWatchdog();
             yield return new WaitForSeconds(8f); // laisser le monde se stabiliser
             // Personnage neuf : l'arrivée en valkyrie est une cinématique, on attend qu'elle finisse
             float cut = Time.time + 60f;

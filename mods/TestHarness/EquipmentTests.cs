@@ -87,7 +87,7 @@ namespace TestHarness
             var grid = gui.m_playerGrid;
             var wood = Give(inv, "Wood");
             bool refused = wood != null && !grid.DropItem(inv, wood, wood.m_stack, new Vector2i(3, reserved));
-            h.Check("Équipement.la case Cape refuse du bois", refused && wood != null && wood.m_gridPos.y != reserved, wood == null ? "bois absent" : $"refusé={refused}, bois en {wood.m_gridPos.x},{wood.m_gridPos.y}");
+            h.Check("Équipement.la case Cape rejette le bois", refused && wood != null && wood.m_gridPos.y != reserved, wood == null ? "bois absent" : $"refusé={refused}, bois en {wood.m_gridPos.x},{wood.m_gridPos.y}");
             player.UnequipItem(helmet2, false);
             yield return null;
             bool dropped = grid.DropItem(inv, helmet2, 1, new Vector2i(0, reserved));

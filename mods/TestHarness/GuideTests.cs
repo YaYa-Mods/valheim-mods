@@ -211,7 +211,9 @@ namespace TestHarness
                 ev?.DynamicInvoke(cur, first);
             }
             catch (Exception ex) { Plugin.Log.LogWarning("événement StepCompleted : " + ex.Message); }
+            Plugin.Step("guide : événement levé");
             yield return new WaitForSecondsRealtime(0.5f);
+            Plugin.Step("guide : capture du suivi");
             ScreenCapture.CaptureScreenshot(shotTracker);
             yield return new WaitForSecondsRealtime(1f);
             // Mode réduit (une ligne) : capture séparée, puis retour au mode complet
@@ -223,7 +225,11 @@ namespace TestHarness
             ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(Paths.ConfigPath, "guide_tracker_compact.png"));
             yield return new WaitForSecondsRealtime(0.8f);
             modeCfg.BoxedValue = modePrev;
+            Plugin.Step("guide : ouverture de la fenêtre");
             pluginT.GetMethod("Toggle", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
+            Plugin.Step("guide : fenêtre ouverte, attente");
+            yield return new WaitForSecondsRealtime(1f);
+            Plugin.Step("guide : capture de la fenêtre");
             yield return new WaitForSecondsRealtime(1f);
             ScreenCapture.CaptureScreenshot(shotWindow);
             yield return new WaitForSecondsRealtime(1.5f);

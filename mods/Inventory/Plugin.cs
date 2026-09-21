@@ -232,6 +232,7 @@ namespace InventoryMod
             }
             player.SetInventorySize(rows);
             Plugin.Log.LogInfo($"Inventaire passé à {rows} lignes");
+            Equipment.Sync(player); // la ligne réservée vient d'apparaître : ce qui est déjà équipé y va
         }
     }
 

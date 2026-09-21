@@ -53,7 +53,7 @@ namespace InventoryMod
         {
             // Mod éteint : la colonne d'outils doit disparaître, sinon le joueur garde un panneau dont il ne peut plus rien faire
             if (!Plugin.Enabled.Value) { ShowTools(false); return; }
-            try { EnsureScroll(__instance); EnsureButtons(__instance); ShowTools(true); }
+            try { EnsureScroll(__instance); EnsureButtons(__instance); ShowTools(true); Equipment.Sync(Player.m_localPlayer); }
             catch (Exception ex) { Plugin.Log.LogWarning("Inventaire (défilement/boutons) : " + ex.Message); }
         }
 

@@ -46,6 +46,13 @@ namespace TestHarness
             var hintBarT = Asm("ModHub").GetType("ModHub.KeyHintBar");
             var collect = hintBarT.GetMethod("Collect", BindingFlags.NonPublic | BindingFlags.Static);
 
+            // Le suivi doit être visible pour que le test ait un sens (un run interrompu peut avoir laissé le mode « Masque » dans la config)
+            var modeCfg = (BepInEx.Configuration.ConfigEntryBase)guideT.GetField("Mode", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+            modeCfg.BoxedValue = Enum.Parse(modeCfg.SettingType, "Complet");
+            yield return new WaitForSecondsRealtime(0.6f);
+            int rectsBefore = ((Rect[])hudRects.Invoke(null, null)).Length;
+            h.Check("Vanilla.suivi de quête visible au départ", rectsBefore > 0, $"zones déclarées par le guide : {rectsBefore}");
+
             // ---- tout éteindre
             foreach (var e in entries) e.Value.Value = false;
             yield return new WaitForSecondsRealtime(1.2f);
