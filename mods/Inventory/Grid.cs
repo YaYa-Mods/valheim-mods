@@ -355,8 +355,9 @@ namespace InventoryMod
         {
             var inv = player?.GetInventory();
             if (inv == null) return;
-            int width = inv.GetWidth(), height = inv.GetHeight();
-            var items = inv.GetAllItems().Where(i => i.m_gridPos.y > 0).ToList();
+            int width = inv.GetWidth(), height = inv.GetHeight(), reserved = Equipment.ReservedRow(inv);
+            if (reserved > 0) height = reserved; // la ligne des cases d'équipement n'est jamais triée
+            var items = inv.GetAllItems().Where(i => i.m_gridPos.y > 0 && i.m_gridPos.y != reserved).ToList();
             Comparison<ItemDrop.ItemData> byName = (a, b) => string.Compare(Name(a), Name(b), StringComparison.OrdinalIgnoreCase);
             Comparison<ItemDrop.ItemData> tail = (a, b) => { int q = b.m_quality.CompareTo(a.m_quality); return q != 0 ? q : b.m_stack.CompareTo(a.m_stack); };
             items.Sort((a, b) =>

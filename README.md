@@ -8,7 +8,7 @@ no external dependencies beyond BepInEx and Harmony. The in-game UI follows the 
 | [**Resource Finder**](mods/ResourceFinder/README.md) | Scanner window (F7) with a catalogue of ores, pickables, trees, locations and creatures. Finds the nearest ones in the known world, can generate unexplored zones to look further, pins results on the map, points at the target on screen (pill + minimap marker + glowing silhouette), **track mode** (F4) that chains to the next target when one is harvested or killed. Discovery by sight: what you look at or fight becomes visible in the catalogue. |
 | [**Guide**](mods/Guide/README.md) | Progression guide: one chapter per boss, steps that check themselves from what the game records (crafted items, placed pieces, kills, explored locations…), an on-screen quest tracker (full / compact / hidden, F11), a journal window (F10), anti-spoiler locking of future chapters. Offerings, recipes and building costs are read from the game data, not hard-coded. |
 | [**Mod Hub**](mods/ModHub/README.md) | In-game configuration of every mod (F9), a “Mods” group in the radial menu, mod buttons in the inventory panel, mod key hints in the game's own key-hint bar. |
-| [**Inventory**](mods/Inventory/README.md) | Larger, scrollable inventory (up to 40 rows), sorting (category / name / quantity / weight), stacking, category filter toolbar, keep inventory and skills on death, tombstone recovery, bigger stacks and carry weight. |
+| [**Inventory**](mods/Inventory/README.md) | Larger, scrollable inventory (up to 40 rows), equipment slots (head, chest, legs, cape, accessory) next to the grid, pickups fill from the top, sorting (category / name / quantity / weight), stacking, category filter toolbar, keep inventory and skills on death, tombstone recovery, bigger stacks and carry weight. |
 | [**Craft From Chests**](mods/CraftFromChests/README.md) | Crafting stations and the crafting menu use materials from nearby chests. |
 | [**Home Teleport**](mods/HomeTeleport/README.md) | F8: teleport to your bed (with confirmation). |
 | [**Lumberjack**](mods/Lumberjack/README.md) | Woodcutting skill matters: high level fells trees in one hit and auto-cuts logs. |
@@ -62,8 +62,8 @@ Douze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du 
 - **Guide** (F10) : guide de progression par boss, étapes cochées automatiquement d'après le jeu, suivi de quête à
   l'écran (F11 : complet / réduit / masqué), anti-spoiler.
 - **Mod Hub** (F9) : configuration en jeu, roue d'action, boutons dans l'inventaire, aides de touches.
-- **Inventory** : inventaire agrandi et défilant, tri, empilage, filtre par catégorie, mort sans perte (objets et
-  compétences).
+- **Inventory** : inventaire agrandi et défilant, emplacements d'équipement à côté de la grille, ramassage dans la
+  première case libre, tri, empilage, filtre par catégorie, mort sans perte (objets et compétences).
 - **Craft From Chests**, **Home Teleport** (F8), **Lumberjack**, **Longer Food**, **No Durability**, **Short Nights**,
   **Movement**, **Quick Start**.
 

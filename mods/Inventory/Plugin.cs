@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Configuration;
@@ -35,12 +36,13 @@ namespace InventoryMod
         internal static ConfigEntry<bool> KeepInventoryOnDeath;
         internal static ConfigEntry<bool> RecoverTombstones;
         internal static ConfigEntry<bool> FillTopFirst;
+        internal static ConfigEntry<bool> EquipmentSlots;
 
         private void Awake()
         {
             Log = Logger;
             Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod (poids, piles, lignes)."));
-            Enabled.SettingChanged += (_, __) => { Patches.ReapplyStacks(); Grid.OnEnabledChanged(); };
+            Enabled.SettingChanged += (_, __) => { Patches.ReapplyStacks(); Grid.OnEnabledChanged(); Equipment.OnToggle(Player.m_localPlayer); };
             NoWeightLimit = Config.Bind("General", "NoWeightLimit", true, L.T("Plus de limite de poids (jamais surchargé)."));
             MaxStackSize = Config.Bind("General", "MaxStackSize", 9999,
                 new ConfigDescription(L.T("Taille max des piles pour tous les items empilables. 0 = vanilla."), new AcceptableValueRange<int>(0, 99999)));
@@ -60,6 +62,8 @@ namespace InventoryMod
                 L.T("À la mort, aucune baisse de compétences (le jeu retire 5 % de chaque compétence, hors période de grâce)."));
             FillTopFirst = Config.Bind("General", "FillTopFirst", true,
                 L.T("Un objet ramassé va dans la première case libre en partant du haut (le jeu remplit par le bas, ce qui envoie tout en fin d'inventaire avec beaucoup de lignes). La barre d'action reste en dernier recours ; les armes cherchent d'abord une place dans la barre, comme dans le jeu."));
+            EquipmentSlots = Config.Bind("General", "EquipmentSlots", true,
+                L.T("Emplacements d'équipement (Tête, Torse, Jambes, Cape, Accessoire) à côté de la grille : ce qui est équipé y va, la grille reste libre. C'est la dernière ligne de l'inventaire, redessinée à part."));
             RecoverTombstones = Config.Bind("Death", "RecoverTombstones", true,
                 L.T("À l'apparition, vos pierres tombales encore dans le monde sont vidées dans votre inventaire à distance, puis supprimées."));
             BackupEnabled = Config.Bind("Safety", "BackupEnabled", true,
@@ -68,10 +72,12 @@ namespace InventoryMod
 
             MaxStackSize.SettingChanged += (_, __) => Patches.ReapplyStacks();
             InventoryRows.SettingChanged += (_, __) => Patches.ApplyRows(Player.m_localPlayer);
+            EquipmentSlots.SettingChanged += (_, __) => Equipment.OnToggle(Player.m_localPlayer);
 
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             Harmony.CreateAndPatchAll(typeof(LoadGuard), Guid);
             Harmony.CreateAndPatchAll(typeof(FirstFreeSlot), Guid);
+            Harmony.CreateAndPatchAll(typeof(Equipment), Guid);
             Harmony.CreateAndPatchAll(typeof(Backup), Guid);
             Harmony.CreateAndPatchAll(typeof(Death), Guid);
             Harmony.CreateAndPatchAll(typeof(Grid), Guid);
@@ -207,7 +213,7 @@ namespace InventoryMod
         internal static void ApplyRows(Player player)
         {
             if (player == null || !Plugin.Enabled.Value) return;
-            int rows = Plugin.InventoryRows.Value;
+            int rows = Plugin.InventoryRows.Value + (Plugin.EquipmentSlots.Value ? 1 : 0); // une ligne de plus : les cases d'équipement
             var inv = player.GetInventory();
             if (inv == null || inv.GetHeight() == rows) return;
 
@@ -241,15 +247,17 @@ namespace InventoryMod
         [HarmonyPrefix]
         private static bool Prefix(Inventory __instance, bool topFirst, ref Vector2i __result)
         {
-            if (topFirst || !Plugin.Enabled.Value || !Plugin.FillTopFirst.Value) return true;
+            if (!Plugin.Enabled.Value) return true;
             var p = Player.m_localPlayer;
             if (p == null || !ReferenceEquals(__instance, p.GetInventory())) return true;
-            int w = __instance.GetWidth(), h = __instance.GetHeight();
-            for (int y = 1; y < h; y++)
+            int reserved = Equipment.ReservedRow(__instance);
+            if (reserved < 0 && (topFirst || !Plugin.FillTopFirst.Value)) return true; // comportement du jeu, rien à réserver
+            if (topFirst || Plugin.FillTopFirst.Value) { __result = Equipment.FirstFree(__instance, topFirst); return false; }
+            // Remplissage par le bas (réglage du jeu conservé) mais sans la ligne réservée
+            int w = __instance.GetWidth();
+            for (int y = reserved - 1; y >= 0; y--)
                 for (int x = 0; x < w; x++)
                     if (__instance.GetItemAt(x, y) == null) { __result = new Vector2i(x, y); return false; }
-            for (int x = 0; x < w; x++)
-                if (__instance.GetItemAt(x, 0) == null) { __result = new Vector2i(x, 0); return false; }
             __result = new Vector2i(-1, -1);
             return false;
         }
