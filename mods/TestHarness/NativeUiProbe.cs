@@ -92,10 +92,9 @@ namespace TestHarness
             yield return new WaitForSecondsRealtime(1.2f);
             var panel = GameObject.Find("ResourceFinderPanel");
             bool nativeStyle = (bool)rfT.GetProperty("UseNativePanel", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null, null);
-            var themeT = rfT.Assembly.GetType("ModsCommon.Theme");
-            bool gameSkin = (bool)themeT.GetProperty("UsingGameSkin", BindingFlags.Public | BindingFlags.Static).GetValue(null, null);
+            bool drawnOpen = (bool)rfT.GetField("WindowOpen", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
             if (nativeStyle) h.Check("Scanner.panneau natif construit", panel != null && panel.activeSelf, panel == null ? "panneau absent" : "actif=" + panel.activeSelf);
-            else h.Check("Scanner.fenêtre habillée des sprites du jeu", gameSkin, "UsingGameSkin=" + gameSkin);
+            else h.Check("Scanner.fenêtre dessinée ouverte", drawnOpen && panel == null, $"WindowOpen={drawnOpen}, panneau natif={(panel != null)}");
             if (panel != null) { sb.AppendLine().AppendLine("--- Notre panneau (scanner) ---"); Dump(sb, panel.transform, 0); }
             ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "finder_native.png"));
             yield return new WaitForSecondsRealtime(1f);
