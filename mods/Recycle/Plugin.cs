@@ -29,6 +29,7 @@ namespace Recycle
         internal static ConfigEntry<float> Ratio;
         internal static ConfigEntry<bool> IncludeMaterials;
         internal static ConfigEntry<bool> IncludeAmmo;
+        internal static ConfigEntry<int> PieceWood, PieceStone;
         internal static bool WindowOpen;
         private static Plugin s_instance;
 
@@ -56,13 +57,17 @@ namespace Recycle
             Ratio = Config.Bind("General", "Ratio", 0.34f, new ConfigDescription(L.T("Part du coût de fabrication rendue (0,34 = un tiers), arrondie à l'unité inférieure par matériau."), new AcceptableValueRange<float>(0.05f, 1f)));
             IncludeAmmo = Config.Bind("General", "IncludeAmmo", true, L.T("Proposer aussi les munitions (flèches, carreaux...) : la pile entière est recyclée d'un coup."));
             IncludeMaterials = Config.Bind("General", "IncludeMaterials", false, L.T("Proposer aussi les matériaux fabriqués (bronze, clous, cuir tanné...). Éteint par défaut : on recycle de l'équipement, pas des lingots."));
+            PieceWood = Config.Bind("Recycler", "Wood", 10, new ConfigDescription(L.T("Bois demandé pour poser le Recycleur (meuble, établi à portée). Lu au lancement du jeu."), new AcceptableValueRange<int>(0, 200)));
+            PieceStone = Config.Bind("Recycler", "Stone", 10, new ConfigDescription(L.T("Pierre demandée pour poser le Recycleur. Lu au lancement du jeu."), new AcceptableValueRange<int>(0, 200)));
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
+            Harmony.CreateAndPatchAll(typeof(Recycler), Guid);
             ScrollGuard.Install(Guid, () => WindowOpen);
             Log.LogInfo($"Recycle chargé (touche {ToggleKey.Value}, part rendue {Ratio.Value:P0})");
         }
 
         private void Update()
         {
+            try { Recycler.Update(); } catch (Exception ex) { Log.LogWarning("Recycleur : " + ex.Message); }
             if (Player.m_localPlayer == null || !Enabled.Value) { WindowOpen = false; return; }
             if (WindowOpen && ModWindows.GameTookScreen()) Close();
             if (ZInput.GetKeyDown(ToggleKey.Value, false) && !Console.IsVisible()) { if (WindowOpen) Close(); else if (!ModWindows.GameBusy()) Open(); }

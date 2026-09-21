@@ -14,7 +14,11 @@ building returns everything, the incinerator only gives coal), so gear you have 
   into your inventory, or drop at your feet if it is full.
 - Equipped items are never listed: take them off first. Raw materials are never recyclable; crafted materials
   (bronze, nails...) only if you turn `IncludeMaterials` on.
-- No crafting station needed.
+- No crafting station needed for the window.
+- **The Recycler**, a piece of furniture: hammer, Furniture tab, workbench nearby, 10 wood + 10 stone. A chest that the
+  game never lets you build (the dvergr chest model), so it cannot be mistaken for your own chests. Throw everything in,
+  open it and press **Recycle** (twice, the second click confirms): every item with a recipe becomes materials that stay
+  inside, the rest is untouched, nothing is destroyed. 32 slots; overflow drops at its feet.
 
 ## Configuration (`BepInEx/config/vmods.recycle.cfg`)
 
@@ -25,6 +29,8 @@ building returns everything, the incinerator only gives coal), so gear you have 
 | Ratio | 0.34 | Share of the crafting cost given back (0.05 to 1) |
 | IncludeAmmo | true | Offer ammunition too |
 | IncludeMaterials | false | Offer crafted materials (bronze, nails, tanned leather...) |
+| Recycler / Wood | 10 | Wood needed to place the Recycler (read at game start) |
+| Recycler / Stone | 10 | Stone needed to place the Recycler (read at game start) |
 
 Everything can also be changed in game with Mod Hub (F9).
 
@@ -45,6 +51,9 @@ Recycle l'équipement fabriqué contre une part de ses matériaux.
   Les munitions se recyclent par pile.
 - Deux clics (le second confirme). L'objet disparaît, les matériaux vont dans l'inventaire, au sol s'il est plein.
 - Ce qui est équipé n'est jamais proposé ; les matériaux bruts non plus, les matériaux fabriqués seulement si
-  `IncludeMaterials` est activé. Aucune station d'artisanat nécessaire.
+  `IncludeMaterials` est activé. Aucune station d'artisanat nécessaire pour la fenêtre.
+- **Le Recycleur** (meuble) : marteau, onglet Meubles, établi à portée, 10 bois + 10 pierre. Modèle de coffre que le jeu
+  ne laisse jamais fabriquer (coffre dvergr), impossible à confondre avec vos coffres. On y jette tout, on ouvre, bouton
+  **Recycler** (deux clics) : tout ce qui a une recette devient matériaux laissés dedans, le reste ne bouge pas. 32 cases.
 
 Réglages : `ToggleKey`, `Ratio`, `IncludeAmmo`, `IncludeMaterials` ; fichier `vmods.recycle.cfg` ou Mod Hub (F9).

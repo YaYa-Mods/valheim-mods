@@ -11,7 +11,7 @@ no external dependencies beyond BepInEx and Harmony. The in-game UI follows the 
 | [**Inventory**](mods/Inventory/README.md) | Larger, scrollable inventory (up to 40 rows), equipment slots (head, chest, legs, cape, accessory) next to the grid, pickups fill from the top, sorting (category / name / quantity / weight), stacking, category filter toolbar, keep inventory and skills on death, tombstone recovery, bigger stacks and carry weight. |
 | [**Craft From Chests**](mods/CraftFromChests/README.md) | Crafting stations and the crafting menu use materials from nearby chests. |
 | [**Home Teleport**](mods/HomeTeleport/README.md) | F8: teleport to your bed (with confirmation). |
-| [**Recycle**](mods/Recycle/README.md) | F3: recycle crafted gear for a share of its materials (one third by default, upgrades included), read from the game recipes. |
+| [**Recycle**](mods/Recycle/README.md) | F3: recycle crafted gear for a share of its materials (one third by default, upgrades included), read from the game recipes; plus a buildable Recycler chest that turns everything thrown in it into materials. |
 | [**Lumberjack**](mods/Lumberjack/README.md) | Woodcutting skill matters: high level fells trees in one hit and auto-cuts logs. |
 | [**Longer Food**](mods/LongerFood/README.md) | Food lasts longer (× factor, configurable). |
 | [**No Durability**](mods/NoDurability/README.md) | Tools, weapons and armour never wear out. |
@@ -65,7 +65,7 @@ Treize mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du
 - **Mod Hub** (F9) : configuration en jeu, roue d'action, boutons dans l'inventaire, aides de touches.
 - **Inventory** : inventaire agrandi et défilant, emplacements d'équipement à côté de la grille, ramassage dans la
   première case libre, tri, empilage, filtre par catégorie, mort sans perte (objets et compétences).
-- **Recycle** (F3) : recyclage de l'équipement fabriqué contre un tiers de ses matériaux.
+- **Recycle** (F3) : recyclage de l'équipement fabriqué contre un tiers de ses matériaux, et un meuble Recycleur à poser.
 - **Craft From Chests**, **Home Teleport** (F8), **Lumberjack**, **Longer Food**, **No Durability**, **Short Nights**,
   **Movement**, **Quick Start**.
 

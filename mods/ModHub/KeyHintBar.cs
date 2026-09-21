@@ -34,7 +34,7 @@ namespace ModHub
             // Visible seulement quand aucun groupe du jeu ne l'est, HUD affiché, pas de fenêtre de mod ouverte
             bool gameHint = false;
             foreach (var g in s_gameGroups) if (g != null && g.gameObject.activeSelf) { gameHint = true; break; }
-            bool show = !gameHint && !Hud.IsUserHidden() && !Plugin.WindowOpen && !TextInput.IsVisible() && !Minimap.IsOpen() && !Player.m_localPlayer.IsDead() && !Player.m_localPlayer.InCutscene();
+            bool show = !gameHint && !Hud.IsUserHidden() && !Plugin.WindowOpen && !TextInput.IsVisible() && !Minimap.IsOpen() && !InventoryGui.IsVisible() && !Player.m_localPlayer.IsDead() && !Player.m_localPlayer.InCutscene();
             if (s_group.activeSelf != show) s_group.SetActive(show);
             if (!show || Time.unscaledTime < s_nextRefresh) return;
             s_nextRefresh = Time.unscaledTime + 0.5f;

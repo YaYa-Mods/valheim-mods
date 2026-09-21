@@ -44,17 +44,51 @@ namespace InventoryMod
         [HarmonyPrefix]
         private static void InventoryGui_SetInventorySize(ref int rows)
         {
-            if (Plugin.Enabled.Value) rows = Mathf.Min(rows, Plugin.VisibleRows.Value);
+            if (Plugin.Enabled.Value) rows = Mathf.Min(rows, VisibleRowsFor(s_openContainer));
         }
+
+        /// <summary>
+        /// Lignes visibles du panneau joueur. Un coffre ouvert s'affiche SOUS le panneau joueur : avec 9 lignes visibles,
+        /// un coffre de 4 lignes sort de l'écran (le jeu n'a prévu que 4 lignes de joueur). On garde 8 lignes en tout
+        /// entre les deux (mesuré : 287 + 70,75 par ligne, coffre 108 + 70,75 par ligne, écran 1080), au moins 4.
+        /// </summary>
+        internal static int VisibleRowsFor(Container container)
+        {
+            int wanted = Plugin.VisibleRows.Value;
+            if (container == null || container.GetInventory() == null) return wanted;
+            return Mathf.Clamp(Mathf.Min(wanted, 8 - container.GetInventory().GetHeight()), 4, wanted);
+        }
+
+        private static Container s_openContainer;
 
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Show))]
         [HarmonyPostfix]
-        private static void InventoryGui_Show(InventoryGui __instance)
+        private static void InventoryGui_Show(InventoryGui __instance, Container container)
         {
             // Mod éteint : la colonne d'outils doit disparaître, sinon le joueur garde un panneau dont il ne peut plus rien faire
             if (!Plugin.Enabled.Value) { ShowTools(false); return; }
-            try { EnsureScroll(__instance); EnsureButtons(__instance); ShowTools(true); Equipment.Sync(Player.m_localPlayer); }
+            try
+            {
+                s_openContainer = container;
+                var inv = Player.m_localPlayer?.GetInventory();
+                if (inv != null) __instance.SetInventorySize(inv.GetHeight()); // repasse par le plafond : moins de lignes visibles si un coffre est ouvert
+                EnsureScroll(__instance); FitScrollbar(__instance); EnsureButtons(__instance); ShowTools(true); Equipment.Sync(Player.m_localPlayer);
+            }
             catch (Exception ex) { Plugin.Log.LogWarning("Inventaire (défilement/boutons) : " + ex.Message); }
+        }
+
+        /// <summary>La barre de défilement suit la hauteur de la grille (elle change quand un coffre est ouvert).</summary>
+        private static void FitScrollbar(InventoryGui gui)
+        {
+            var grid = gui.m_playerGrid; var bar = grid != null ? grid.m_scrollbar : null;
+            if (grid == null || bar == null || bar.name != "PlayerScroll") return;
+            var brt = bar.GetComponent<RectTransform>(); var grt = grid.GetComponent<RectTransform>();
+            var gridCorners = new Vector3[4]; grt.GetWorldCorners(gridCorners);
+            var panelCorners = new Vector3[4]; gui.m_player.GetWorldCorners(panelCorners);
+            float scale = gui.m_player.lossyScale.y > 0f ? gui.m_player.lossyScale.y : 1f;
+            float top = (panelCorners[1].y - gridCorners[1].y) / scale, height = (gridCorners[1].y - gridCorners[0].y) / scale;
+            brt.anchoredPosition = new Vector2(2f, -top);
+            brt.sizeDelta = new Vector2(10f, height);
         }
 
         // Le filtre par catégorie est une vue du moment : refermer l'inventaire le lève, sinon on rouvre sur des cases
