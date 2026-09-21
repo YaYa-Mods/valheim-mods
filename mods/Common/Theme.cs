@@ -9,7 +9,7 @@ namespace ModsCommon
     /// </summary>
     internal static class Theme
     {
-        public static readonly Color Accent = new Color(0.96f, 0.66f, 0.28f);
+        public static readonly Color Accent = new Color(1f, 0.718f, 0.36f); // #FFB75C : orangé des titres du compendium du jeu
         public static readonly Color Text = new Color(0.93f, 0.90f, 0.82f);
         public static readonly Color MutedColor = new Color(0.80f, 0.78f, 0.72f);
 
@@ -311,7 +311,7 @@ namespace ModsCommon
                 {
                     if (f == null) continue;
                     if (f.name == "Norsebold") s_title = f;
-                    else if (f.name == "AveriaSansLibre-Regular") s_body = f;
+                    else if (f.name == "AveriaSerifLibre-Bold") s_body = f;      // police des lignes et textes du compendium (trophées, compétences)
                     else if (f.name == "AveriaSerifLibre-Regular") s_fallback = f;
                 }
                 if (s_body != null && !(s_body.HasCharacter('é') && s_body.HasCharacter('É') && s_body.HasCharacter('ç'))) s_body = null;
@@ -399,7 +399,36 @@ namespace ModsCommon
             skin.verticalScrollbarThumb.fixedWidth = 10;
             skin.scrollView.normal.background = Solid(new Color(0, 0, 0, 0.25f)); skin.scrollView.padding = new RectOffset(8, 8, 8, 8);
 
+            // Sprites et couleurs du compendium du jeu par-dessus le thème dessiné : la fenêtre garde sa densité et son
+            // contenu, mais son cadre, ses fonds, ses boutons et ses teintes sont ceux des trophées et des compétences.
+            try
+            {
+                if (GameSkin.TryApply(skin))
+                {
+                    UsingGameSkin = true;
+                    skin.window.normal.textColor = GameSkin.Title; skin.window.onNormal.textColor = GameSkin.Title;
+                    // Le cadre de bois a une bordure épaisse : le contenu ne doit pas monter dessus
+                    var wb = skin.window.border;
+                    skin.window.padding = new RectOffset(Mathf.Max(skin.window.padding.left, wb.left + 6), Mathf.Max(skin.window.padding.right, wb.right + 6),
+                                                         Mathf.Max(skin.window.padding.top, wb.top + 12), Mathf.Max(skin.window.padding.bottom, wb.bottom + 6));
+                    skin.window.contentOffset = new Vector2(0f, -(skin.window.padding.top - 16f));
+                    foreach (var st in new[] { skin.button.normal, skin.button.hover, skin.button.active, skin.button.focused })
+                        st.textColor = GameSkin.ButtonText;
+                    foreach (var st in new[] { skin.toggle.normal, skin.toggle.hover, skin.toggle.active, skin.toggle.focused })
+                        st.textColor = Color.white; // lignes de liste : blanc comme celles du compendium (les boutons, eux, sont orangés)
+                    foreach (var st in new[] { skin.button.onNormal, skin.button.onHover, skin.button.onActive, skin.button.onFocused,
+                                               skin.toggle.onNormal, skin.toggle.onHover, skin.toggle.onActive, skin.toggle.onFocused })
+                        st.textColor = Color.white;
+                    skin.label.normal.textColor = Color.white;
+                    skin.button.padding = new RectOffset(14, 14, 8, 8); skin.toggle.padding = new RectOffset(14, 14, 8, 8);
+                }
+            }
+            catch (System.Exception ex) { Debug.LogWarning("[vmods] habillage par les sprites du jeu : " + ex.Message); }
+
             s_skin = skin;
         }
+
+        /// <summary>Vrai quand les sprites du jeu ont pu être appliqués (sinon thème dessiné).</summary>
+        public static bool UsingGameSkin { get; private set; }
     }
 }

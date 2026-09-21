@@ -119,7 +119,8 @@ namespace TestHarness
                     if (scanner != null)
                     {
                         scanner.Interact?.Invoke();
-                        yield return null;
+                        yield return new WaitForSecondsRealtime(0.5f); // la roue exécute l'action à la fermeture de son animation
+                        if (!(bool)rfOpenF.GetValue(null)) { scanner.Interact?.Invoke(); yield return new WaitForSecondsRealtime(0.5f); }
                         h.Check("Radial.Scanner ouvre le finder", (bool)rfOpenF.GetValue(null));
                     }
                 }

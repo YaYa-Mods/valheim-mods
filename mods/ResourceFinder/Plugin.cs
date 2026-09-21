@@ -95,7 +95,7 @@ namespace ResourceFinder
             MaxPinsPerLayer = Config.Bind("Display", "MaxPinsPerLayer", 30,
                 new ConfigDescription(L.T("Nombre max de positions (donc d'épingles) conservées par couche : les plus proches. ") +
                                       L.T("Des milliers d'épingles ralentissent fortement le jeu."), new AcceptableValueRange<int>(3, 200)));
-            PanelStyle = Config.Bind("Display", "PanelStyle", Style.Natif,
+            PanelStyle = Config.Bind("Display", "PanelStyle", Style.Classique,
                 L.T("Apparence de la fenêtre : Natif = le panneau du jeu (celui des trophées et des compétences, cloné avec ses sprites et ses polices) ; Classique = la fenêtre dessinée par le mod."));
             HideUndiscovered = Config.Bind("Display", "HideUndiscovered", true,
                 L.T("Immersion : ne proposer que les ressources dont vous avez déjà eu le matériau en main et les lieux dont vous avez visité le biome. ") +

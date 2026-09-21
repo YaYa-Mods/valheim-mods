@@ -80,7 +80,7 @@ namespace ModsCommon
             _lastDir = dir;
 
             // Stick droit : défilement du groupe contenant le focus (ou du premier)
-            float ry = ZInput.GetJoyRightStickY(true);
+            float ry = ZInput.GetJoyRightStickY();
             if (Mathf.Abs(ry) > 0.25f && _scrolls.Count > 0)
             {
                 int g = _focus < _items.Count && _items[_focus].Scroll >= 0 ? _items[_focus].Scroll : 0;

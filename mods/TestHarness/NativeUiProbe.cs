@@ -91,14 +91,14 @@ namespace TestHarness
             rfT.GetMethod("Open", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(rfInst, null);
             yield return new WaitForSecondsRealtime(1.2f);
             var panel = GameObject.Find("ResourceFinderPanel");
-            h.Check("Scanner.panneau natif construit", panel != null && panel.activeSelf, panel == null ? "panneau absent (repli sur la fenêtre dessinée ?)" : "actif=" + panel.activeSelf);
-            if (panel != null)
-            {
-                sb.AppendLine().AppendLine("--- Notre panneau (scanner) ---");
-                Dump(sb, panel.transform, 0);
-                ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "finder_native.png"));
-                yield return new WaitForSecondsRealtime(1f);
-            }
+            bool nativeStyle = (bool)rfT.GetProperty("UseNativePanel", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null, null);
+            var themeT = rfT.Assembly.GetType("ModsCommon.Theme");
+            bool gameSkin = (bool)themeT.GetProperty("UsingGameSkin", BindingFlags.Public | BindingFlags.Static).GetValue(null, null);
+            if (nativeStyle) h.Check("Scanner.panneau natif construit", panel != null && panel.activeSelf, panel == null ? "panneau absent" : "actif=" + panel.activeSelf);
+            else h.Check("Scanner.fenêtre habillée des sprites du jeu", gameSkin, "UsingGameSkin=" + gameSkin);
+            if (panel != null) { sb.AppendLine().AppendLine("--- Notre panneau (scanner) ---"); Dump(sb, panel.transform, 0); }
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "finder_native.png"));
+            yield return new WaitForSecondsRealtime(1f);
             rfT.GetMethod("Close", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(rfInst, null);
             yield return new WaitForSecondsRealtime(0.5f);
 
