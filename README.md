@@ -20,7 +20,11 @@ no external dependencies beyond BepInEx and Harmony. The in-game UI follows the 
 | [**Test Harness**](mods/TestHarness/README.md) | *(developers)* In-game integration tests with screenshots, run on a dedicated test character/world. |
 
 All mods share `mods/Common` (IMGUI theme using the game's own fonts, gamepad navigation, the French/English text table) and talk to each other only by
-reflection (`RadialEntries()`, `InventoryEntries()`, `KeyHints()`, `SearchLabel()`), so every DLL works alone.
+reflection (`RadialEntries()`, `InventoryEntries()`, `KeyHints()`, `SearchLabel()`, `HudRects()`, `CloseWindow()`), so every DLL works alone.
+
+Only one thing is on screen at a time: opening a mod window closes the other mods' windows, the inventory and the large map, and
+the window closes itself when the game takes the screen back (inventory, map, pause menu, shop, death). On-screen elements
+(quest tracker, target pill) never cover the game HUD or each other.
 
 ## Building
 
@@ -62,6 +66,10 @@ Douze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du 
   compétences).
 - **Craft From Chests**, **Home Teleport** (F8), **Lumberjack**, **Longer Food**, **No Durability**, **Short Nights**,
   **Movement**, **Quick Start**.
+
+Une seule chose à l'écran à la fois : ouvrir une fenêtre de mod ferme celles des autres mods, l'inventaire et la grande carte,
+et la fenêtre se ferme d'elle-même si le jeu reprend l'écran (inventaire, carte, menu, boutique, mort). Le suivi de quête et
+la pastille de cible ne recouvrent jamais le HUD du jeu ni l'un l'autre.
 
 Compilation : `dotnet build mods/<Mod> -c Release -p:Deploy=true` (dossier du jeu : variable `VALHEIM_DIR` ou
 `mods/Directory.Build.props.user`). Tests en jeu : `tools/run-tests.ps1 -Quick` (personnage et monde de test dédiés).

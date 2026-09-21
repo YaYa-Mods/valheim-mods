@@ -1067,32 +1067,60 @@ namespace ResourceFinder
                 {
                     try { var r = m.Invoke(null, null) as Rect[]; if (r != null) s_reserved.AddRange(r); } catch { }
                 }
+            s_reserved.AddRange(GameHud.Rects()); // et le HUD du jeu lui-même : barres, barre d'action, mini-carte, messages, boss
             return s_reserved;
         }
 
-        /// <summary>Pastille entièrement à l'écran et hors des zones réservées : on la décale sous, puis sur, puis à côté de l'obstacle.</summary>
+        /// <summary>
+        /// Pastille entièrement à l'écran et hors des zones réservées. Quand elle en recouvre une, on essaie les places
+        /// juste sous, sur, à gauche et à droite de l'obstacle, puis à partir de celles-ci (trois rangs au plus : deux
+        /// obstacles voisins, comme les barres de vie et les aides de touches en bas, ne la piègent pas), et on garde la
+        /// place libre la plus proche de la demande.
+        /// </summary>
         internal static Rect PlacePill(Rect rect, float sw, float sh, List<Rect> reserved)
         {
-            const float m = 6f;
+            const float m = 6f, gap = 8f;
             rect.x = Mathf.Clamp(rect.x, m, Mathf.Max(m, sw - rect.width - m));
             rect.y = Mathf.Clamp(rect.y, m, Mathf.Max(m, sh - rect.height - m));
-            if (reserved == null || reserved.Count == 0) return rect;
-            for (int pass = 0; pass < 4; pass++)
+            if (reserved == null || reserved.Count == 0 || PillFree(rect, reserved)) return rect;
+            var origin = rect.position;
+            Rect best = rect; float bestD = float.MaxValue;
+            s_pillQueue.Clear(); s_pillQueue.Add(rect);
+            for (int depth = 0; depth < 3 && bestD == float.MaxValue && s_pillQueue.Count > 0; depth++)
             {
-                bool moved = false;
-                foreach (var r in reserved)
-                {
-                    if (r.width <= 0f || !r.Overlaps(rect)) continue;
-                    float below = r.yMax + 8f, above = r.yMin - rect.height - 8f;
-                    if (below + rect.height <= sh - m) rect.y = below;
-                    else if (above >= m) rect.y = above;
-                    else if (r.xMin - rect.width - 8f >= m) rect.x = r.xMin - rect.width - 8f;
-                    else rect.x = Mathf.Min(r.xMax + 8f, Mathf.Max(m, sw - rect.width - m));
-                    moved = true;
-                }
-                if (!moved) break;
+                s_pillNext.Clear();
+                foreach (var cur in s_pillQueue)
+                    foreach (var r in reserved)
+                    {
+                        if (r.width <= 0f || !r.Overlaps(cur)) continue;
+                        PillTry(new Rect(cur.x, r.yMax + gap, cur.width, cur.height), sw, sh, m, reserved, origin, ref best, ref bestD);
+                        PillTry(new Rect(cur.x, r.yMin - cur.height - gap, cur.width, cur.height), sw, sh, m, reserved, origin, ref best, ref bestD);
+                        PillTry(new Rect(r.xMin - cur.width - gap, cur.y, cur.width, cur.height), sw, sh, m, reserved, origin, ref best, ref bestD);
+                        PillTry(new Rect(r.xMax + gap, cur.y, cur.width, cur.height), sw, sh, m, reserved, origin, ref best, ref bestD);
+                    }
+                var t = s_pillQueue; s_pillQueue = s_pillNext; s_pillNext = t;
             }
-            return rect;
+            return best;
+        }
+
+        private static List<Rect> s_pillQueue = new List<Rect>(), s_pillNext = new List<Rect>();
+
+        private static bool PillFree(Rect rect, List<Rect> reserved)
+        {
+            foreach (var r in reserved) if (r.width > 0f && r.Overlaps(rect)) return false;
+            return true;
+        }
+
+        /// <summary>Une place candidate : hors écran on l'ignore ; libre on la garde si elle est la plus proche ; sinon on repartira d'elle.</summary>
+        private static void PillTry(Rect cand, float sw, float sh, float m, List<Rect> reserved, Vector2 origin, ref Rect best, ref float bestD)
+        {
+            if (cand.xMin < m || cand.yMin < m || cand.xMax > sw - m || cand.yMax > sh - m) return;
+            if (PillFree(cand, reserved))
+            {
+                float d = (cand.position - origin).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = cand; }
+            }
+            else if (s_pillNext.Count < 32) s_pillNext.Add(cand);
         }
 
         private void DrawHud()

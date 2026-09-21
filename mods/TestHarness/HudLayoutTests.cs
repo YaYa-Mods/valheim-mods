@@ -93,21 +93,50 @@ namespace TestHarness
             h.Check("HUD.éléments du jeu repérés", hudParts.Count >= 3, $"{hudParts.Count} éléments");
 
             modeCfg.BoxedValue = Enum.Parse(modeCfg.SettingType, "Complet");
-            foreach (var kv in presets)
+            var stepsCfg = (BepInEx.Configuration.ConfigEntry<int>)guideT.GetField("TrackerSteps", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
+            int prevSteps = stepsCfg.Value;
+            // Le jeu recalcule les maximums chaque seconde d'après la nourriture : on change la base (m_baseHP, m_baseStamina) plutôt que le résultat
+            var baseHp = typeof(Player).GetField("m_baseHP", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var baseSt = typeof(Player).GetField("m_baseStamina", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            float prevBaseHp = baseHp != null ? (float)baseHp.GetValue(player) : 25f, prevBaseSt = baseSt != null ? (float)baseSt.GetValue(player) : 75f;
+            // Deux passes : personnage de départ, puis personnage bien nourri (barres de vie, endurance et eitr au plus grand)
+            // avec le suivi au plus long (8 étapes) : le pire cas pour les positions ancrées en bas
+            for (int pass = 0; pass < 2; pass++)
             {
-                string name = (string)kv.GetType().GetProperty("Key").GetValue(kv, null);
-                var pos = (Vector2)kv.GetType().GetProperty("Value").GetValue(kv, null);
-                xCfg.Value = pos.x; yCfg.Value = pos.y;
-                yield return new WaitForSecondsRealtime(0.4f); // le temps que le suivi soit redessiné à sa nouvelle place
-                var t = (Rect)rectF.GetValue(null);
-                var screen = new Rect(t.x * scale, t.y * scale, t.width * scale, t.height * scale);
-                var hits = hudParts.Where(p => p.Value.Overlaps(screen)).Select(p => p.Key).Distinct().ToList();
-                bool inside = screen.xMin >= -1f && screen.yMin >= -1f && screen.xMax <= Screen.width + 1f && screen.yMax <= Screen.height + 1f;
-                h.Check($"Suivi.position « {name} » n'écrase rien", hits.Count == 0 && inside,
-                    $"suivi {screen.x:0},{screen.y:0} {screen.width:0}×{screen.height:0}, écran {Screen.width}×{Screen.height}, recouvre : {(hits.Count == 0 ? "rien" : string.Join(" + ", hits))}{(inside ? "" : ", DÉBORDE de l'écran")}");
-                ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "tracker_" + name.Replace(' ', '_').ToLowerInvariant() + ".png"));
-                yield return new WaitForSecondsRealtime(0.5f);
+                if (pass == 1)
+                {
+                    baseHp?.SetValue(player, 400f); baseSt?.SetValue(player, 400f);
+                    // Et de la nourriture donnant de l'eitr : sa barre apparaît sous celle d'endurance
+                    foreach (var food in new[] { "YggdrasilPorridge", "SerpentStew", "LoxPie" })
+                    {
+                        var item = ObjectDB.instance.GetItemPrefab(food)?.GetComponent<ItemDrop>()?.m_itemData?.Clone();
+                        if (item != null) try { player.EatFood(item); } catch (Exception ex) { Plugin.Log.LogWarning("[TEST] EatFood " + food + " : " + ex.Message); }
+                    }
+                    stepsCfg.Value = 8;
+                    yield return new WaitForSecondsRealtime(1.5f);
+                    Plugin.Log.LogInfo($"[TEST] bien nourri : vie max={player.GetMaxHealth():0}, endurance max={player.GetMaxStamina():0}, eitr max={player.GetMaxEitr():0}");
+                    hudParts = GameHud();
+                    Plugin.Log.LogInfo("[TEST] HUD bien nourri : " + string.Join(", ", hudParts.Select(p => $"{p.Key} {p.Value.x:0},{p.Value.y:0} {p.Value.width:0}×{p.Value.height:0}")));
+                }
+                string suffix = pass == 1 ? " (bien nourri, 8 étapes)" : "";
+                foreach (var kv in presets)
+                {
+                    string name = (string)kv.GetType().GetProperty("Key").GetValue(kv, null);
+                    var pos = (Vector2)kv.GetType().GetProperty("Value").GetValue(kv, null);
+                    xCfg.Value = pos.x; yCfg.Value = pos.y;
+                    yield return new WaitForSecondsRealtime(0.4f); // le temps que le suivi soit redessiné à sa nouvelle place
+                    var t = (Rect)rectF.GetValue(null);
+                    var screen = new Rect(t.x * scale, t.y * scale, t.width * scale, t.height * scale);
+                    var hits = hudParts.Where(p => p.Value.Overlaps(screen)).Select(p => p.Key).Distinct().ToList();
+                    bool inside = screen.xMin >= -1f && screen.yMin >= -1f && screen.xMax <= Screen.width + 1f && screen.yMax <= Screen.height + 1f;
+                    h.Check($"Suivi.position « {name} »{suffix} n'écrase rien", hits.Count == 0 && inside,
+                        $"suivi {screen.x:0},{screen.y:0} {screen.width:0}×{screen.height:0}, écran {Screen.width}×{Screen.height}, recouvre : {(hits.Count == 0 ? "rien" : string.Join(" + ", hits))}{(inside ? "" : ", DÉBORDE de l'écran")}");
+                    ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "tracker_" + name.Replace(' ', '_').ToLowerInvariant() + (pass == 1 ? "_max" : "") + ".png"));
+                    yield return new WaitForSecondsRealtime(0.5f);
+                }
             }
+            baseHp?.SetValue(player, prevBaseHp); baseSt?.SetValue(player, prevBaseSt); stepsCfg.Value = prevSteps;
+            try { player.ClearFood(); } catch { }
 
             xCfg.Value = prevX; yCfg.Value = prevY; modeCfg.BoxedValue = prevMode;
             yield return new WaitForSecondsRealtime(0.3f);
@@ -213,6 +242,20 @@ namespace TestHarness
                 bool inside = got.xMin >= 0f && got.yMin >= 0f && got.xMax <= sw && got.yMax <= sh;
                 bool clear = c.zones.TrueForAll(z => !z.Overlaps(got));
                 h.Check($"Pastille.{c.nom}", inside && clear, $"placée {got.x:0},{got.y:0} {got.width:0}×{got.height:0}, dans l'écran={inside}, dégagée={clear}");
+            }
+
+            // ---- et face au vrai HUD du jeu : une pastille posée sur chaque élément relevé doit en être écartée
+            var gameRects = (List<Rect>)Asm("ResourceFinder").GetType("ResourceFinder.GameHud").GetMethod("Rects", BindingFlags.Public | BindingFlags.Static).Invoke(null, null);
+            var reserved = (List<Rect>)Asm("ResourceFinder").GetType("ResourceFinder.Plugin").GetMethod("ReservedHudRects", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
+            h.Check("Pastille.HUD du jeu relevé par le scanner", gameRects.Count >= 4 && reserved.Count >= gameRects.Count, $"{gameRects.Count} zones du jeu, {reserved.Count} réservées : {string.Join(", ", gameRects.Select(r => $"{r.x:0},{r.y:0} {r.width:0}×{r.height:0}"))}");
+            int hudCase = 0;
+            foreach (var z in gameRects.ToList())
+            {
+                var ask = new Rect(z.center.x - 150f, z.center.y - 18f, 300f, 36f);
+                var got = (Rect)place.Invoke(null, new object[] { ask, screen1080.x, screen1080.y, reserved });
+                bool inside = got.xMin >= 0f && got.yMin >= 0f && got.xMax <= screen1080.x && got.yMax <= screen1080.y;
+                bool clear = reserved.TrueForAll(r => !r.Overlaps(got));
+                h.Check($"Pastille.sur le HUD du jeu {++hudCase}", inside && clear, $"zone {z.x:0},{z.y:0} {z.width:0}×{z.height:0} → placée {got.x:0},{got.y:0}, dans l'écran={inside}, dégagée={clear}");
             }
         }
     }
