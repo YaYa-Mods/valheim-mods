@@ -108,6 +108,10 @@ namespace InventoryMod
                     if (other != null) other.m_gridPos = item.m_gridPos;
                     item.m_gridPos = want; changed = true;
                 }
+                else if (item.m_gridPos.y == reserved && !item.m_equipped && slot == item.m_gridPos.x && !player.IsDead() && player.EquipItem(item, false))
+                {
+                    continue; // pièce laissée dans sa case (mort avec inventaire conservé) : remise
+                }
                 else if (item.m_gridPos.y == reserved && (!item.m_equipped || slot < 0 || item.m_gridPos.x != slot))
                 {
                     var free = FirstFree(inv, item.IsWeapon());
@@ -147,11 +151,23 @@ namespace InventoryMod
             try { PlaceEquipped(p.GetInventory(), item); } catch (Exception ex) { Plugin.Log.LogWarning("équipement : " + ex.Message); }
         }
 
+        // La mort : le jeu retire tout l'équipement dans Player.OnDeath ; les pièces restent dans leurs cases (inventaire
+        // conservé) et Sync les remet à l'apparition. IsDead() n'est pas encore vrai à ce moment-là : on marque le passage.
+        private static bool s_dying;
+        [HarmonyPatch(typeof(Player), "OnDeath")]
+        [HarmonyPrefix]
+        private static void Player_OnDeath_Prefix() { s_dying = true; }
+        [HarmonyPatch(typeof(Player), "OnDeath")]
+        [HarmonyFinalizer]
+        private static void Player_OnDeath_Finalizer() { s_dying = false; }
+
         [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.UnequipItem))]
         [HarmonyPostfix]
         private static void Humanoid_UnequipItem(Humanoid __instance, ItemDrop.ItemData item)
         {
             if (!Active || item == null || !(__instance is Player p) || p != Player.m_localPlayer) return;
+            // À la mort, le jeu retire tout : les pièces restent dans leurs cases et sont remises à l'apparition (inventaire conservé)
+            if (s_dying || p.IsDead()) return;
             try { PlaceUnequipped(p.GetInventory(), item); } catch (Exception ex) { Plugin.Log.LogWarning("équipement : " + ex.Message); }
         }
 

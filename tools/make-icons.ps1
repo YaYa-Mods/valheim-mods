@@ -177,3 +177,12 @@ New-Icon "$root\mods\Inventory\Icons\cat_misc.png" {
     $g.DrawLine($pen, 26, 72, 102, 72)
     if ($pass -eq 1) { $g.FillEllipse($brush, 58, 76, 12, 12) }
 }
+
+# Deux flèches en boucle (recyclage)
+New-Icon "$root\mods\Recycle\Icons\recycle.png" {
+    param($g, $pen, $brush, $pass)
+    $g.DrawArc($pen, 24, 24, 80, 80, 200, 140)
+    $g.DrawArc($pen, 24, 24, 80, 80, 20, 140)
+    $g.DrawLine($pen, 90, 38, 102, 52); $g.DrawLine($pen, 114, 38, 102, 52)
+    $g.DrawLine($pen, 14, 90, 26, 76); $g.DrawLine($pen, 38, 90, 26, 76)
+}

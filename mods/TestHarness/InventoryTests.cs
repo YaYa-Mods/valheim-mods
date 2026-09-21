@@ -136,9 +136,14 @@ namespace TestHarness
             string shot = System.IO.Path.Combine(Paths.ConfigPath, "inventory_scroll.png");
             ScreenCapture.CaptureScreenshot(shot);
             yield return new WaitForSecondsRealtime(1.5f);
-            ((GameObject)catButtons2[0].GetType().GetField("Go").GetValue(catButtons2[0])).GetComponent<UnityEngine.UI.Button>().onClick.Invoke(); // Toutes
-            gridT.GetField("FocusFamily", BindingFlags.NonPublic | BindingFlags.Static).SetValue(null, -1);
+            // Refermer l'inventaire avec une catégorie choisie la lève (sinon on rouvre sur des cases « vides »)
+            var focusF = gridT.GetField("FocusFamily", BindingFlags.NonPublic | BindingFlags.Static);
+            if ((int)focusF.GetValue(null) < 0) ((GameObject)catButtons2[1].GetType().GetField("Go").GetValue(catButtons2[1])).GetComponent<UnityEngine.UI.Button>().onClick.Invoke();
+            int focusOpen = (int)focusF.GetValue(null);
             InventoryGui.instance.Hide();
+            yield return new WaitForSecondsRealtime(0.3f);
+            h.Check("Inventaire.fermer lève le filtre par catégorie", focusOpen >= 0 && (int)focusF.GetValue(null) < 0, $"ouvert={focusOpen}, après fermeture={(int)focusF.GetValue(null)}");
+            focusF.SetValue(null, -1);
             foreach (var it in added.Where(i => inv.ContainsItem(i))) inv.RemoveItem(it);
             inv.RemoveItem("$item_wood", 16, -1, false);
             h.Check("Inventaire.capture", System.IO.File.Exists(shot), shot);

@@ -25,7 +25,9 @@ $mods = @(
     @{ Dir = 'CraftFromChests'; Name = 'CraftFromChests'; Glyph = 'chest'
        Desc = 'Crafting, building and stations (smelter, oven, fermenter...) use materials from nearby chests as if they were in your inventory. Configurable range.' }
     @{ Dir = 'HomeTeleport'; Name = 'HomeTeleport'; Icon = 'HomeTeleport\Icons\home.png'
-       Desc = 'One key (F8) to teleport back to your bed, with confirmation, refused while an enemy targets you, optional cooldown. EN/FR.' }
+       Desc = 'One key (F8) to teleport back to your bed, with confirmation and an optional cooldown. EN/FR.' }
+    @{ Dir = 'Recycle'; Name = 'Recycle'; Icon = 'Recycle\Icons\recycle.png'
+       Desc = 'Recycle crafted gear for a share of its materials (one third by default, upgrades included), read from the game recipes. Window with gamepad support. EN/FR.' }
     @{ Dir = 'Lumberjack'; Name = 'Lumberjack'; Glyph = 'tree'
        Desc = 'The Woodcutting skill matters: high level fells trees in one hit, and fallen logs and stumps cut themselves up. Tool tiers still apply.' }
     @{ Dir = 'LongerFood'; Name = 'LongerFood'; Glyph = 'food'

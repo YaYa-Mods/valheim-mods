@@ -290,6 +290,7 @@ namespace TestHarness
                 yield return Safe("CreatureTests", CreatureTests.Run(this, Player.m_localPlayer));
                 yield return Safe("InventoryTests", InventoryTests.Run(this, Player.m_localPlayer));
                 yield return Safe("EquipmentTests", EquipmentTests.Run(this, Player.m_localPlayer));
+                yield return Safe("RecycleTests", RecycleTests.Run(this, Player.m_localPlayer));
                 yield return Safe("GuideTests", GuideTests.Run(this, Player.m_localPlayer));
                 GuideAudit.Run(this);
                 CatalogAudit.Run(this);
@@ -554,6 +555,7 @@ namespace TestHarness
             yield return Safe("CreatureTests", CreatureTests.Run(this, player));
             yield return Safe("InventoryTests", InventoryTests.Run(this, player));
             yield return Safe("EquipmentTests", EquipmentTests.Run(this, player));
+            yield return Safe("RecycleTests", RecycleTests.Run(this, player));
             yield return Safe("GuideTests", GuideTests.Run(this, player));
             GuideAudit.Run(this);
             CatalogAudit.Run(this);

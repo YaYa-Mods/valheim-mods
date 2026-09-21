@@ -23,7 +23,7 @@ A more comfortable inventory: bigger, sortable, filterable, and death without lo
   slots are the last inventory row, drawn apart, so removing the mod leaves everything in place.
 - **Category filter**: a toolbar above the grid with one button per category. Choosing one sorts that category first
   and either **hides** the other items (slots look empty and cannot be clicked) or **dims** them, depending on
-  `FilterStyle`.
+  `FilterStyle`. Closing the inventory clears the filter.
 - **Death**: keep the whole inventory (no tombstone) and keep your skills (the game normally removes 5% of each).
   Tombstones left in the world from before are emptied into your inventory on spawn and removed.
 - **Toolbar**: actions (sort, stack) then one button per category, in the same icon language as the game's action wheel. It disappears with the mod when you disable it, and the mouse wheel scrolls the grid instead of zooming the camera.

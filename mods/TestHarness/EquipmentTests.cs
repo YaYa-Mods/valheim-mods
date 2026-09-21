@@ -108,6 +108,19 @@ namespace TestHarness
             h.Check("Équipement.le tri laisse les cases d'équipement", helmet2.m_gridPos == new Vector2i(0, reserved) && chest.m_gridPos == new Vector2i(1, reserved) && legs.m_gridPos == new Vector2i(2, reserved),
                 $"casque {helmet2.m_gridPos.x},{helmet2.m_gridPos.y}, torse {chest.m_gridPos.x},{chest.m_gridPos.y}, jambes {legs.m_gridPos.x},{legs.m_gridPos.y}");
 
+            // Mort avec inventaire conservé : le jeu retire tout dans OnDeath ; les pièces restent dans leurs cases et sont remises à l'apparition
+            {
+                var dying = eqT.GetField("s_dying", BindingFlags.NonPublic | BindingFlags.Static);
+                dying.SetValue(null, true);
+                player.UnequipItem(chest, false);
+                dying.SetValue(null, false);
+                bool stayed = !chest.m_equipped && chest.m_gridPos == new Vector2i(1, reserved);
+                eqT.GetMethod("Sync", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, new object[] { player });
+                yield return null;
+                h.Check("Équipement.mort : la pièce reste dans sa case puis est remise", stayed && chest.m_equipped && chest.m_gridPos == new Vector2i(1, reserved),
+                    $"restée en place={stayed}, après apparition équipée={chest.m_equipped} en {chest.m_gridPos.x},{chest.m_gridPos.y}");
+            }
+
             // Panneau : présent, cinq cases hors de la grille, rien recouvert (colonne d'outils, panneau de fabrication), capture
             yield return new WaitForSecondsRealtime(0.5f);
             var panel = GameObject.Find("EquipmentPanel");

@@ -1,6 +1,6 @@
 # YaYa's Valheim mods
 
-A set of BepInEx mods for Valheim, built from source against the game's own assemblies, no downloaded binaries,
+A set of thirteen BepInEx mods for Valheim, built from source against the game's own assemblies, no downloaded binaries,
 no external dependencies beyond BepInEx and Harmony. The in-game UI follows the game language: **French** or **English** (any other language gets English). Each mod has its own README in `mods/<Mod>/` with keys, configuration and details.
 
 | Mod | What it does |
@@ -11,6 +11,7 @@ no external dependencies beyond BepInEx and Harmony. The in-game UI follows the 
 | [**Inventory**](mods/Inventory/README.md) | Larger, scrollable inventory (up to 40 rows), equipment slots (head, chest, legs, cape, accessory) next to the grid, pickups fill from the top, sorting (category / name / quantity / weight), stacking, category filter toolbar, keep inventory and skills on death, tombstone recovery, bigger stacks and carry weight. |
 | [**Craft From Chests**](mods/CraftFromChests/README.md) | Crafting stations and the crafting menu use materials from nearby chests. |
 | [**Home Teleport**](mods/HomeTeleport/README.md) | F8: teleport to your bed (with confirmation). |
+| [**Recycle**](mods/Recycle/README.md) | F3: recycle crafted gear for a share of its materials (one third by default, upgrades included), read from the game recipes. |
 | [**Lumberjack**](mods/Lumberjack/README.md) | Woodcutting skill matters: high level fells trees in one hit and auto-cuts logs. |
 | [**Longer Food**](mods/LongerFood/README.md) | Food lasts longer (× factor, configurable). |
 | [**No Durability**](mods/NoDurability/README.md) | Tools, weapons and armour never wear out. |
@@ -55,7 +56,7 @@ MIT, see `LICENSE`.
 
 ## En français
 
-Douze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du jeu. Interface en français ou en anglais selon la langue du jeu. Chaque mod a son propre README dans `mods/<Mod>/`.
+Treize mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du jeu. Interface en français ou en anglais selon la langue du jeu. Chaque mod a son propre README dans `mods/<Mod>/`.
 
 - **Resource Finder** (F7) : scanner de ressources, lieux et créatures ; épingles sur la carte ; cible à l'écran ;
   mode **Traque** (F4) qui enchaîne les cibles ; découverte par la vue.
@@ -64,6 +65,7 @@ Douze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du 
 - **Mod Hub** (F9) : configuration en jeu, roue d'action, boutons dans l'inventaire, aides de touches.
 - **Inventory** : inventaire agrandi et défilant, emplacements d'équipement à côté de la grille, ramassage dans la
   première case libre, tri, empilage, filtre par catégorie, mort sans perte (objets et compétences).
+- **Recycle** (F3) : recyclage de l'équipement fabriqué contre un tiers de ses matériaux.
 - **Craft From Chests**, **Home Teleport** (F8), **Lumberjack**, **Longer Food**, **No Durability**, **Short Nights**,
   **Movement**, **Quick Start**.
 

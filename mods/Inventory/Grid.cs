@@ -57,6 +57,17 @@ namespace InventoryMod
             catch (Exception ex) { Plugin.Log.LogWarning("Inventaire (défilement/boutons) : " + ex.Message); }
         }
 
+        // Le filtre par catégorie est une vue du moment : refermer l'inventaire le lève, sinon on rouvre sur des cases
+        // « vides » (mode Masquer) et on croit ses objets perdus.
+        [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Hide))]
+        [HarmonyPostfix]
+        private static void InventoryGui_Hide()
+        {
+            if (FocusFamily < 0) return;
+            FocusFamily = -1;
+            try { RefreshTools(); } catch { }
+        }
+
         private static void EnsureScroll(InventoryGui gui)
         {
             var grid = gui.m_playerGrid;
