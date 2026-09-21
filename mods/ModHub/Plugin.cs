@@ -73,15 +73,19 @@ namespace ModHub
             }
             if (_capturingKey != null) return; // la capture se fait dans OnGUI
             try { KeyHintBar.Update(); } catch (Exception ex) { if (!_hintErrorLogged) { _hintErrorLogged = true; Log.LogWarning("Aides de touches : " + ex.Message); } }
-            if (ZInput.GetKeyDown(ToggleKey.Value, false)) Toggle();
+            if (WindowOpen && ModWindows.GameTookScreen()) WindowOpen = false; // inventaire, carte ou menu ouverts par-dessus : on s'efface
+            if (ZInput.GetKeyDown(ToggleKey.Value, false) && !Console.IsVisible()) { if (WindowOpen) WindowOpen = false; else if (!ModWindows.GameBusy()) Toggle(); }
             else if (WindowOpen && (ZInput.GetKeyDown(KeyCode.Escape, false) || _pad.Update())) WindowOpen = false;
         }
 
         internal static void Toggle()
         {
             WindowOpen = !WindowOpen;
-            if (WindowOpen && s_instance != null) { s_instance._pad.OnOpened(); s_instance._window = Theme.CenteredWindow(1200f, 820f); }
+            if (WindowOpen && s_instance != null) { ModWindows.TakeScreen(); s_instance._pad.OnOpened(); s_instance._window = Theme.CenteredWindow(1200f, 820f); }
         }
+
+        /// <summary>Fermeture demandée par un autre mod qui ouvre sa propre fenêtre (convention ModWindows).</summary>
+        public static void CloseWindow() { WindowOpen = false; }
 
         // ------------------------------------------------------------------ plugins
 

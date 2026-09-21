@@ -114,9 +114,10 @@ namespace ResourceFinder
             if (player == null) { if (WindowOpen) Close(); Layers.Unload(); _target = null; return; }
 
             if (!Enabled.Value) { if (WindowOpen) Close(); Layers.Tick(); return; }
-            if (ZInput.GetKeyDown(ToggleKey.Value, false)) { if (WindowOpen) Close(); else Open(); }
+            if (WindowOpen && ModWindows.GameTookScreen()) Close(); // inventaire, carte ou menu ouverts par-dessus : on s'efface
+            if (ZInput.GetKeyDown(ToggleKey.Value, false) && !Console.IsVisible()) { if (WindowOpen) Close(); else if (!ModWindows.GameBusy()) Open(); }
             else if (WindowOpen && (ZInput.GetKeyDown(KeyCode.Escape, false) || _pad.Update())) Close();
-            else if (ZInput.GetKeyDown(NextTargetKey.Value, false)) NextTarget(player.transform.position);
+            else if (ZInput.GetKeyDown(NextTargetKey.Value, false) && !ModWindows.GameBusy()) NextTarget(player.transform.position);
             else if (TrackKey.Value != KeyCode.None && ZInput.GetKeyDown(TrackKey.Value, false) && !Console.IsVisible() && !TextInput.IsVisible()) ToggleTrack();
 
             if (!_namesDumped && DumpNames.Value && ZNetScene.instance != null) { _namesDumped = true; DumpGameNames(); }
@@ -167,6 +168,7 @@ namespace ResourceFinder
 
         private void Open()
         {
+            ModWindows.TakeScreen(); // ferme l'inventaire, la grande carte et les fenêtres des autres mods
             WindowOpen = true;
             if (PanelStyle.Value == Style.Natif && s_panel.Ensure()) { s_panel.Open(); RefreshPanel(); return; }
             _pad.OnOpened(); FitWindow(); _focusSearch = !Pad.Active;
@@ -177,6 +179,9 @@ namespace ResourceFinder
             WindowOpen = false;
             if (s_panel.Visible) s_panel.Close();
         }
+
+        /// <summary>Fermeture demandée par un autre mod qui ouvre sa propre fenêtre (convention ModWindows).</summary>
+        public static void CloseWindow() { if (s_instance != null && WindowOpen) s_instance.Close(); }
 
         /// <summary>Le panneau natif s'est fermé tout seul (bouton du jeu, clic à côté).</summary>
         internal static void NativeClosed() { WindowOpen = false; }

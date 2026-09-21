@@ -93,16 +93,19 @@ namespace Guide
             if (!Enabled.Value) { WindowOpen = false; return; }
             // À l'arrivée dans le monde : le suivi (même réduit) se déploie 12 s pour rappeler où on en était
             if (_loginPlayer != player) { _loginPlayer = player; _expandUntil = Time.unscaledTime + 12f; }
-            if (ZInput.GetKeyDown(ToggleKey.Value, false) && !Console.IsVisible()) { if (WindowOpen) Close(); else Open(); }
+            if (WindowOpen && ModWindows.GameTookScreen()) Close(); // inventaire, carte ou menu ouverts par-dessus : on s'efface
+            if (ZInput.GetKeyDown(ToggleKey.Value, false) && !Console.IsVisible()) { if (WindowOpen) Close(); else if (!ModWindows.GameBusy()) Open(); }
             else if (TrackerKey.Value != KeyCode.None && ZInput.GetKeyDown(TrackerKey.Value, false) && !Console.IsVisible() && !TextInput.IsVisible()) CycleTracker();
             else if (WindowOpen && (ZInput.GetKeyDown(KeyCode.Escape, false) || _pad.Update())) Close();
             Progress.Tick(player);
             AltarPins.Tick();
         }
 
-        private void Open() { WindowOpen = true; _pad.OnOpened(); FitWindow(); _selected = Progress.Current(); Progress.Tick(Player.m_localPlayer, true); }
+        private void Open() { ModWindows.TakeScreen(); WindowOpen = true; _pad.OnOpened(); FitWindow(); _selected = Progress.Current(); Progress.Tick(Player.m_localPlayer, true); }
         private void Close() { WindowOpen = false; }
         internal static void Toggle() { if (s_instance == null) return; if (WindowOpen) s_instance.Close(); else s_instance.Open(); }
+        /// <summary>Fermeture demandée par un autre mod qui ouvre sa propre fenêtre (convention ModWindows).</summary>
+        public static void CloseWindow() { if (s_instance != null && WindowOpen) s_instance.Close(); }
 
         /// <summary>Aides de touches (panneau du jeu, via Mod Hub).</summary>
         public static List<KeyValuePair<string, KeyCode>> KeyHints() => !Enabled.Value ? new List<KeyValuePair<string, KeyCode>>() : new List<KeyValuePair<string, KeyCode>>

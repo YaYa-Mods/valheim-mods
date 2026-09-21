@@ -51,6 +51,7 @@ namespace HomeTeleport
         private void Update()
         {
             if (!Enabled.Value || Player.m_localPlayer == null) { DialogOpen = false; return; }
+            if (DialogOpen && ModWindows.GameTookScreen()) DialogOpen = false; // inventaire, carte ou menu ouverts par-dessus : on s'efface
             if (DialogOpen)
             {
                 // Confirmation : la même touche ou A ; annulation : Échap ou B
@@ -58,7 +59,7 @@ namespace HomeTeleport
                 else if (ZInput.GetKeyDown(KeyCode.Escape, false) || _pad.Update()) DialogOpen = false;
                 return;
             }
-            if (ZInput.GetKeyDown(Key.Value, false) && !TextInput.IsVisible() && !Menu.IsVisible() && !Console.IsVisible()) Request();
+            if (ZInput.GetKeyDown(Key.Value, false) && !TextInput.IsVisible() && !ModWindows.GameBusy()) Request();
         }
 
         /// <summary>Aides de touches (panneau du jeu, via Mod Hub).</summary>
@@ -82,9 +83,13 @@ namespace HomeTeleport
             s_instance._where = where;
             s_instance._distance = Vector3.Distance(player.transform.position, Destination(out _));
             s_instance._window = Theme.CenteredWindow(560f, 150f);
+            ModWindows.TakeScreen();
             s_instance._pad.OnOpened();
             DialogOpen = true;
         }
+
+        /// <summary>Fermeture demandée par un autre mod qui ouvre sa propre fenêtre (convention ModWindows).</summary>
+        public static void CloseWindow() { DialogOpen = false; }
 
         private static bool CanGo(Player player, out string where)
         {
