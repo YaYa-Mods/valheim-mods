@@ -57,6 +57,12 @@ namespace TestHarness
                 if (t != null) Add(list, w.label, t);
             }
             Add(list, "mini-carte", Minimap.instance != null ? Minimap.instance.m_smallRoot?.transform as RectTransform : null);
+            // Messages du jeu (haut gauche : découvertes, ramassages ; centre : événements) : un panneau ne doit pas les couvrir
+            if (MessageHud.instance != null)
+            {
+                Add(list, "messages haut gauche", MessageHud.instance.m_messageText);
+                Add(list, "message central", MessageHud.instance.m_messageCenterText);
+            }
             return list;
         }
 
@@ -78,6 +84,10 @@ namespace TestHarness
             float prevX = xCfg.Value, prevY = yCfg.Value; object prevMode = modeCfg.BoxedValue;
             var scale = (float)Asm("Guide").GetType("ModsCommon.Theme").GetProperty("UiScale", BindingFlags.Public | BindingFlags.Static).GetValue(null, null);
 
+            // Des messages affichés pendant le relevé : leurs zones comptent (le joueur les lit en jouant)
+            player.Message(MessageHud.MessageType.TopLeft, "Relevé : message en haut à gauche");
+            player.Message(MessageHud.MessageType.Center, "Relevé : message central");
+            yield return new WaitForSecondsRealtime(0.4f);
             var hudParts = GameHud();
             Plugin.Log.LogInfo("[TEST] HUD du jeu relevé : " + string.Join(", ", hudParts.Select(p => $"{p.Key} {p.Value.x:0},{p.Value.y:0} {p.Value.width:0}×{p.Value.height:0}")));
             h.Check("HUD.éléments du jeu repérés", hudParts.Count >= 3, $"{hudParts.Count} éléments");
@@ -126,6 +136,59 @@ namespace TestHarness
             yield return new WaitForSecondsRealtime(0.6f);
             gui.Hide();
             yield return new WaitForSecondsRealtime(0.4f);
+
+            // ---- colonne d'outils face à un coffre ouvert : le panneau du coffre s'affiche à côté de l'inventaire
+            GameObject chest = null;
+            try
+            {
+                var prefab = ZNetScene.instance.GetPrefab("piece_chest_wood");
+                if (prefab != null) chest = UnityEngine.Object.Instantiate(prefab, player.transform.position + player.transform.forward * 2f, Quaternion.identity);
+            }
+            catch (Exception ex) { Plugin.Log.LogWarning("[TEST] coffre : " + ex.Message); }
+            if (chest != null)
+            {
+                yield return null;
+                var container = chest.GetComponent<Container>();
+                if (container != null)
+                {
+                    InventoryGui.instance.Show(container, 1);
+                    yield return new WaitForSecondsRealtime(0.8f);
+                    var containerParts = new List<KeyValuePair<string, Rect>>();
+                    Add(containerParts, "panneau du coffre", gui.m_container);
+                    Add(containerParts, "tout prendre", gui.m_takeAllButton);
+                    Add(containerParts, "tout empiler", gui.m_stackAllButton);
+                    var toolsChest = new List<KeyValuePair<string, Rect>>();
+                    foreach (var t in gui.m_player.GetComponentsInChildren<RectTransform>(false))
+                        if (t.name.StartsWith("ModTool", StringComparison.Ordinal)) Add(toolsChest, t.name, t);
+                    var clashChest = new List<string>();
+                    foreach (var t in toolsChest) foreach (var g in containerParts) if (g.Value.Overlaps(t.Value)) clashChest.Add($"{t.Key} sur {g.Key}");
+                    Plugin.Log.LogInfo($"[TEST] coffre ouvert : {string.Join(", ", containerParts.Select(p => $"{p.Key} {p.Value.x:0},{p.Value.y:0} {p.Value.width:0}×{p.Value.height:0}"))}");
+                    h.Check("Inventaire.colonne d'outils dégagée du panneau de coffre", toolsChest.Count >= 8 && clashChest.Count == 0, $"{toolsChest.Count} outils, chevauchements : {(clashChest.Count == 0 ? "aucun" : string.Join(" + ", clashChest))}");
+                    ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(BepInEx.Paths.ConfigPath, "inventory_chest.png"));
+                    yield return new WaitForSecondsRealtime(0.6f);
+                    gui.Hide();
+                    yield return new WaitForSecondsRealtime(0.4f);
+                }
+                ZNetScene.instance.Destroy(chest);
+            }
+
+            // ---- chaque fenêtre de mod tient dans l'écran (unités 1080p, aucun bord hors champ)
+            var screen1080 = (Vector2)Asm("Guide").GetType("ModsCommon.Theme").GetProperty("ScreenSize", BindingFlags.Public | BindingFlags.Static).GetValue(null, null);
+            foreach (var w in new (string mod, string type, string open, string close)[]
+                { ("ResourceFinder", "ResourceFinder.Plugin", "Open", "Close"), ("Guide", "Guide.Plugin", "Toggle", "Toggle"), ("ModHub", "ModHub.Plugin", "Toggle", "Toggle") })
+            {
+                var t = Asm(w.mod).GetType(w.type);
+                var inst = UnityEngine.Object.FindObjectOfType(t);
+                var openM = t.GetMethod(w.open, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+                openM.Invoke(openM.IsStatic ? null : inst, null);
+                yield return new WaitForSecondsRealtime(0.6f);
+                var rect = (Rect)t.GetField("_window", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(inst);
+                bool fits = rect.xMin >= 0f && rect.yMin >= 0f && rect.xMax <= screen1080.x + 0.5f && rect.yMax <= screen1080.y + 0.5f;
+                h.Check($"Fenêtre.{w.mod} dans l'écran", fits, $"fenêtre {rect.x:0},{rect.y:0} {rect.width:0}×{rect.height:0}, écran {screen1080.x:0}×{screen1080.y:0}");
+                var closeM = t.GetMethod(w.close, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+                closeM.Invoke(closeM.IsStatic ? null : inst, null);
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
 
             // ---- pastille du scanner : tous les cas de bord, avec et sans panneau à éviter
             var place = Asm("ResourceFinder").GetType("ResourceFinder.Plugin").GetMethod("PlacePill", BindingFlags.NonPublic | BindingFlags.Static);

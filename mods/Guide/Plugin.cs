@@ -343,7 +343,7 @@ namespace Guide
         private static readonly KeyValuePair<string, Vector2>[] s_presets =
         {
             new KeyValuePair<string, Vector2>("Sous la carte", new Vector2(-350f, 290f)),
-            new KeyValuePair<string, Vector2>("Haut gauche", new Vector2(20f, 130f)),
+            new KeyValuePair<string, Vector2>("Haut gauche", new Vector2(20f, 250f)),  // sous la zone des messages du jeu (découvertes, ramassages)
             new KeyValuePair<string, Vector2>("Bas gauche", new Vector2(20f, -310f)),   // ancré en bas : au-dessus des barres de vie
             new KeyValuePair<string, Vector2>("Bas droite", new Vector2(-350f, -310f)), // ancré en bas : au-dessus des aides de touches
         };
