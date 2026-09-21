@@ -109,7 +109,9 @@ namespace TestHarness
                     // Et de la nourriture donnant de l'eitr : sa barre apparaît sous celle d'endurance
                     foreach (var food in new[] { "YggdrasilPorridge", "SerpentStew", "LoxPie" })
                     {
-                        var item = ObjectDB.instance.GetItemPrefab(food)?.GetComponent<ItemDrop>()?.m_itemData?.Clone();
+                        var foodPrefab = ObjectDB.instance.GetItemPrefab(food);
+                        var item = foodPrefab?.GetComponent<ItemDrop>()?.m_itemData?.Clone();
+                        if (item != null) item.m_dropPrefab = foodPrefab; // EatFood lit le prefab de l'objet
                         if (item != null) try { player.EatFood(item); } catch (Exception ex) { Plugin.Log.LogWarning("[TEST] EatFood " + food + " : " + ex.Message); }
                     }
                     stepsCfg.Value = 8;

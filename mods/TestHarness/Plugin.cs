@@ -443,6 +443,14 @@ namespace TestHarness
             catch (Exception ex) { Check("Movement", false, ex.InnerException?.Message ?? ex.Message); }
             // ---------------- CraftFromChests : coffre créé avec tout le bois du joueur ----------------
             GameObject chest = null;
+            // Le monde de test garde les coffres d'un run interrompu, et le bois au sol (test du bûcheron) serait ramassé
+            // en cours de test : on retire les coffres voisins et on coupe le ramassage automatique le temps du test.
+            var autoPickup = typeof(Player).GetField("m_enableAutoPickup", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            object prevPickup = autoPickup?.GetValue(player); autoPickup?.SetValue(player, false);
+            int removedChests = 0;
+            foreach (var old in UnityEngine.Object.FindObjectsOfType<Container>())
+                if (old.name.StartsWith("piece_chest_wood", StringComparison.Ordinal) && Vector3.Distance(old.transform.position, player.transform.position) < 250f) { ZNetScene.instance.Destroy(old.gameObject); removedChests++; }
+            if (removedChests > 0) { Log.LogInfo($"[TEST] coffres d'un run précédent retirés : {removedChests}"); yield return new WaitForSeconds(0.5f); }
             try
             {
                 var prefab = ZNetScene.instance.GetPrefab("piece_chest_wood");
@@ -460,7 +468,12 @@ namespace TestHarness
                 // Recette sans station (massue = 6 bois) : HaveRequirements(pièce) exigerait un établi à portée.
                 var club = ObjectDB.instance.m_recipes.First(r => r.m_item != null && r.m_item.name == "Club");
                 bool can = player.HaveRequirements(club, false, 1, 1);
-                Check("CraftFromChests.ressources vues dans le coffre", can && pInv.CountItems("$item_wood", -1, false) == 0, $"boisJoueur=0, boisCoffre={cInv.CountItems("$item_wood", -1, false)}");
+                // Diagnostic : ce que le mod voit du coffre (réseau valide, à portée, accessible) et la recette elle-même
+                var nviewC = chest.GetComponent<ZNetView>();
+                var cfcT = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == "CraftFromChests")?.GetType("CraftFromChests.ContainerRegistry");
+                var nearby = cfcT?.GetMethod("Nearby", BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null) as System.Collections.ICollection;
+                Log.LogInfo($"[TEST] coffre : nview valide={nviewC != null && nviewC.IsValid()}, propriétaire={nviewC != null && nviewC.IsValid() && nviewC.IsOwner()}, en usage={container.IsInUse()}, coffres vus par le mod={nearby?.Count.ToString() ?? "?"}, distance={Vector3.Distance(chest.transform.position, player.transform.position):0.0} m ; recette massue : {string.Join(" + ", club.m_resources.Select(r => $"{r.GetAmount(1)} × {r.m_resItem?.m_itemData?.m_shared?.m_name}"))}, station={(club.m_craftingStation != null ? club.m_craftingStation.name : "aucune")} ; coffre : {string.Join(" + ", piece.m_resources.Select(r => $"{r.GetAmount(0)} × {r.m_resItem?.m_itemData?.m_shared?.m_name}"))}");
+                Check("CraftFromChests.ressources vues dans le coffre", can && pInv.CountItems("$item_wood", -1, false) == 0, $"recette possible={can}, boisJoueur={pInv.CountItems("$item_wood", -1, false)}, boisCoffre={cInv.CountItems("$item_wood", -1, false)}");
                 int before = cInv.CountItems("$item_wood", -1, false);
                 player.ConsumeResources(piece.m_resources, 0, -1, 1);
                 yield return null;
@@ -471,7 +484,7 @@ namespace TestHarness
                 cInv.RemoveItem("$item_wood", back, -1, false);
                 pInv.AddItem("Wood", Math.Max(0, playerWood), 1, 0, 0L, "", false, false);
             }
-            finally { if (chest != null) ZNetScene.instance.Destroy(chest); }
+            finally { if (chest != null) ZNetScene.instance.Destroy(chest); autoPickup?.SetValue(player, prevPickup); }
 
             // ---------------- ResourceFinder : recherche dans le monde connu, puis scan fantôme ----------------
             Func<string, string[], float, bool, IEnumerator> runFinder = null;
