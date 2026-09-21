@@ -434,7 +434,6 @@ namespace ModsCommon
             { "les pierres sacrificielles (pas de lit)", "the sacrificial stones (no bed)" },
             { "Retour vers ", "Returning to " },
             { "Retour possible dans {0:0} s", "Return possible in {0:0} s" },
-            { "Impossible : un ennemi vous prend pour cible", "Impossible: an enemy is targeting you" },
 
             // ---- descriptions de configuration
             { "Active le guide (suivi à l'écran et fenêtre).", "Enables the guide (on-screen tracker and window)." },
@@ -465,6 +464,7 @@ namespace ModsCommon
             { "Lignes d'inventaire appliquées à l'apparition du personnage (vanilla 4 + achats chez les marchands, plafond du jeu 9 : ", "Inventory rows applied when the character spawns (vanilla 4 + trader purchases, game cap 9: " },
             { "au-delà, la grille défile). Réduit seulement si les lignes retirées sont vides.", "beyond that, the grid scrolls). Reduced only if the removed rows are empty." },
             { "Lignes visibles à la fois dans le panneau ; le reste défile (molette, stick droit).", "Rows visible at once in the panel; the rest scrolls (wheel, right stick)." },
+            { "Un objet ramassé va dans la première case libre en partant du haut (le jeu remplit par le bas, ce qui envoie tout en fin d'inventaire avec beaucoup de lignes). La barre d'action reste en dernier recours ; les armes cherchent d'abord une place dans la barre, comme dans le jeu.", "A picked-up item goes to the first free slot from the top (the game fills from the bottom, which sends everything to the end of a tall inventory). The hotbar stays the last resort; weapons look for a hotbar slot first, as in the game." },
             { "Message à l'écran quand une étape est accomplie.", "On-screen message when a step is completed." },
             { "Multiplicateur de la durée des aliments à effets positifs. 1.0 = vanilla, 1.5 = +50%, 1.67 ≈ 3 min → 5 min.", "Duration multiplier for foods with positive effects. 1.0 = vanilla, 1.5 = +50%, 1.67 ≈ 3 min → 5 min." },
             { "Multiplicateur de vitesse de marche/jogging/course du joueur. 1 = vanilla.", "Player walk/jog/run speed multiplier. 1 = vanilla." },
@@ -487,7 +487,6 @@ namespace ModsCommon
             { "Rayon (m) autour du joueur dans lequel les coffres sont utilisés.", "Radius (m) around the player in which chests are used." },
             { "Rayon (m) du premier scan des zones inconnues. Les zones générées sont enregistrées dans le monde, ", "Radius (m) of the first scan of unknown zones. Generated zones are saved in the world, " },
             { "comme si vous y étiez passé. 0 = ne jamais générer, chercher seulement dans le monde connu.", "as if you had been there. 0 = never generate, only search the known world." },
-            { "Refuser la téléportation quand un ennemi vous prend pour cible.", "Refuse the teleport while an enemy is targeting you." },
             { "Repère de la cible au bord de la mini-carte quand elle est hors du cadre.", "Target marker at the edge of the minimap when it is out of frame." },
             { "Saute la cinématique d'intro : arrivée directe sur le menu principal.", "Skips the intro cinematic: straight to the main menu." },
             { "Secondes d'attente avant qu'un tronc tombé se découpe (laisse le temps à l'animation de chute).", "Seconds to wait before a fallen log is cut up (lets the falling animation play)." },

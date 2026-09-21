@@ -34,6 +34,7 @@ namespace InventoryMod
         internal static ConfigEntry<bool> KeepSkillsOnDeath;
         internal static ConfigEntry<bool> KeepInventoryOnDeath;
         internal static ConfigEntry<bool> RecoverTombstones;
+        internal static ConfigEntry<bool> FillTopFirst;
 
         private void Awake()
         {
@@ -57,6 +58,8 @@ namespace InventoryMod
                 L.T("À la mort, tout l'inventaire reste sur vous (pas de pierre tombale). Même effet que la clé interne DeathKeepInventory du jeu."));
             KeepSkillsOnDeath = Config.Bind("Death", "KeepSkillsOnDeath", true,
                 L.T("À la mort, aucune baisse de compétences (le jeu retire 5 % de chaque compétence, hors période de grâce)."));
+            FillTopFirst = Config.Bind("General", "FillTopFirst", true,
+                L.T("Un objet ramassé va dans la première case libre en partant du haut (le jeu remplit par le bas, ce qui envoie tout en fin d'inventaire avec beaucoup de lignes). La barre d'action reste en dernier recours ; les armes cherchent d'abord une place dans la barre, comme dans le jeu."));
             RecoverTombstones = Config.Bind("Death", "RecoverTombstones", true,
                 L.T("À l'apparition, vos pierres tombales encore dans le monde sont vidées dans votre inventaire à distance, puis supprimées."));
             BackupEnabled = Config.Bind("Safety", "BackupEnabled", true,
@@ -68,6 +71,7 @@ namespace InventoryMod
 
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             Harmony.CreateAndPatchAll(typeof(LoadGuard), Guid);
+            Harmony.CreateAndPatchAll(typeof(FirstFreeSlot), Guid);
             Harmony.CreateAndPatchAll(typeof(Backup), Guid);
             Harmony.CreateAndPatchAll(typeof(Death), Guid);
             Harmony.CreateAndPatchAll(typeof(Grid), Guid);
@@ -222,6 +226,32 @@ namespace InventoryMod
             }
             player.SetInventorySize(rows);
             Plugin.Log.LogInfo($"Inventaire passé à {rows} lignes");
+        }
+    }
+
+    /// <summary>
+    /// Où va un objet ramassé. Le jeu remplit l'inventaire par le BAS pour tout ce qui n'est pas une arme (TopFirst) :
+    /// avec 4 lignes on ne le remarque pas, avec 20 lignes chaque ramassage part tout en bas et il faut trier sans
+    /// arrêt. Ici : première case libre en partant du haut, la barre d'action (ligne 1) restant en dernier recours,
+    /// comme dans le jeu. Les armes gardent le comportement du jeu (elles cherchent d'abord une place dans la barre).
+    /// </summary>
+    [HarmonyPatch(typeof(Inventory), "FindEmptySlot")]
+    internal static class FirstFreeSlot
+    {
+        [HarmonyPrefix]
+        private static bool Prefix(Inventory __instance, bool topFirst, ref Vector2i __result)
+        {
+            if (topFirst || !Plugin.Enabled.Value || !Plugin.FillTopFirst.Value) return true;
+            var p = Player.m_localPlayer;
+            if (p == null || !ReferenceEquals(__instance, p.GetInventory())) return true;
+            int w = __instance.GetWidth(), h = __instance.GetHeight();
+            for (int y = 1; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (__instance.GetItemAt(x, y) == null) { __result = new Vector2i(x, y); return false; }
+            for (int x = 0; x < w; x++)
+                if (__instance.GetItemAt(x, 0) == null) { __result = new Vector2i(x, 0); return false; }
+            __result = new Vector2i(-1, -1);
+            return false;
         }
     }
 

@@ -104,6 +104,24 @@ namespace TestHarness
             h.Check("Inventaire.empilage", woodStacksBefore == 2 && woodStacksAfter == 1 && inv.CountItems("$item_wood") == woodTotal, $"piles de bois {woodStacksBefore}→{woodStacksAfter}, total {woodTotal}→{inv.CountItems("$item_wood")}");
             inv.RemoveItem("$item_wood", 5, -1, false);
 
+            // Ramassage : un objet nouveau va dans la première case libre en partant du haut (hors barre d'action),
+            // jamais tout en bas des 20 lignes comme le fait le jeu ; une arme, elle, va d'abord dans la barre.
+            {
+                var free = Enumerable.Range(1, inv.GetHeight() - 1).SelectMany(y => Enumerable.Range(0, inv.GetWidth()).Select(x => new Vector2i(x, y))).First(p => inv.GetItemAt(p.x, p.y) == null);
+                var stonePrefab = ObjectDB.instance.GetItemPrefab("Flint");
+                var picked = stonePrefab.GetComponent<ItemDrop>().m_itemData.Clone(); picked.m_dropPrefab = stonePrefab; picked.m_stack = 1;
+                bool addedOk = inv.AddItem(picked);
+                var at = picked.m_gridPos;
+                h.Check("Inventaire.ramassage dans la première case libre", addedOk && at == free, $"attendu {free.x},{free.y}, obtenu {at.x},{at.y} (hauteur {inv.GetHeight()})");
+                if (addedOk) inv.RemoveItem(picked);
+                var barFree = Enumerable.Range(0, inv.GetWidth()).Select(x => new Vector2i(x, 0)).FirstOrDefault(p => inv.GetItemAt(p.x, 0) == null);
+                var axePrefab = ObjectDB.instance.GetItemPrefab("AxeStone");
+                var axe = axePrefab.GetComponent<ItemDrop>().m_itemData.Clone(); axe.m_dropPrefab = axePrefab; axe.m_stack = 1;
+                bool axeOk = inv.AddItem(axe);
+                h.Check("Inventaire.arme ramassée : barre d'action d'abord", axeOk && axe.m_gridPos.y == 0 && axe.m_gridPos == barFree, $"obtenu {axe.m_gridPos.x},{axe.m_gridPos.y}, première case libre de la barre {barFree.x},{barFree.y}");
+                if (axeOk) inv.RemoveItem(axe);
+            }
+
             // Capture puis nettoyage (objets ajoutés retirés, lignes restaurées si possible)
             gui.m_playerGrid.m_gridRoot.anchoredPosition = Vector2.zero; // en haut
             yield return new WaitForSecondsRealtime(0.3f);

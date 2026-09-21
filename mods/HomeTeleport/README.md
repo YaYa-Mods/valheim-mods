@@ -10,7 +10,7 @@ Go back to your bed with one key.
   gamepad, cancel with Esc or B. The confirmation can be turned off.
 - Uses the game's own portal travel (loading screen, zone loaded before arrival) but without the portal restriction
   on ore and metal.
-- Refused while an enemy is targeting you (configurable), and an optional cooldown between two trips.
+- Works whenever you want, even in a fight: only an optional cooldown between two trips.
 - Also in the action wheel (group Mods) and the game's key-hint panel through Mod Hub.
 
 ## Configuration (`BepInEx/config/vmods.hometeleport.cfg`)
@@ -20,7 +20,6 @@ Go back to your bed with one key.
 | Enabled | true | Enable the mod |
 | Key | F8 | Teleport key |
 | Confirm | true | Ask for confirmation before leaving |
-| BlockWhenTargeted | true | Refuse while an enemy is targeting you |
 | Cooldown | 0 | Minimum seconds between two trips (0 = none) |
 
 ---
@@ -33,6 +32,6 @@ Retour au lit d'une touche.
 - Fenêtre de confirmation avec la destination et la distance : même touche, Entrée ou A pour partir, Échap ou B pour
   rester. Désactivable.
 - Trajet des portails du jeu (écran de chargement), mais sans la restriction sur le minerai.
-- Refusé quand un ennemi vous prend pour cible ; délai optionnel entre deux retours.
+- Possible à tout moment, même en combat ; délai optionnel entre deux retours.
 
-Réglages : `Key`, `Confirm`, `BlockWhenTargeted`, `Cooldown` ; fichier `vmods.hometeleport.cfg` ou Mod Hub (F9).
+Réglages : `Key`, `Confirm`, `Cooldown` ; fichier `vmods.hometeleport.cfg` ou Mod Hub (F9).

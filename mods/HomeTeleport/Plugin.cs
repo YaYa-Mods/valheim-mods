@@ -13,7 +13,7 @@ namespace HomeTeleport
     /// Retour au lit : téléporte le joueur sur son point d'apparition (le lit où il a dormi en dernier, celui que le
     /// jeu utilise à la mort), touche configurable ou entrée « Rentrer au lit » du menu radial. Sans lit : les pierres
     /// sacrificielles. Utilise Player.TeleportTo (le trajet des portails : écran de chargement, zone chargée avant
-    /// l'arrivée), sans la restriction des portails sur le minerai. Refusé pendant qu'un ennemi vous prend pour cible.
+    /// l'arrivée), sans la restriction des portails sur le minerai.
     /// Une confirmation (fenêtre : touche/A pour confirmer, Échap/B pour annuler) évite le F8 accidentel.
     /// </summary>
     [BepInPlugin(Guid, "Home Teleport", "1.1.0")]
@@ -25,7 +25,6 @@ namespace HomeTeleport
         internal static ConfigEntry<bool> Enabled;
         internal static ConfigEntry<KeyCode> Key;
         internal static ConfigEntry<bool> Confirm;
-        internal static ConfigEntry<bool> BlockWhenTargeted;
         internal static ConfigEntry<float> Cooldown;
         internal static bool DialogOpen;
         private static float s_lastTeleport = -1e9f;
@@ -41,7 +40,6 @@ namespace HomeTeleport
             Enabled = Config.Bind("General", "Enabled", true, L.T("Active le mod."));
             Key = Config.Bind("General", "Key", KeyCode.F8, L.T("Touche : rentrer au lit (point d'apparition). Aussi dans le menu radial, groupe Mods."));
             Confirm = Config.Bind("General", "Confirm", true, L.T("Demander confirmation avant de partir (touche à nouveau ou A pour confirmer, Échap ou B pour annuler)."));
-            BlockWhenTargeted = Config.Bind("General", "BlockWhenTargeted", true, L.T("Refuser la téléportation quand un ennemi vous prend pour cible."));
             Cooldown = Config.Bind("General", "Cooldown", 0f, new ConfigDescription(L.T("Délai minimum (secondes) entre deux retours. 0 = aucun."), new AcceptableValueRange<float>(0f, 3600f)));
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             ScrollGuard.Install(Guid, () => DialogOpen);
@@ -95,7 +93,6 @@ namespace HomeTeleport
         {
             where = null;
             if (player.IsTeleporting() || player.IsDead() || player.InCutscene()) return false;
-            if (BlockWhenTargeted.Value && player.IsTargeted()) { player.Message(MessageHud.MessageType.Center, L.T("Impossible : un ennemi vous prend pour cible")); return false; }
             float since = Time.time - s_lastTeleport;
             if (Cooldown.Value > 0f && since < Cooldown.Value) { player.Message(MessageHud.MessageType.Center, L.F("Retour possible dans {0:0} s", Cooldown.Value - since)); return false; }
             Destination(out where);

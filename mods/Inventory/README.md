@@ -1,3 +1,4 @@
+| General | FillTopFirst | true | Picked-up items go to the first free slot from the top |
 # Inventory
 
 A more comfortable inventory: bigger, sortable, filterable, and death without loss.
@@ -13,6 +14,8 @@ A more comfortable inventory: bigger, sortable, filterable, and death without lo
   wheel groups: consumables, weapons and tools, armour and accessories, then materials, trophies, misc), by name, by
   quantity, by weight. The button's icon shows the current mode; click it to cycle.
 - **Stacking**: merges piles of the same item and frees slots.
+- **First free slot**: anything you pick up, craft or take from a chest lands in the first free slot from the top (the game
+  fills from the bottom, which sends everything to row 20). The hotbar stays the last resort, weapons still go to the hotbar first.
 - **Category filter**: a toolbar above the grid with one button per category. Choosing one sorts that category first
   and either **hides** the other items (slots look empty and cannot be clicked) or **dims** them, depending on
   `FilterStyle`.
@@ -50,6 +53,8 @@ Un inventaire plus confortable : plus grand, triable, filtrable, et une mort san
 - **Plus de limite de poids**, **piles de 9999**.
 - **Tri** (bouton dans l'inventaire, roue d'action, Mod Hub) : catégorie, nom, quantité, poids.
 - **Empilage** : fusionne les piles identiques.
+- **Première case libre** : tout objet ramassé, fabriqué ou pris dans un coffre va dans la première case libre en partant
+  du haut (le jeu remplit par le bas). La barre d'action reste en dernier recours, les armes y vont toujours d'abord.
 - **Filtre par catégorie** : barre d'outils au-dessus de la grille ; la catégorie choisie passe en premier et les
   autres objets sont masqués (ou estompés selon `FilterStyle`).
 - **Mort** : inventaire et compétences conservés ; les pierres tombales restantes sont vidées dans l'inventaire à

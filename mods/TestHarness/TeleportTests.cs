@@ -18,11 +18,8 @@ namespace TestHarness
             // Même cible que le mod : le lit, sinon les pierres sacrificielles (icône du lieu StartTemple)
             Vector3 target = profile.HaveCustomSpawnPoint() ? profile.GetCustomSpawnPoint() : PlayerProfile.m_originalSpawnPoint;
             if (!profile.HaveCustomSpawnPoint() && ZoneSystem.instance != null && ZoneSystem.instance.GetLocationIcon(Game.instance.m_StartLocation, out var start)) target = start;
-            // Conditions neutralisées pour le test : ni délai de rappel restant, ni blocage « ennemi vous prend pour cible »
-            // (une créature d'un test précédent peut encore rôder)
+            // Condition neutralisée pour le test : aucun délai de rappel restant
             t.GetField("s_lastTeleport", BindingFlags.NonPublic | BindingFlags.Static)?.SetValue(null, -1000f);
-            var blockCfg = t.GetField("BlockWhenTargeted", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null) as BepInEx.Configuration.ConfigEntry<bool>;
-            bool blockPrev = blockCfg == null || blockCfg.Value; if (blockCfg != null) blockCfg.Value = false;
             // Confirmation : Request() ouvre la fenêtre sans partir ; capture ; fermeture
             t.GetMethod("Request", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
             yield return new WaitForSecondsRealtime(0.8f);
@@ -39,7 +36,6 @@ namespace TestHarness
             while (player.IsTeleporting() && Time.time < deadline) yield return null;
             yield return new WaitForSecondsRealtime(0.5f);
             float d = Vector3.Distance(player.transform.position, target);
-            if (blockCfg != null) blockCfg.Value = blockPrev; // rendu APRÈS le départ : une créature qui rôde bloquerait le retour
             h.Check("HomeTeleport.retour au lit", d < 6f, $"lit={profile.HaveCustomSpawnPoint()}, départ à {Vector3.Distance(from, target):0} m, arrivée à {d:0.#} m du point");
         }
     }
