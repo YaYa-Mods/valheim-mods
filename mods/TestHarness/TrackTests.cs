@@ -56,10 +56,22 @@ namespace TestHarness
             ZDOID Id(object r) => r == null ? ZDOID.None : (ZDOID)r.GetType().GetField("Id").GetValue(r);
             bool first = Id(t0) == idA;
 
+            // Un sanglier C arrive APRÈS la recherche, tout près du joueur (derrière lui) : il n'est pas dans la liste de départ
+            var c = UnityEngine.Object.Instantiate(ZNetScene.instance.GetPrefab("Boar"), player.transform.position - player.transform.forward * 4f, Quaternion.identity);
+            yield return null;
+            var idC = c.GetComponent<ZNetView>().GetZDO().m_uid;
+
             ZNetScene.instance.Destroy(a); // « tué »
-            yield return new WaitForSecondsRealtime(0.5f);
+            yield return new WaitForSecondsRealtime(1.5f); // nouvelle recherche depuis ici
             var t1 = targetF.GetValue(rfInst);
-            bool chained = Id(t1) == idB;
+            bool fresh = Id(t1) == idC; // le plus proche MAINTENANT, pas B (le suivant de la liste de départ)
+
+            ZNetScene.instance.Destroy(c);
+            yield return new WaitForSecondsRealtime(1.5f);
+            var t1b = targetF.GetValue(rfInst);
+            bool chained = Id(t1b) == idB;
+            h.Check("Traque.la cible suivante est la plus proche de soi, cherchée à nouveau", fresh && chained,
+                $"après A tué → {(fresh ? "C, apparu tout près après la recherche" : Id(t1) == idB ? "B, le suivant de la liste de départ (ancien comportement)" : "autre")}, après C tué → B : {chained}");
 
             ZNetScene.instance.Destroy(b);
             yield return new WaitForSecondsRealtime(2.5f); // relance de la recherche depuis ici, rien → arrêt
@@ -67,8 +79,8 @@ namespace TestHarness
             bool tracking2 = (bool)trackingF.GetValue(null);
             // Après B : soit plus rien à proximité → traque arrêtée, soit la relance a trouvé un sanglier sauvage du monde → traque continue sur lui
             bool stopped = t2 == null && !tracking2;
-            bool relaunched = t2 != null && Id(t2) != idA && Id(t2) != idB && tracking2;
-            h.Check("Traque.enchaîne puis relance ou s'arrête", first && chained && (stopped || relaunched), $"1re cible = A : {first}, après A tué → B : {chained}, après B tué → {(stopped ? "plus rien, traque arrêtée" : relaunched ? "relance : nouvelle cible sauvage" : $"incohérent (cible={t2 != null}, traque={tracking2})")}");
+            bool relaunched = t2 != null && Id(t2) != idA && Id(t2) != idB && Id(t2) != idC && tracking2;
+            h.Check("Traque.enchaîne puis relance ou s'arrête", first && chained && (stopped || relaunched), $"1re cible = A : {first}, puis C puis B : {chained}, après B tué → {(stopped ? "plus rien, traque arrêtée" : relaunched ? "relance : nouvelle cible sauvage" : $"incohérent (cible={t2 != null}, traque={tracking2})")}");
             trackingF.SetValue(null, false);
             rfT.GetMethod("ClearAllPins", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(rfInst, null);
 

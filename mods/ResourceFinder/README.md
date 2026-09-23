@@ -19,8 +19,9 @@ The interface follows the game language (French or English).
   of the minimap when it is out of frame, and a glowing silhouette when the object is loaded.
 - **F6** jumps to the next result of the current layer without opening the window. Right-click a result to see it on
   the large map.
-- **Track mode (F4)**: as soon as the target is harvested or killed, the next nearest one is targeted from your current
-  position; when nothing is left, the search is restarted from where you stand. Press F4 again to stop.
+- **Track mode (F4)**: as soon as the target is harvested or killed, a new search runs from where you stand and the
+  nearest one from there becomes the target (not the next one of the list found at the start). When nothing is left,
+  tracking stops. Press F4 again to stop.
 - **Discovery**: by default the catalogue only shows what you have already seen, held or fought (a rock you looked at,
   a deer that ran away, a biome you visited). Undiscovered entries are counted and can be revealed one by one if you do
   not mind the spoiler.
@@ -91,8 +92,8 @@ proche. L'interface suit la langue du jeu.
 - Les résultats sont **épinglés sur la carte** (une couche par recherche, conservée entre les sessions) ; le plus proche
   est pointé à l'écran (pastille au-dessus de l'objet, repère au bord de la mini-carte, silhouette lumineuse).
 - **F6** : cible suivante sans ouvrir la fenêtre. Clic droit sur un résultat : le voir sur la grande carte.
-- **Traque (F4)** : dès que la cible est récoltée ou tuée, la suivante la plus proche est visée ; quand il n'en reste
-  plus, la recherche est relancée depuis votre position. F4 de nouveau pour arrêter.
+- **Traque (F4)** : dès que la cible est récoltée ou tuée, une nouvelle recherche part de là où vous êtes et la plus
+  proche de vous devient la cible (pas la suivante de la liste trouvée au départ). Plus rien : la traque s'arrête.
 - **Découverte** : le catalogue ne montre que ce que vous avez déjà vu, tenu en main ou combattu. Le reste peut être
   révélé entrée par entrée.
 - Les créatures ne sont trouvées que si elles sont chargées autour de vous ; sinon la fenêtre indique leurs biomes.

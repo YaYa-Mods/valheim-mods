@@ -132,18 +132,19 @@ namespace ResourceFinder
             if (_animatedTarget != _target) { Layers.Animate(_animatedTarget, false); Layers.Animate(_target, true); _animatedTarget = _target; }
             UpdateGlow();
 
-            // Cible disparue (minée, cueillie et détruite, tuée...) → suivante de la même couche ; en Traque, on enchaîne depuis ici et,
-            // s'il ne reste rien, la recherche est relancée depuis la position actuelle (chasser vingt biches sans rouvrir la fenêtre)
+            // Cible disparue (minée, cueillie et détruite, tuée...). En Traque : nouvelle recherche depuis la position ACTUELLE, et la
+            // cible devient le plus proche de là, pas le suivant d'une liste trouvée au départ, ailleurs (chasser vingt biches, miner un
+            // filon après l'autre, sans rouvrir la fenêtre). Hors Traque : la suivante de la même couche.
             if (_target != null && !_target.StillExists())
             {
                 _finder.Results.Remove(_target);
                 var from = player.transform.position;
-                _target = Nearest(_targetLayer?.Results ?? _finder.Results, from);
-                if (Tracking)
+                if (Tracking && _currentEntry != null)
                 {
-                    if (_target == null && _currentEntry != null && _finder.State == Finder.Phase.Done) { _trackRelaunch = true; StartSearch(_currentEntry); }
-                    else if (_target != null) player.Message(MessageHud.MessageType.TopLeft, L.F("Traque : {0} à {1:0} m", DisplayName(_target), _target.Distance(from)));
+                    _trackRelaunch = true;
+                    StartSearch(_currentEntry);
                 }
+                else _target = Nearest(_targetLayer?.Results ?? _finder.Results, from);
             }
         }
 

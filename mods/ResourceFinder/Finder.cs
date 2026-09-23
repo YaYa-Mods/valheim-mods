@@ -267,6 +267,8 @@ namespace ResourceFinder
             // Intérieurs de donjon (cryptes, grottes…) : le jeu les place à ~5 000 m d'altitude ; on ne peut pas y aller « tout droit »
             if (pos.y > DungeonAltitude) { InDungeons++; return; }
             if (_liveCreaturesOnly && IsCreature(hash) && (ZNetScene.instance == null || ZNetScene.instance.FindInstance(zdo) == null)) return;
+            // Cueillette déjà ramassée : elle reste dans le monde le temps de repousser, mais il n'y a rien à prendre
+            if (zdo.GetBool(ZDOVars.s_picked, false)) return;
             var id = zdo.m_uid;
             if (Results.Any(r => r.Id == id)) return;
             Results.Add(new Result { Pos = pos, Prefab = _hashToName[hash], Hash = hash, Id = id, IsLocation = false });
