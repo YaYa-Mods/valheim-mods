@@ -30,7 +30,7 @@ namespace TestHarness
             return null;
         }
 
-        private static readonly string[] s_mods = { "vmods.resourcefinder", "vmods.guide", "vmods.inventory", "vmods.hometeleport", "vmods.recycle", "vmods.craftfromchests", "vmods.lumberjack", "vmods.longerfood", "vmods.nodurability", "vmods.shortnights", "vmods.movement" };
+        private static readonly string[] s_mods = { "vmods.resourcefinder", "vmods.guide", "vmods.inventory", "vmods.hometeleport", "vmods.recycle", "vmods.craftfromchests", "vmods.lumberjack", "vmods.longerfood", "vmods.nodurability", "vmods.shortnights", "vmods.movement", "vmods.miner" };
 
         public static IEnumerator Run(Plugin h, Player player)
         {

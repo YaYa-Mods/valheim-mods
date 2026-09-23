@@ -109,6 +109,9 @@ namespace ResourceFinder
             var player = Player.m_localPlayer;
             if (player == null) return true;
 
+            // Matériaux : l'objet lui-même a déjà été ramassé (ses sources peuvent n'avoir jamais été vues)
+            if (e.Category == Category.Materiau) return !string.IsNullOrEmpty(e.ItemName) && player.IsMaterialKnown(e.ItemName);
+
             // Créatures : déjà tuée
             if (e.Category == Category.Creature)
                 foreach (var p in e.Prefabs)

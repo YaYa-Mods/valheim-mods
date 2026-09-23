@@ -49,6 +49,8 @@ namespace TestHarness
                 var entryT = Asm(asm).GetType(asm + ".ResourceEntry");
                 foreach (var e in (IList)catT.GetField("Entries").GetValue(null))
                 {
+                    // Entrées « Matériaux » : nommées par la traduction du jeu elle-même (nom de l'objet), pas par notre table
+                    if (entryT.GetField("Category")?.GetValue(e)?.ToString() == "Materiau") continue;
                     string label = (string)entryT.GetField("Label").GetValue(e);
                     if (!table.ContainsKey(label) && Regex.IsMatch(label, "[àâéèêëîïôùûç ]")) untranslated.Add(label);
                 }

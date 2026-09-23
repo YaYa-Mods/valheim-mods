@@ -5,7 +5,7 @@ using static Heightmap.Biome;
 
 namespace ResourceFinder
 {
-    internal enum Category { Minerai, Cueillette, Arbre, Lieu, Creature }
+    internal enum Category { Minerai, Cueillette, Arbre, Lieu, Creature, Materiau }
 
     /// <summary>
     /// Une ressource cherchable : un libellé, des noms de prefabs (objets du monde, comparés sans casse)
@@ -28,6 +28,8 @@ namespace ResourceFinder
         public Heightmap.Biome Biomes = None;
         /// <summary>Les prefabs sont des objets de surface placés dans les lieux listés : un lieu dont la zone est chargée et qui n'en contient plus a été récolté (épingle retirée).</summary>
         public bool SurfacePrefabs;
+        /// <summary>Entrée « Matériaux » : nom interne de l'objet ($item_…), découvert dès que le personnage l'a ramassé.</summary>
+        public string ItemName;
 
         public ResourceEntry(string label, string[] prefabs = null, string[] locations = null, string icon = null, Heightmap.Biome biomes = None)
         {
@@ -51,6 +53,7 @@ namespace ResourceFinder
                 case Category.Cueillette: return L.T("Cueillette");
                 case Category.Arbre: return L.T("Arbres");
                 case Category.Lieu: return L.T("Lieux");
+                case Category.Materiau: return L.T("Matériaux");
                 default: return L.T("Créatures");
             }
         }

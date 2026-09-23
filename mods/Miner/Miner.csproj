@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="..\Common\L10n.cs" />
+    <Compile Include="..\Common\L10n.en.cs" />
+    <Compile Include="..\Common\ScrollGuard.cs" />
+  </ItemGroup>
+  <PropertyGroup>
+    <AssemblyName>Miner</AssemblyName>
+    <RootNamespace>Miner</RootNamespace>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+</Project>

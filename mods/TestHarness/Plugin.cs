@@ -75,7 +75,7 @@ namespace TestHarness
             // Pas d'autosauvegarde pendant les tests (le jeu est tué à la fin, rien ne doit s'écrire)
             Game.m_saveInterval = 1e9f;
             if (WorldReport.Value) { WorldReport.Value = false; StartCoroutine(RunWorldReport()); }
-            if (AutoRun.Value) { AutoRun.Value = false; StartCoroutine(RunAll()); }
+            if (AutoRun.Value) { AutoRun.Value = false; StartCoroutine(RunAllGuarded()); }
         }
 
 
@@ -202,16 +202,41 @@ namespace TestHarness
         }
         /// <summary>Exécute un groupe de tests en rattrapant toute exception (sinon la coroutine meurt en silence, le jeu
         /// reste ouvert jusqu'au délai du script et rien n'est rapporté) : l'exception devient un FAIL et on passe au groupe suivant.</summary>
-        private IEnumerator Safe(string group, IEnumerator tests)
+        /// <summary>
+        /// Garde-fou de chaque groupe de tests : une exception ou un blocage ne doit JAMAIS figer le run.
+        ///  - Les sous-étapes (yield return d'un autre IEnumerator) sont déroulées ici même, dans le même try : une
+        ///    exception au fond d'une sous-étape est attrapée (laissée à Unity, elle tuait la sous-étape et le groupe
+        ///    attendait pour toujours).
+        ///  - Délai maximum par groupe : au-delà, le groupe est arrêté, noté en échec avec sa dernière étape, et le run continue.
+        /// </summary>
+        private IEnumerator Safe(string group, IEnumerator tests, float maxSeconds = GroupTimeout)
         {
-            while (true)
+            var stack = new Stack<IEnumerator>();
+            stack.Push(tests);
+            float start = Time.realtimeSinceStartup;
+            Step(group + " : début");
+            while (stack.Count > 0)
             {
+                if (Time.realtimeSinceStartup - start > maxSeconds)
+                {
+                    Check(group + ".délai dépassé", false, $"groupe arrêté au bout de {maxSeconds:0} s, dernière étape « {s_lastStep} »");
+                    CloseModWindows();
+                    yield break;
+                }
                 object current;
-                try { if (!tests.MoveNext()) yield break; current = tests.Current; }
+                try
+                {
+                    if (!stack.Peek().MoveNext()) { stack.Pop(); continue; }
+                    current = stack.Peek().Current;
+                }
                 catch (Exception ex) { Check(group + ".exception", false, ex.GetType().Name + " : " + ex.Message + " | " + ex.StackTrace); CloseModWindows(); yield break; }
+                if (current is IEnumerator nested) { stack.Push(nested); continue; } // sous-étape : déroulée ici, sous la même protection
                 yield return current;
             }
         }
+
+        /// <summary>Délai maximum d'un groupe de tests (secondes réelles). Le plus long (placement du catalogue) dure environ une minute.</summary>
+        private const float GroupTimeout = 150f;
 
         /// <summary>Après une exception : referme les fenêtres des mods (finder, guide, hub) pour ne pas fausser les groupes suivants.</summary>
         private static void CloseModWindows()
@@ -248,6 +273,15 @@ namespace TestHarness
             if (ok) _pass++; else _fail++;
             Log.LogInfo($"[TEST] {(ok ? "PASS" : "FAIL")} {name}{(string.IsNullOrEmpty(detail) ? "" : ", " + detail)}");
         }
+
+        /// <summary>Le run complet sous garde-fou : même interrompu (exception, délai), il écrit toujours sa ligne de fin.</summary>
+        private IEnumerator RunAllGuarded()
+        {
+            yield return Safe("Run", RunAll(), RunTimeout);
+            if (!_finished) { Log.LogInfo($"[TEST] ===== fin : {_pass} PASS, {_fail} FAIL (run interrompu) ====="); _finished = true; }
+        }
+        private bool _finished;
+        private const float RunTimeout = 1500f;
 
         private IEnumerator RunAll()
         {
@@ -294,10 +328,12 @@ namespace TestHarness
                 yield return Safe("RecyclerTests", RecyclerTests.Run(this, Player.m_localPlayer));
                 yield return Safe("StaminaTests", StaminaTests.Run(this, Player.m_localPlayer));
                 yield return Safe("AutoSaveTests", AutoSaveTests.Run(this, Player.m_localPlayer));
+                yield return Safe("MinerTests", MinerTests.Run(this, Player.m_localPlayer));
                 yield return Safe("GuideTests", GuideTests.Run(this, Player.m_localPlayer));
-                GuideAudit.Run(this);
-                CatalogAudit.Run(this);
+                try { GuideAudit.Run(this); } catch (Exception ex) { Check("GuideAudit.exception", false, ex.Message); }
+                try { CatalogAudit.Run(this); } catch (Exception ex) { Check("CatalogAudit.exception", false, ex.Message); }
                 yield return Safe("CatalogSearchTests", CatalogSearchTests.Run(this, Player.m_localPlayer));
+                yield return Safe("MaterialTests", MaterialTests.Run(this, Player.m_localPlayer));
                 yield return Safe("TeleportTests", TeleportTests.Run(this, Player.m_localPlayer));
                 yield return Safe("TrackTests", TrackTests.Run(this, Player.m_localPlayer));
                 yield return Safe("HudLayoutTests", HudLayoutTests.Run(this, Player.m_localPlayer));
@@ -307,7 +343,7 @@ namespace TestHarness
                 yield return Safe("WindowStackTests", WindowStackTests.Run(this, Player.m_localPlayer));
                 yield return Safe("L10nTests", L10nTests.Run(this, Player.m_localPlayer));
                 L10nTests.Restore();
-                Log.LogInfo($"[TEST] ===== fin : {_pass} PASS, {_fail} FAIL =====");
+                { Log.LogInfo($"[TEST] ===== fin : {_pass} PASS, {_fail} FAIL ====="); _finished = true; }
                 yield break;
             }
             var player = Player.m_localPlayer;
@@ -562,10 +598,12 @@ namespace TestHarness
             yield return Safe("RecyclerTests", RecyclerTests.Run(this, player));
             yield return Safe("StaminaTests", StaminaTests.Run(this, player));
             yield return Safe("AutoSaveTests", AutoSaveTests.Run(this, player));
+            yield return Safe("MinerTests", MinerTests.Run(this, player));
             yield return Safe("GuideTests", GuideTests.Run(this, player));
-            GuideAudit.Run(this);
-            CatalogAudit.Run(this);
+            try { GuideAudit.Run(this); } catch (Exception ex) { Check("GuideAudit.exception", false, ex.Message); }
+            try { CatalogAudit.Run(this); } catch (Exception ex) { Check("CatalogAudit.exception", false, ex.Message); }
             yield return Safe("CatalogSearchTests", CatalogSearchTests.Run(this, player));
+            yield return Safe("MaterialTests", MaterialTests.Run(this, player));
             yield return Safe("TeleportTests", TeleportTests.Run(this, player));
             yield return Safe("TrackTests", TrackTests.Run(this, player));
             yield return Safe("HudLayoutTests", HudLayoutTests.Run(this, player));
@@ -592,7 +630,7 @@ namespace TestHarness
                     Log.LogInfo($"[TEST]   veg name='{v.m_name}' prefab='{(v.m_prefab != null ? v.m_prefab.name : "null")}' biome={v.m_biome} enable={v.m_enable}");
             }
             catch (Exception ex) { Log.LogInfo("[TEST] diag végétation : " + ex.Message); }
-            Log.LogInfo($"[TEST] ===== fin : {_pass} PASS, {_fail} FAIL =====");
+            { Log.LogInfo($"[TEST] ===== fin : {_pass} PASS, {_fail} FAIL ====="); _finished = true; }
         }
     }
 }

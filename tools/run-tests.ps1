@@ -37,14 +37,17 @@ try {
     # Fenetre du jeu au premier plan : sans focus, Unity ignore les entrees (manette virtuelle des tests comprise)
     $ws = New-Object -ComObject WScript.Shell
     for ($i = 0; $i -lt 90; $i++) { Start-Sleep -Seconds 1; $p.Refresh(); if ($p.HasExited) { break }; if ($p.MainWindowHandle -ne [IntPtr]::Zero) { $null = $ws.AppActivate($p.Id); break } }
-    $deadline = (Get-Date).AddSeconds(600)
+    $deadline = (Get-Date).AddSeconds(600); $stalled = $false
     while ((Get-Date) -lt $deadline) {
         Start-Sleep -Seconds 5
         if ($p.HasExited) { Write-Host "Le jeu s'est ferme avant la fin des tests." -ForegroundColor Yellow; break }
+        # Harnais bloque (plus aucun progres signale par son chien de garde depuis 200 s) : on coupe, avec l'etape en cause
+        $stall = if (Test-Path "$V\BepInEx\LogOutput.log") { Get-Content "$V\BepInEx\LogOutput.log" -Tail 3 -Encoding UTF8 | Select-String -Pattern "chien de garde : rien depuis (\d+) s, derni.re .tape (.*)$" | Select-Object -Last 1 } else { $null }
+        if ($stall -and [int]$stall.Matches[0].Groups[1].Value -ge 200) { $blocked = $stall.Matches[0].Groups[2].Value; $stalled = $true; Write-Output "[TEST] ARRET : harnais bloque depuis $($stall.Matches[0].Groups[1].Value) s sur $blocked, jeu ferme"; break }
         if ((Test-Path "$V\BepInEx\LogOutput.log") -and (Select-String -Path "$V\BepInEx\LogOutput.log" -CaseSensitive -Pattern "\[TEST\] ===== fin|\[TEST\] REFUS|rien n.est charg|impossible . pr.parer" -Quiet)) { break }
     }
     # Arret sans ligne « fin » : le jeu s'est ferme tout seul, ou le delai de 600 s est passe (machine chargee) ; la raison est dite dans la sortie
-    if (-not (Select-String -Path "$V\BepInEx\LogOutput.log" -CaseSensitive -Pattern "\[TEST\] ===== fin" -Quiet)) { Write-Output ("[TEST] ARRET sans ligne de fin : " + $(if ($p.HasExited) { 'le jeu s''est ferme de lui-meme' } else { 'delai de 600 s depasse, jeu tue' })) }
+    if (-not $stalled -and -not (Select-String -Path "$V\BepInEx\LogOutput.log" -CaseSensitive -Pattern "\[TEST\] ===== fin" -Quiet)) { Write-Output ("[TEST] ARRET sans ligne de fin : " + $(if ($p.HasExited) { 'le jeu s''est ferme de lui-meme' } else { 'delai de 600 s depasse, jeu tue' })) }
     Start-Sleep -Seconds 2
     Get-Process valheim -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Seconds 2

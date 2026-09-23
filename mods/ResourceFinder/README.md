@@ -8,6 +8,9 @@ The interface follows the game language (French or English).
 - **F7** opens the scanner window. Pick an entry in the catalogue (tabs: all, ores, pickables, trees, locations,
   creatures) or type a name in the search field (catalogue name or internal game name such as `Pickable_Thistle`,
   `Crypt`, `copper`).
+- **Materials tab**: every item the world gives (bone fragments, resin, feathers, leather scraps...) that you have
+  picked up at least once, with its sources read from the game's own drop tables (creatures, bone piles, rocks, trees,
+  plants). Type `bones` or `os` and the scanner looks for skeletons and bone piles.
 - The scanner first searches the **known world** (zones you have already explored). If it does not find enough results,
   a button offers to **search further**: unexplored zones are generated up to a radius (3 km by default), exactly as if
   you had walked there. Generated zones are saved in the world.
@@ -79,6 +82,9 @@ proche. L'interface suit la langue du jeu.
 
 - **F7** : fenêtre du scanner. Choisissez une entrée du catalogue (onglets : tout, minerais, cueillette, arbres, lieux,
   créatures) ou tapez un nom (nom du catalogue ou nom interne du jeu).
+- **Onglet Matériaux** : chaque objet que le monde donne (fragments d'os, résine, plumes, bouts de cuir...) et que vous
+  avez déjà ramassé une fois, avec ses sources lues dans les tables de butin du jeu (créatures, ossuaires, rochers,
+  arbres, plantes). Tapez `os` : le scanner cherche les squelettes et les ossuaires.
 - Le scanner cherche d'abord dans le **monde connu** ; s'il manque des résultats, un bouton propose de **chercher plus
   loin** en générant les zones inconnues (3 km par défaut), comme si vous y étiez passé.
 - La molette fait défiler les listes de la fenêtre sans zoomer la caméra ; la pastille à l'écran reste toujours entièrement lisible (flèche vers la cible quand elle est hors champ) et ne se pose ni sur le nom de créature du jeu, ni sur le HUD (barres, barre d'action, mini-carte, messages, barre du boss), ni sur un autre panneau.

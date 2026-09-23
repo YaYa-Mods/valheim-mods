@@ -74,6 +74,7 @@ namespace TestHarness
                 sb.AppendLine("# Audit du catalogue du scanner : existence et placement de chaque prefab / lieu");
                 foreach (var e in entries)
                 {
+                    if (entryT.GetField("Category").GetValue(e).ToString() == "Materiau") continue; // tirées des tables de butin, vérifiées à part (MaterialTests)
                     string label = (string)entryT.GetField("Label").GetValue(e);
                     var prefabs = (string[])entryT.GetField("Prefabs").GetValue(e);
                     var locations = (string[])entryT.GetField("Locations").GetValue(e);

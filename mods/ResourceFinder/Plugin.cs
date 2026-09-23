@@ -407,6 +407,7 @@ namespace ResourceFinder
         /// « or », « autel eikthyr »), le libellé le plus court gagnant ; sinon recherche libre sur les noms internes.</summary>
         private static ResourceEntry ResolveSearch(string text)
         {
+            ItemSources.EnsureBuilt();
             string q = Normalize(text);
             ResourceEntry best = null; int bestScore = 0;
             foreach (var e in Catalog.Entries)
@@ -417,9 +418,21 @@ namespace ResourceFinder
                 string padded = " " + l + " ";
                 int score = padded.IndexOf(" " + q + " ", StringComparison.Ordinal) >= 0 ? 4 : l.StartsWith(q, StringComparison.Ordinal) ? 3 : padded.IndexOf(" " + q, StringComparison.Ordinal) >= 0 ? 2 : l.IndexOf(q, StringComparison.Ordinal) >= 0 ? 1 : 0;
                 if (score == 0) continue;
-                if (best == null || score > bestScore || (score == bestScore && e.Label.Length < best.Label.Length)) { best = e; bestScore = score; }
+                if (best == null || score > bestScore || (score == bestScore && Better(e, best))) { best = e; bestScore = score; }
             }
             return best ?? Finder.FreeSearch(text);
+        }
+
+        /// <summary>
+        /// À score égal : ce que le joueur connaît d'abord (« os » : les fragments d'os qu'il a ramassés, pas l'os atrophié
+        /// qu'il n'a jamais vu) ; entre deux matériaux, le plus répandu (le plus de sources) ; sinon le libellé le plus court.
+        /// </summary>
+        private static bool Better(ResourceEntry e, ResourceEntry best)
+        {
+            bool ev = Discovery.IsVisible(e), bv = Discovery.IsVisible(best);
+            if (ev != bv) return ev;
+            if (e.Category == Category.Materiau && best.Category == Category.Materiau && e.Prefabs.Length != best.Prefabs.Length) return e.Prefabs.Length > best.Prefabs.Length;
+            return e.Label.Length < best.Label.Length;
         }
 
         private static string Normalize(string s)
@@ -540,6 +553,7 @@ namespace ResourceFinder
         private void RefreshCatalog()
         {
             if (Time.unscaledTime < _nextCatalogRefresh) return;
+            ItemSources.EnsureBuilt(); // entrées « Matériaux » tirées des tables de butin, une seule fois
             _nextCatalogRefresh = Time.unscaledTime + 0.5f;
             _visibleEntries.Clear(); _hiddenEntries.Clear();
             foreach (var e in Catalog.Entries)

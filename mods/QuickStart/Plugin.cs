@@ -29,6 +29,9 @@ namespace QuickStart
         internal static ConfigEntry<bool> AutoLoadLastWorld;
         internal static ConfigEntry<float> AutoLoadDelay;
         internal static ConfigEntry<string> AutoLoadCharacter, AutoLoadWorld;
+        internal static ConfigEntry<string> LastCharacter, LastWorld;
+        /// <summary>Personnage et monde du harnais de test : jamais retenus comme « dernière vraie partie ».</summary>
+        internal const string TestCharacter = "ModTester", TestWorld = "ModTestWorld";
 
         private void Awake()
         {
@@ -42,6 +45,8 @@ namespace QuickStart
                 new ConfigDescription(L.T("Secondes d'attente entre chaque étape automatique (menu → personnage → monde)."), new AcceptableValueRange<float>(0.1f, 5f)));
             AutoLoadCharacter = Config.Bind("General", "AutoLoadCharacter", "", L.T("Nom du personnage à charger automatiquement (vide = dernier joué). Utilisé par le harnais de test pour ne JAMAIS toucher la vraie partie."));
             AutoLoadWorld = Config.Bind("General", "AutoLoadWorld", "", L.T("Nom du monde à charger automatiquement (vide = dernier joué). Si le personnage ou le monde demandé n'existe pas, rien n'est chargé."));
+            LastCharacter = Config.Bind("Memory", "LastCharacter", "", L.T("Retenu automatiquement : personnage de la dernière vraie partie (jamais celui des tests). C'est lui que l'auto-démarrage recharge."));
+            LastWorld = Config.Bind("Memory", "LastWorld", "", L.T("Retenu automatiquement : monde de la dernière vraie partie (jamais celui des tests)."));
 
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             Log.LogInfo($"Quick Start chargé (SkipIntro={SkipIntro.Value}, AutoLoadLastWorld={AutoLoadLastWorld.Value})");
@@ -117,20 +122,33 @@ namespace QuickStart
                 Plugin.Log.LogWarning("Auto-démarrage : AutoLoadCharacter/AutoLoadWorld ignorés (harnais de test absent), et effacés");
                 Plugin.AutoLoadCharacter.Value = ""; Plugin.AutoLoadWorld.Value = "";
             }
-            if (!string.IsNullOrEmpty(Plugin.AutoLoadCharacter.Value) || !string.IsNullOrEmpty(Plugin.AutoLoadWorld.Value))
-                if (!ResolveSelectors()) { Plugin.Log.LogWarning("Auto-démarrage : sélection par nom impossible, rien n'est chargé"); yield break; }
-            if (!string.IsNullOrEmpty(Plugin.AutoLoadCharacter.Value))
+            // Qui charger : le nom imposé (harnais, strict : introuvable = rien), sinon la dernière VRAIE partie retenue par le
+            // mod (souple : introuvable = dernier joué du jeu). Sans ça, après un run de tests le jeu rouvrait le monde de test.
+            string wantChar = Plugin.AutoLoadCharacter.Value, wantWorld = Plugin.AutoLoadWorld.Value;
+            bool strict = !string.IsNullOrEmpty(wantChar) || !string.IsNullOrEmpty(wantWorld);
+            if (!strict) { wantChar = Plugin.LastCharacter.Value; wantWorld = Plugin.LastWorld.Value; }
+            if (!string.IsNullOrEmpty(wantChar) || !string.IsNullOrEmpty(wantWorld))
+                if (!ResolveSelectors())
+                {
+                    if (strict) { Plugin.Log.LogWarning("Auto-démarrage : sélection par nom impossible, rien n'est chargé"); yield break; }
+                    wantChar = wantWorld = "";
+                }
+            if (!string.IsNullOrEmpty(wantChar))
             {
-                idx = profiles != null ? profiles.FindIndex(p => string.Equals(p.GetName(), Plugin.AutoLoadCharacter.Value, StringComparison.OrdinalIgnoreCase)) : -1;
+                idx = profiles != null ? profiles.FindIndex(p => string.Equals(p.GetName(), wantChar, StringComparison.OrdinalIgnoreCase)) : -1;
                 if (idx < 0)
                 {
                     // Personnage créé après l'ouverture du menu (harnais) : on relit la liste des sauvegardes
                     try { AccessTools.Method(typeof(FejdStartup), "UpdateCharacterList")?.Invoke(fs, null); profiles = s_profiles(fs); } catch (Exception ex) { Plugin.Log.LogWarning("UpdateCharacterList : " + ex.Message); }
-                    idx = profiles != null ? profiles.FindIndex(p => string.Equals(p.GetName(), Plugin.AutoLoadCharacter.Value, StringComparison.OrdinalIgnoreCase)) : -1;
+                    idx = profiles != null ? profiles.FindIndex(p => string.Equals(p.GetName(), wantChar, StringComparison.OrdinalIgnoreCase)) : -1;
                 }
-                if (idx < 0) { Plugin.Log.LogWarning($"Auto-démarrage : personnage « {Plugin.AutoLoadCharacter.Value} » introuvable, rien n'est chargé"); yield break; }
-                s_setProfile(fs, profiles[idx].GetFilename()); // le jeu sélectionne un profil par son nom de fichier
-                yield return new WaitForSecondsRealtime(Plugin.AutoLoadDelay.Value);
+                if (idx < 0 && strict) { Plugin.Log.LogWarning($"Auto-démarrage : personnage « {wantChar} » introuvable, rien n'est chargé"); yield break; }
+                if (idx < 0) { Plugin.Log.LogWarning($"Auto-démarrage : personnage retenu « {wantChar} » introuvable, dernier joué à la place"); idx = s_profileIndex(fs); wantWorld = ""; }
+                else
+                {
+                    s_setProfile(fs, profiles[idx].GetFilename()); // le jeu sélectionne un profil par son nom de fichier
+                    yield return new WaitForSecondsRealtime(Plugin.AutoLoadDelay.Value);
+                }
             }
             if (profiles == null || profiles.Count == 0 || idx < 0 || idx >= profiles.Count)
             {
@@ -143,19 +161,29 @@ namespace QuickStart
             fs.OnCharacterStart();
             yield return new WaitForSecondsRealtime(Plugin.AutoLoadDelay.Value);
 
-            // Monde imposé par la configuration
-            if (!string.IsNullOrEmpty(Plugin.AutoLoadWorld.Value))
+            // Monde imposé (harnais) ou retenu (dernière vraie partie)
+            if (!string.IsNullOrEmpty(wantWorld))
             {
                 var worlds = s_worlds(fs);
-                int wi = worlds != null ? worlds.FindIndex(w => string.Equals(w.m_name, Plugin.AutoLoadWorld.Value, StringComparison.OrdinalIgnoreCase)) : -1;
-                if (wi < 0) { Plugin.Log.LogWarning($"Auto-démarrage : monde « {Plugin.AutoLoadWorld.Value} » introuvable, rien n'est chargé"); yield break; }
-                s_setWorld(fs, wi, true);
-                yield return new WaitForSecondsRealtime(Plugin.AutoLoadDelay.Value);
+                int wi = worlds != null ? worlds.FindIndex(w => string.Equals(w.m_name, wantWorld, StringComparison.OrdinalIgnoreCase)) : -1;
+                if (wi < 0 && strict) { Plugin.Log.LogWarning($"Auto-démarrage : monde « {wantWorld} » introuvable, rien n'est chargé"); yield break; }
+                if (wi < 0) { Plugin.Log.LogWarning($"Auto-démarrage : monde retenu « {wantWorld} » introuvable, dernier joué à la place"); wantWorld = ""; }
+                else
+                {
+                    s_setWorld(fs, wi, true);
+                    yield return new WaitForSecondsRealtime(Plugin.AutoLoadDelay.Value);
+                }
             }
             var world = s_world(fs);
-            if (!string.IsNullOrEmpty(Plugin.AutoLoadWorld.Value) && (world == null || !string.Equals(world.m_name, Plugin.AutoLoadWorld.Value, StringComparison.OrdinalIgnoreCase)))
+            if (strict && !string.IsNullOrEmpty(wantWorld) && (world == null || !string.Equals(world.m_name, wantWorld, StringComparison.OrdinalIgnoreCase)))
             {
-                Plugin.Log.LogWarning($"Auto-démarrage : le monde sélectionné n'est pas « {Plugin.AutoLoadWorld.Value} », rien n'est chargé");
+                Plugin.Log.LogWarning($"Auto-démarrage : le monde sélectionné n'est pas « {wantWorld} », rien n'est chargé");
+                yield break;
+            }
+            // Jamais le monde de test en partie normale : s'il est encore présélectionné (aucune partie retenue), on reste sur la liste
+            if (!strict && world != null && (string.Equals(world.m_name, Plugin.TestWorld, StringComparison.OrdinalIgnoreCase) || string.Equals(profiles[idx].GetName(), Plugin.TestCharacter, StringComparison.OrdinalIgnoreCase)))
+            {
+                Plugin.Log.LogWarning("Auto-démarrage : personnage ou monde de test présélectionné, on reste sur la liste (choisissez votre partie une fois, elle sera retenue)");
                 yield break;
             }
             if (world == null)
@@ -167,6 +195,24 @@ namespace QuickStart
 
             // 3. « Démarrer » le monde
             fs.OnWorldStart();
+        }
+
+        // Dernière vraie partie : retenue à chaque arrivée dans un monde local (hors harnais, hors personnage/monde de test)
+        [HarmonyPatch(typeof(Player), "OnSpawned")]
+        [HarmonyPostfix]
+        private static void Player_OnSpawned(Player __instance)
+        {
+            try
+            {
+                if (__instance != Player.m_localPlayer || BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("vmods.testharness")) return;
+                if (ZNet.instance == null || !ZNet.instance.IsServer()) return; // partie rejointe : le monde est celui du serveur, pas un monde local
+                string ch = Game.instance?.GetPlayerProfile()?.GetName() ?? "", wo = ZNet.instance.GetWorldName() ?? "";
+                if (ch.Length == 0 || wo.Length == 0) return;
+                if (string.Equals(ch, Plugin.TestCharacter, StringComparison.OrdinalIgnoreCase) || string.Equals(wo, Plugin.TestWorld, StringComparison.OrdinalIgnoreCase)) return;
+                if (Plugin.LastCharacter.Value != ch) Plugin.LastCharacter.Value = ch;
+                if (Plugin.LastWorld.Value != wo) Plugin.LastWorld.Value = wo;
+            }
+            catch (Exception ex) { Plugin.Log.LogWarning("Dernière partie : " + ex.Message); }
         }
     }
 }

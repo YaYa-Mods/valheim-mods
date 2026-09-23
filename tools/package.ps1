@@ -30,6 +30,8 @@ $mods = @(
        Desc = 'Recycle crafted gear for a share of its materials (one third by default, upgrades included), read from the game recipes. Window with gamepad support. EN/FR.' }
     @{ Dir = 'Lumberjack'; Name = 'Lumberjack'; Glyph = 'tree'
        Desc = 'The Woodcutting skill matters: high level fells trees in one hit, and fallen logs and stumps cut themselves up. Tool tiers still apply.' }
+    @{ Dir = 'Miner'; Name = 'Miner'; Glyph = 'pick'
+       Desc = 'Faster mining of ore deposits only: pickaxe damage x3 (up to x6 with the Pickaxes skill) and area hits on large veins. Ordinary stone unchanged. EN/FR.' }
     @{ Dir = 'LongerFood'; Name = 'LongerFood'; Glyph = 'food'
        Desc = 'Food with positive effects lasts longer (multiplier, 1.5 by default). Potions and meads untouched, vanilla values restored when disabled.' }
     @{ Dir = 'NoDurability'; Name = 'NoDurability'; Glyph = 'shield'
@@ -69,6 +71,7 @@ function Draw-Glyph([System.Drawing.Graphics]$g, [string]$glyph) {
             'chevrons' { $g.DrawLine($pen, 30, 28, 62, 64); $g.DrawLine($pen, 62, 64, 30, 100); $g.DrawLine($pen, 66, 28, 98, 64); $g.DrawLine($pen, 98, 64, 66, 100) }
             'play'     { $g.DrawPolygon($pen, [System.Drawing.Point[]]@([System.Drawing.Point]::new(26, 24), [System.Drawing.Point]::new(70, 64), [System.Drawing.Point]::new(26, 104))); $g.DrawPolygon($pen, [System.Drawing.Point[]]@([System.Drawing.Point]::new(70, 24), [System.Drawing.Point]::new(110, 64), [System.Drawing.Point]::new(70, 104))) }
             'clock'    { $g.DrawEllipse($pen, 22, 22, 84, 84); $g.DrawLine($pen, 64, 64, 64, 38); $g.DrawLine($pen, 64, 64, 84, 74) }
+            'pick'     { $g.DrawArc($pen, 24, 22, 80, 60, 200, 140); $g.DrawLine($pen, 64, 30, 64, 108) }
         }
         $pen.Dispose(); $brush.Dispose()
     }

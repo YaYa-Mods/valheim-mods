@@ -40,6 +40,7 @@ namespace TestHarness
 
             foreach (var e in entries)
             {
+                if (entryT.GetField("Category").GetValue(e).ToString() == "Materiau") continue; // vérifiées à part (MaterialTests)
                 string label = (string)entryT.GetField("Label").GetValue(e);
                 var prefabs = (string[])entryT.GetField("Prefabs").GetValue(e);
                 var locations = (string[])entryT.GetField("Locations").GetValue(e);
