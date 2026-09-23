@@ -859,7 +859,10 @@ namespace ResourceFinder
             {
                 var go = ZNetScene.instance != null && !r.IsLocation ? ZNetScene.instance.GetPrefab(r.Prefab) : null;
                 var character = go != null ? go.GetComponent<Character>() : null;
+                var hover = go != null ? go.GetComponent<HoverText>() : null;
                 if (character != null && !string.IsNullOrEmpty(character.m_name)) name = Localization.instance.Localize(character.m_name);
+                // Le nom que le jeu affiche au survol (« Tas d'os », « Gisement de cuivre ») : ce qu'on cherche des yeux
+                else if (hover != null && !string.IsNullOrEmpty(hover.m_text) && !hover.m_text.Contains("{")) name = Localization.instance.Localize(hover.m_text);
                 else
                 {
                     var item = Icons.ItemForPrefab(r.Prefab);
@@ -872,6 +875,14 @@ namespace ResourceFinder
             if (string.IsNullOrEmpty(name)) name = Prettify(r.Prefab);
             s_displayNames[r.Prefab] = name;
             return name;
+        }
+
+        /// <summary>Ce libellé est-il celui d'une entrée « Matériaux » (objet ramassé, sources variées) ?</summary>
+        internal static bool IsMaterialLabel(string label)
+        {
+            if (string.IsNullOrEmpty(label)) return false;
+            foreach (var e in Catalog.Entries) if (e.Category == Category.Materiau && e.Label == label) return true;
+            return false;
         }
 
         /// <summary>« Mistlands_DvergrTownEntrance1 » → « Mistlands Dvergr Town Entrance 1 ».</summary>
@@ -948,7 +959,7 @@ namespace ResourceFinder
         }
 
 
-        private Result _hudTarget; private Layer _hudLayer; private string _hudLabel, _hudDistText; private int _hudDistKey = -1; private float _hudLabelW, _hudDistW; private Sprite _hudIcon;
+        private Result _hudTarget; private Layer _hudLayer; private string _hudLabel, _hudShownLabel, _hudDistText; private int _hudDistKey = -1; private float _hudLabelW, _hudDistW; private Sprite _hudIcon;
         private static readonly GUIContent s_content = new GUIContent();
         private bool _hudTracking;
 
@@ -1158,7 +1169,14 @@ namespace ResourceFinder
                 _hudDistText = dist >= 1000f ? $"{dist / 1000f:0.0} km" : dist < 3f ? L.T("ici") : $"{dist:0} m";
                 // Pas de compteur sur la pastille : le rang n'est dit qu'au moment d'appuyer sur F6
                 if (Tracking) _hudDistText += L.T("  <size=12><color=#7cc35a>traque</color></size>");
-                s_content.text = label; _hudLabelW = _hudStyle.CalcSize(s_content).x;
+                // Recherche d'un matériau : la pastille dit aussi QUOI chercher (« Fragments d'os · Tas d'os », « · Squelette »)
+                _hudShownLabel = label;
+                if (!_target.IsLocation && IsMaterialLabel(_targetLayer?.Label ?? _finder.Label))
+                {
+                    string source = DisplayName(_target);
+                    if (!string.IsNullOrEmpty(source) && !string.Equals(source, label, StringComparison.OrdinalIgnoreCase)) _hudShownLabel = label + "  <color=#c9c2b4>· " + source + "</color>";
+                }
+                s_content.text = _hudShownLabel; _hudLabelW = _hudStyle.CalcSize(s_content).x;
                 s_content.text = _hudDistText; _hudDistW = _hudDist.CalcSize(s_content).x;
                 _hudIcon = _targetLayer?.Icon() ?? (_target.IsLocation ? Icons.ForEntry(_currentEntry) : (Icons.ForPrefab(_target.Prefab) ?? Icons.ForEntry(_currentEntry)));
             }
@@ -1200,7 +1218,7 @@ namespace ResourceFinder
             bool arrowFirst = arrow == "◀" || arrow == "▲"; // la flèche est du côté où se trouve la cible
             if (!onScreen && arrowFirst) { GUI.Label(new Rect(x - 4f, rect.y, 24f, h), arrow, _hudArrow); x += arrowW; }
             if (icon != null) { Icons.Draw(new Rect(x, rect.y + 3f, 30f, 30f), icon); x += 38f; }
-            Theme.ShadowLabel(new Rect(x, rect.y, labelW + 4f, h), label, _hudStyle); x += labelW + 10f;
+            Theme.ShadowLabel(new Rect(x, rect.y, labelW + 4f, h), _hudShownLabel ?? label, _hudStyle); x += labelW + 10f;
             Theme.ShadowLabel(new Rect(x, rect.y, distW + 4f, h), distText, _hudDist);
             if (onScreen) GUI.Label(new Rect(Mathf.Clamp(p.x - 10f, 0f, sw - 20f), rect.yMax + 2f, 20f, 20f), "▼", _hudDist);
             else if (!arrowFirst) GUI.Label(new Rect(rect.xMax - 26f, rect.y, 24f, h), arrow, _hudArrow);

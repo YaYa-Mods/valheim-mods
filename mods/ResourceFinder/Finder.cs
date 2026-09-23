@@ -79,6 +79,9 @@ namespace ResourceFinder
         private HashSet<int> _hashes = new HashSet<int>();
         private Dictionary<int, string> _hashToName = new Dictionary<int, string>();
         private string[] _locationPatterns = Array.Empty<string>();
+        // Recherche d'un matériau : une créature n'est proposée que si elle est là, chargée autour du joueur. Un souvenir de
+        // créature dans une zone non chargée (squelette apparu la nuit, parti au lever du jour) enverrait vers un endroit vide.
+        private bool _liveCreaturesOnly;
         private Heightmap.Biome _entryBiomes = Heightmap.Biome.None;
         private bool _hasStaticPrefabs;   // faux = que des créatures : rien à générer, elles n'apparaissent pas à la génération
 
@@ -183,6 +186,7 @@ namespace ResourceFinder
                 _prefabNamesToSearch.Add(name);
             }
             _locationPatterns = entry.Locations;
+            _liveCreaturesOnly = entry.Category == Category.Materiau;
             _entryBiomes = entry.Biomes;
             _hasStaticPrefabs = _hashes.Any(h => !IsCreature(h));
 
@@ -262,6 +266,7 @@ namespace ResourceFinder
             var pos = zdo.GetPosition();
             // Intérieurs de donjon (cryptes, grottes…) : le jeu les place à ~5 000 m d'altitude ; on ne peut pas y aller « tout droit »
             if (pos.y > DungeonAltitude) { InDungeons++; return; }
+            if (_liveCreaturesOnly && IsCreature(hash) && (ZNetScene.instance == null || ZNetScene.instance.FindInstance(zdo) == null)) return;
             var id = zdo.m_uid;
             if (Results.Any(r => r.Id == id)) return;
             Results.Add(new Result { Pos = pos, Prefab = _hashToName[hash], Hash = hash, Id = id, IsLocation = false });

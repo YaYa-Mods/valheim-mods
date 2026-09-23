@@ -51,6 +51,9 @@ namespace ResourceFinder
             foreach (var p in byName.Values)
             {
                 if (p.GetComponent<Piece>() != null || p.GetComponent<ItemDrop>() != null || p.GetComponent<Player>() != null) continue;
+                // Pièges enterrés (« Greydwarf_Surprise ») : quasi invisibles, ils n'éclosent qu'au passage ; le scanner
+                // enverrait le joueur vers un carré d'herbe vide. Ce ne sont pas des sources qu'on va chercher.
+                if (p.name.IndexOf("Surprise", StringComparison.OrdinalIgnoreCase) >= 0) continue;
                 var cd = p.GetComponent<CharacterDrop>();
                 if (cd?.m_drops != null)
                 {
