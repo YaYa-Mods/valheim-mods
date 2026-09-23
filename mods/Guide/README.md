@@ -47,7 +47,7 @@ Also in the action wheel (group Mods) and the inventory buttons (Mod Hub).
 | Tracker | Mode | Complet | Complet (full), Reduit (compact), Masque (hidden) |
 | Tracker | TrackerKey | F11 | Cycle the tracker mode |
 | Tracker | Steps | 4 | Steps shown under the objective |
-| Tracker | X, Y | -350, 290 | Tracker position (1080p units; negative X = from the right edge, negative Y = from the bottom, where the panel grows upwards and never covers the health bars) |
+| Tracker | X, Y | -390, 290 | Tracker position (1080p units; negative X = from the right edge, negative Y = from the bottom, where the panel grows upwards and never covers the health bars) |
 
 ## Notes
 

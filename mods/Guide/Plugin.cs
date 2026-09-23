@@ -60,9 +60,9 @@ namespace Guide
             Mode = Config.Bind("Tracker", "Mode", TrackerMode.Complet, L.T("Suivi à l'écran : Complet (objectif, barre, prochaines étapes), Reduit (une ligne : objectif et prochaine étape), Masque. Touche TrackerKey ou roue d'action → Mods pour passer de l'un à l'autre ; il se déploie quelques secondes quand une étape est accomplie."));
             TrackerKey = Config.Bind("Tracker", "TrackerKey", KeyCode.F11, L.T("Touche qui fait tourner le suivi : complet → réduit → masqué."));
             TrackerSteps = Config.Bind("Tracker", "Steps", 4, new ConfigDescription(L.T("Nombre d'étapes affichées sous l'objectif."), new AcceptableValueRange<int>(1, 8)));
-            TrackerX = Config.Bind("Tracker", "X", -350f, new ConfigDescription(L.T("Position X du suivi (unités 1080p ; négatif = depuis le bord droit)."), new AcceptableValueRange<float>(-1920f, 1920f)));
+            TrackerX = Config.Bind("Tracker", "X", -390f, new ConfigDescription(L.T("Position X du suivi (unités 1080p ; négatif = depuis le bord droit)."), new AcceptableValueRange<float>(-1920f, 1920f)));
             TrackerY = Config.Bind("Tracker", "Y", 290f, new ConfigDescription(L.T("Position Y du suivi (unités 1080p ; négatif = depuis le bas de l'écran, le panneau grandit alors vers le haut et ne recouvre jamais les barres de vie)."), new AcceptableValueRange<float>(-1080f, 1080f)));
-            if (Mathf.Approximately(TrackerX.Value, -330f)) TrackerX.Value = -350f; // ancien défaut (suivi de 310 px) : suit l'élargissement à 330 px
+            if (Mathf.Approximately(TrackerX.Value, -330f) || Mathf.Approximately(TrackerX.Value, -350f)) TrackerX.Value = -390f; // anciens défauts (suivi de 310 puis 340 px) : suivent l'élargissement à 380 px
             Progress.StepCompleted += OnStepCompleted;
             Harmony.CreateAndPatchAll(typeof(Patches), Guid);
             ScrollGuard.Install(Guid, () => WindowOpen); // molette : faire défiler la liste, pas zoomer la caméra
@@ -180,8 +180,8 @@ namespace Guide
             _step = new GUIStyle(Theme.Skin.label) { fontSize = 14, wordWrap = true };
             _stepDone = new GUIStyle(_step); _stepDone.normal.textColor = new Color(0.55f, 0.75f, 0.45f);
             _tag = new GUIStyle(Theme.Skin.label) { fontSize = 12, alignment = TextAnchor.MiddleRight }; _tag.normal.textColor = Theme.MutedColor;
-            _trackerTitle = new GUIStyle(Theme.H2) { fontSize = 18 }; // Norsebold, comme les titres du jeu
-            _trackerLine = new GUIStyle(Theme.Skin.label) { fontSize = 14, wordWrap = true, alignment = TextAnchor.MiddleLeft }; _trackerLine.padding = new RectOffset(2, 2, 3, 3);
+            _trackerTitle = new GUIStyle(Theme.H2) { fontSize = 21 }; // Norsebold, comme les titres du jeu
+            _trackerLine = new GUIStyle(Theme.Skin.label) { fontSize = 16, wordWrap = true, alignment = TextAnchor.MiddleLeft }; _trackerLine.padding = new RectOffset(2, 2, 4, 4); _trackerLine.margin = new RectOffset(0, 0, 0, 0); // sans la marge du thème : texte centré sur le losange et l'icône
             _trackerCompact = new GUIStyle(Theme.H2) { fontSize = 15, wordWrap = false, clipping = TextClipping.Clip }; _trackerCompact.padding = new RectOffset(2, 2, 0, 0);
             _trackerMuted = new GUIStyle(_trackerLine); _trackerMuted.normal.textColor = Theme.MutedColor;
             _trackerDoneLine = new GUIStyle(_trackerLine); _trackerDoneLine.normal.textColor = new Color(0.60f, 0.82f, 0.48f);
@@ -248,16 +248,16 @@ namespace Guide
             bool repaint = Event.current.type == EventType.Repaint;
 
             // Style « moderne » : pas de cadre, un voile sombre qui s'estompe vers le bas, textes ombrés, accents fins.
-            GUILayout.BeginArea(new Rect(x, y, 340f, 480f));
+            GUILayout.BeginArea(new Rect(x, y, 380f, 560f));
             GUILayout.BeginVertical(Theme.Veil);
 
             // ---- en-tête : trophée, titre en Norse, compteur ; filet accent qui s'efface vers la droite
             GUILayout.BeginHorizontal();
             var chIcon = Facts.ChapterIcon(chapter);
-            float iconSize = compact ? 22f : 30f;
+            float iconSize = compact ? 24f : 36f;
             if (chIcon != null) { Theme.SpriteLayout(chIcon, iconSize); GUILayout.Space(8f); }
             Theme.ShadowLabel(chapter.DisplayTitle, compact ? _trackerCompact : _trackerTitle, GUILayout.ExpandWidth(true));
-            Theme.ShadowLabel($"{done}<size=11>/{chapter.Steps.Count}</size>", _trackerCount, GUILayout.Width(48f));
+            Theme.ShadowLabel($"{done}<size=13>/{chapter.Steps.Count}</size>", _trackerCount, GUILayout.Width(60f));
             GUILayout.EndHorizontal();
             var rule = GUILayoutUtility.GetRect(10f, compact ? 3f : 4f, GUILayout.ExpandWidth(true));
             if (repaint)
@@ -268,7 +268,7 @@ namespace Guide
                 Theme.Fill(pr, new Color(1f, 1f, 1f, 0.10f));
                 if (frac > 0f) { Theme.Fill(new Rect(pr.x, pr.y, pr.width * frac, pr.height), Theme.Accent); Theme.Fill(new Rect(pr.x + pr.width * frac - 2f, pr.y - 1f, 4f, pr.height + 2f), new Color(1f, 0.9f, 0.7f, 0.9f)); }
             }
-            GUILayout.Space(compact ? 3f : 6f);
+            GUILayout.Space(compact ? 4f : 10f);
 
             if (compact)
             {
@@ -310,8 +310,8 @@ namespace Guide
             string prog = st.Progress.Length > 0 && !done ? $"  <color=#f5a847>{st.Progress}</color>" : "";
             GUILayout.BeginHorizontal(GUILayout.MinHeight(TrackerRowHeight));
             Marker(s.Need == Need.Required, done);
-            Theme.SpriteLayout(Facts.StepIcon(s), 22f, TrackerRowHeight); // case réservée même sans icône : lignes alignées
-            GUILayout.Space(4f);
+            Theme.SpriteLayout(Facts.StepIcon(s), 26f, TrackerRowHeight); // case réservée même sans icône : lignes alignées
+            GUILayout.Space(6f);
             var style = done ? _trackerDoneLine : current ? _trackerLine : _trackerMuted;
             Theme.ShadowLabel(s.DisplayTitle + prog, style, GUILayout.MinHeight(TrackerRowHeight));
             GUILayout.EndHorizontal();
@@ -325,7 +325,7 @@ namespace Guide
             GUILayout.Space(TrackerRowGap); // de l'air entre deux étapes : chaque ligne se lit d'un coup d'œil en jouant
         }
 
-        private const float TrackerRowHeight = 26f, TrackerRowGap = 4f;
+        private const float TrackerRowHeight = 32f, TrackerRowGap = 8f;
 
         /// <summary>Marqueur d'étape dessiné (pas un caractère de police) : losange plein accent = obligatoire, creux = conseillé, coche verte = fait.</summary>
         private static void Marker(bool required, bool done)
@@ -349,10 +349,10 @@ namespace Guide
         /// <summary>Positions prêtes à l'emploi du suivi (unités 1080p ; X négatif = depuis le bord droit).</summary>
         private static readonly KeyValuePair<string, Vector2>[] s_presets =
         {
-            new KeyValuePair<string, Vector2>("Sous la carte", new Vector2(-350f, 290f)),
+            new KeyValuePair<string, Vector2>("Sous la carte", new Vector2(-390f, 290f)),
             new KeyValuePair<string, Vector2>("Haut gauche", new Vector2(20f, 250f)),  // sous la zone des messages du jeu (découvertes, ramassages)
             new KeyValuePair<string, Vector2>("Bas gauche", new Vector2(20f, -310f)),   // ancré en bas : au-dessus des barres de vie
-            new KeyValuePair<string, Vector2>("Bas droite", new Vector2(-350f, -310f)), // ancré en bas : au-dessus des aides de touches
+            new KeyValuePair<string, Vector2>("Bas droite", new Vector2(-390f, -310f)), // ancré en bas : au-dessus des aides de touches
         };
 
         private void DrawWindow(int id)
