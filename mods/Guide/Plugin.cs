@@ -181,7 +181,7 @@ namespace Guide
             _stepDone = new GUIStyle(_step); _stepDone.normal.textColor = new Color(0.55f, 0.75f, 0.45f);
             _tag = new GUIStyle(Theme.Skin.label) { fontSize = 12, alignment = TextAnchor.MiddleRight }; _tag.normal.textColor = Theme.MutedColor;
             _trackerTitle = new GUIStyle(Theme.H2) { fontSize = 18 }; // Norsebold, comme les titres du jeu
-            _trackerLine = new GUIStyle(Theme.Skin.label) { fontSize = 13, wordWrap = true }; _trackerLine.padding = new RectOffset(2, 2, 1, 1);
+            _trackerLine = new GUIStyle(Theme.Skin.label) { fontSize = 14, wordWrap = true, alignment = TextAnchor.MiddleLeft }; _trackerLine.padding = new RectOffset(2, 2, 3, 3);
             _trackerCompact = new GUIStyle(Theme.H2) { fontSize = 15, wordWrap = false, clipping = TextClipping.Clip }; _trackerCompact.padding = new RectOffset(2, 2, 0, 0);
             _trackerMuted = new GUIStyle(_trackerLine); _trackerMuted.normal.textColor = Theme.MutedColor;
             _trackerDoneLine = new GUIStyle(_trackerLine); _trackerDoneLine.normal.textColor = new Color(0.60f, 0.82f, 0.48f);
@@ -248,7 +248,7 @@ namespace Guide
             bool repaint = Event.current.type == EventType.Repaint;
 
             // Style « moderne » : pas de cadre, un voile sombre qui s'estompe vers le bas, textes ombrés, accents fins.
-            GUILayout.BeginArea(new Rect(x, y, 340f, 400f));
+            GUILayout.BeginArea(new Rect(x, y, 340f, 480f));
             GUILayout.BeginVertical(Theme.Veil);
 
             // ---- en-tête : trophée, titre en Norse, compteur ; filet accent qui s'efface vers la droite
@@ -308,29 +308,33 @@ namespace Guide
         {
             var st = Progress.Get(chapter, s);
             string prog = st.Progress.Length > 0 && !done ? $"  <color=#f5a847>{st.Progress}</color>" : "";
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(GUILayout.MinHeight(TrackerRowHeight));
             Marker(s.Need == Need.Required, done);
-            Theme.SpriteLayout(Facts.StepIcon(s), 20f); // case réservée même sans icône : lignes alignées
-            GUILayout.Space(2f);
+            Theme.SpriteLayout(Facts.StepIcon(s), 22f, TrackerRowHeight); // case réservée même sans icône : lignes alignées
+            GUILayout.Space(4f);
             var style = done ? _trackerDoneLine : current ? _trackerLine : _trackerMuted;
-            Theme.ShadowLabel(s.DisplayTitle + prog, style);
+            Theme.ShadowLabel(s.DisplayTitle + prog, style, GUILayout.MinHeight(TrackerRowHeight));
             GUILayout.EndHorizontal();
             if (current && !done && Event.current.type == EventType.Repaint)
             {
                 var r = GUILayoutUtility.GetLastRect();
                 // liseré accent à gauche de la ligne courante + léger surlignage qui s'estompe vers la droite
                 Theme.FadeLine(new Rect(r.x - 6f, r.y + 1f, r.width * 0.9f, r.height - 2f), new Color(1f, 0.75f, 0.35f, 0.10f));
-                Theme.Fill(new Rect(r.x - 8f, r.y + 2f, 2f, r.height - 4f), Theme.Accent);
+                Theme.Fill(new Rect(r.x - 8f, r.y + 3f, 2f, r.height - 6f), Theme.Accent);
             }
+            GUILayout.Space(TrackerRowGap); // de l'air entre deux étapes : chaque ligne se lit d'un coup d'œil en jouant
         }
+
+        private const float TrackerRowHeight = 26f, TrackerRowGap = 4f;
 
         /// <summary>Marqueur d'étape dessiné (pas un caractère de police) : losange plein accent = obligatoire, creux = conseillé, coche verte = fait.</summary>
         private static void Marker(bool required, bool done)
         {
-            var r = GUILayoutUtility.GetRect(16f, 20f, GUILayout.Width(16f), GUILayout.Height(20f));
+            var r = GUILayoutUtility.GetRect(16f, TrackerRowHeight, GUILayout.Width(16f), GUILayout.Height(TrackerRowHeight));
             if (Event.current.type != EventType.Repaint) return;
-            var g = new Rect(r.x + 2f, r.y + 4f, 12f, 12f);
-            if (done) Theme.DrawCheck(new Rect(r.x, r.y + 2f, 16f, 16f), new Color(0.49f, 0.76f, 0.35f));
+            float mid = r.y + r.height / 2f;
+            var g = new Rect(r.x + 2f, mid - 6f, 12f, 12f);
+            if (done) Theme.DrawCheck(new Rect(r.x, mid - 8f, 16f, 16f), new Color(0.49f, 0.76f, 0.35f));
             else Theme.DrawDiamond(g, required ? Theme.Accent : new Color(0.62f, 0.58f, 0.50f), required);
         }
 
