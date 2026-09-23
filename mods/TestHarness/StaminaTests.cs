@@ -57,6 +57,32 @@ namespace TestHarness
             h.Check("Endurance.frapper une créature met en combat", before - after > 19f, $"{before:0.#} → {after:0.#}");
             ZNetScene.instance.Destroy(boar);
 
+            // Un monstre qui vous a pour cible de loin (simple repérage) ne met pas en combat ; tout près, si
+            var greyPrefab = ZNetScene.instance.GetPrefab("Greyling");
+            var grey = UnityEngine.Object.Instantiate(greyPrefab, player.transform.position + player.transform.forward * 30f, Quaternion.identity);
+            yield return new WaitForSeconds(0.5f);
+            var targetF = typeof(MonsterAI).GetField("m_targetCreature", BindingFlags.NonPublic | BindingFlags.Instance);
+            var ai = grey.GetComponent<MonsterAI>();
+            bool farTargeting = false, nearTargeting = false; float farUsed = -1f, nearUsed = -1f;
+            if (ai != null && targetF != null)
+            {
+                setFight.Invoke(null, new object[] { false });
+                targetF.SetValue(ai, player);
+                farTargeting = ai.GetTargetCreature() == player;
+                player.AddStamina(1000f);
+                before = player.GetStamina(); player.UseStamina(20f); farUsed = before - player.GetStamina();
+                grey.transform.position = player.transform.position + player.transform.forward * 4f;
+                setFight.Invoke(null, new object[] { false });
+                targetF.SetValue(ai, player);
+                nearTargeting = ai.GetTargetCreature() == player;
+                player.AddStamina(1000f);
+                before = player.GetStamina(); player.UseStamina(20f); nearUsed = before - player.GetStamina();
+            }
+            h.Check("Endurance.monstre qui vous cible à 30 m : pas de combat", farTargeting && farUsed < 0.01f, $"cible posée={farTargeting}, consommé={farUsed:0.#}");
+            h.Check("Endurance.monstre qui vous cible à 4 m : combat", nearTargeting && nearUsed > 19f, $"cible posée={nearTargeting}, consommé={nearUsed:0.#}");
+            ZNetScene.instance.Destroy(grey);
+            yield return null;
+
             // Réglage éteint : comportement du jeu
             setFight.Invoke(null, new object[] { false });
             freeCfg.Value = false;

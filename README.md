@@ -1,6 +1,6 @@
 # YaYa's Valheim mods
 
-A set of thirteen BepInEx mods for Valheim, built from source against the game's own assemblies, no downloaded binaries,
+A set of fourteen BepInEx mods for Valheim, built from source against the game's own assemblies, no downloaded binaries,
 no external dependencies beyond BepInEx and Harmony. The in-game UI follows the game language: **French** or **English** (any other language gets English). Each mod has its own README in `mods/<Mod>/` with keys, configuration and details.
 
 | Mod | What it does |
@@ -16,7 +16,8 @@ no external dependencies beyond BepInEx and Harmony. The in-game UI follows the 
 | [**Longer Food**](mods/LongerFood/README.md) | Food lasts longer (× factor, configurable). |
 | [**No Durability**](mods/NoDurability/README.md) | Tools, weapons and armour never wear out. |
 | [**Short Nights**](mods/ShortNights/README.md) | Shorter nights without changing the day length. |
-| [**Movement**](mods/Movement/README.md) | Faster running, jogging and swimming. |
+| [**Movement**](mods/Movement/README.md) | Faster running, jogging and swimming; no stamina used out of combat. |
+| [**Auto Save**](mods/AutoSave/README.md) | The game's own autosave every 5 minutes instead of 30 (configurable). |
 | [**Quick Start**](mods/QuickStart/README.md) | Skip the intro, auto-load a character and world. |
 | [**Test Harness**](mods/TestHarness/README.md) | *(developers)* In-game integration tests with screenshots, run on a dedicated test character/world. |
 
@@ -56,7 +57,7 @@ MIT, see `LICENSE`.
 
 ## En français
 
-Treize mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du jeu. Interface en français ou en anglais selon la langue du jeu. Chaque mod a son propre README dans `mods/<Mod>/`.
+Quatorze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du jeu. Interface en français ou en anglais selon la langue du jeu. Chaque mod a son propre README dans `mods/<Mod>/`.
 
 - **Resource Finder** (F7) : scanner de ressources, lieux et créatures ; épingles sur la carte ; cible à l'écran ;
   mode **Traque** (F4) qui enchaîne les cibles ; découverte par la vue.
@@ -67,7 +68,7 @@ Treize mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du
   première case libre, tri, empilage, filtre par catégorie, mort sans perte (objets et compétences).
 - **Recycle** (F3) : recyclage de l'équipement fabriqué contre un tiers de ses matériaux, et un meuble Recycleur à poser.
 - **Craft From Chests**, **Home Teleport** (F8), **Lumberjack**, **Longer Food**, **No Durability**, **Short Nights**,
-  **Movement**, **Quick Start**.
+  **Movement** (avec endurance gratuite hors combat), **Auto Save** (sauvegarde toutes les 5 min), **Quick Start**.
 
 Une seule chose à l'écran à la fois : ouvrir une fenêtre de mod ferme celles des autres mods, l'inventaire et la grande carte,
 et la fenêtre se ferme d'elle-même si le jeu reprend l'écran (inventaire, carte, menu, boutique, mort). Le suivi de quête et

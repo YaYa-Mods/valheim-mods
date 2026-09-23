@@ -37,7 +37,9 @@ $mods = @(
     @{ Dir = 'ShortNights'; Name = 'ShortNights'; Glyph = 'moon'
        Desc = 'Shorter nights without changing the length of the day/night cycle (night share configurable, 0.15 by default instead of 0.30).' }
     @{ Dir = 'Movement'; Name = 'Movement'; Glyph = 'chevrons'
-       Desc = 'Faster walking, jogging, running and swimming for the local player (multipliers, 1.3 by default).' }
+       Desc = 'Faster walking, jogging, running and swimming for the local player (multipliers, 1.3 by default), and no stamina used out of combat.' }
+    @{ Dir = 'AutoSave'; Name = 'AutoSave'; Glyph = 'clock'
+       Desc = 'The game''s own autosave every 5 minutes instead of 30 (1 to 60, configurable). Character and world, nothing written on the side.' }
     @{ Dir = 'QuickStart'; Name = 'QuickStart'; Glyph = 'play'
        Desc = 'Skip the intro cinematic and optionally auto-load the last character into the last world at launch.' }
 )
@@ -66,6 +68,7 @@ function Draw-Glyph([System.Drawing.Graphics]$g, [string]$glyph) {
             'moon'     { $g.DrawArc($pen, 24, 20, 84, 84, 60, 240); $g.DrawArc($pen, 48, 20, 60, 84, 60, 240) }
             'chevrons' { $g.DrawLine($pen, 30, 28, 62, 64); $g.DrawLine($pen, 62, 64, 30, 100); $g.DrawLine($pen, 66, 28, 98, 64); $g.DrawLine($pen, 98, 64, 66, 100) }
             'play'     { $g.DrawPolygon($pen, [System.Drawing.Point[]]@([System.Drawing.Point]::new(26, 24), [System.Drawing.Point]::new(70, 64), [System.Drawing.Point]::new(26, 104))); $g.DrawPolygon($pen, [System.Drawing.Point[]]@([System.Drawing.Point]::new(70, 24), [System.Drawing.Point]::new(110, 64), [System.Drawing.Point]::new(70, 104))) }
+            'clock'    { $g.DrawEllipse($pen, 22, 22, 84, 84); $g.DrawLine($pen, 64, 64, 64, 38); $g.DrawLine($pen, 64, 64, 84, 74) }
         }
         $pen.Dispose(); $brush.Dispose()
     }
