@@ -233,6 +233,82 @@ namespace ModsCommon
             GUI.Label(r, s_shadowContent, style);
         }
 
+        // ------------------------------------------------------------------ texte net (HUD)
+
+        // GUI.matrix agrandit l'image du texte déjà rendu (police à 16 px étirée à 21 px en 1440p) : texte flou. Pour le HUD,
+        // lu en jouant, on rend le texte à la taille réelle de l'écran : police à fontSize × échelle, matrice neutre le temps
+        // du dessin. Rectangles en unités 1080p, positions absolues (pas dans un GUILayout.BeginArea ni une fenêtre).
+        private static readonly System.Collections.Generic.Dictionary<GUIStyle, GUIStyle> s_sharp = new System.Collections.Generic.Dictionary<GUIStyle, GUIStyle>();
+        private static readonly System.Collections.Generic.Dictionary<string, string> s_sharpText = new System.Collections.Generic.Dictionary<string, string>();
+        private static readonly System.Text.RegularExpressions.Regex s_sizeTag = new System.Text.RegularExpressions.Regex(@"<size=(\d+)>");
+        private static float s_sharpScale;
+
+        /// <summary>Échelle réelle du dessin en cours (celle de GUI.matrix posée par <see cref="Begin"/>).</summary>
+        private static float CurrentScale => Mathf.Max(1f, GUI.matrix.m00);
+
+        /// <summary>Copie du style à la taille réelle de l'écran (police, marges intérieures), gardée tant que l'échelle ne change pas.</summary>
+        private static GUIStyle SharpStyle(GUIStyle style, float s)
+        {
+            if (!Mathf.Approximately(s, s_sharpScale)) { s_sharp.Clear(); s_sharpText.Clear(); s_sharpScale = s; }
+            if (s_sharp.TryGetValue(style, out var st)) return st;
+            st = new GUIStyle(style);
+            int size = style.fontSize > 0 ? style.fontSize : (style.font != null && style.font.fontSize > 0 ? style.font.fontSize : 14);
+            st.fontSize = Mathf.RoundToInt(size * s);
+            st.padding = new RectOffset(Mathf.RoundToInt(style.padding.left * s), Mathf.RoundToInt(style.padding.right * s), Mathf.RoundToInt(style.padding.top * s), Mathf.RoundToInt(style.padding.bottom * s));
+            s_sharp[style] = st;
+            return st;
+        }
+
+        /// <summary>Balises &lt;size=N&gt; en pixels : mises à l'échelle elles aussi (les tailles en % suivent la police).</summary>
+        private static string SharpText(string text, float s)
+        {
+            if (string.IsNullOrEmpty(text) || text.IndexOf("<size=", System.StringComparison.Ordinal) < 0) return text;
+            if (s_sharpText.TryGetValue(text, out var t)) return t;
+            t = s_sizeTag.Replace(text, m => "<size=" + Mathf.RoundToInt(int.Parse(m.Groups[1].Value) * s) + ">");
+            if (s_sharpText.Count > 512) s_sharpText.Clear();
+            s_sharpText[text] = t;
+            return t;
+        }
+
+        /// <summary>Étiquette ombrée nette à position fixe (HUD) : même rendu que <see cref="ShadowLabel(Rect,string,GUIStyle)"/>, sans flou.</summary>
+        public static void SharpLabel(Rect r, string text, GUIStyle style, bool shadow = true)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            float s = CurrentScale;
+            if (s <= 1.001f) { if (shadow) ShadowLabel(r, text, style); else GUI.Label(r, text, style); return; }
+            var prevM = GUI.matrix;
+            GUI.matrix = Matrix4x4.identity;
+            var st = SharpStyle(style, s);
+            s_shadowContent.text = SharpText(text, s);
+            var rr = new Rect(Mathf.Round(r.x * s), Mathf.Round(r.y * s), Mathf.Round(r.width * s), Mathf.Round(r.height * s));
+            if (shadow)
+            {
+                var prevGui = GUI.color;
+                GUI.color = new Color(0f, 0f, 0f, prevGui.a);
+                float o = Mathf.Max(1f, Mathf.Round(s));
+                GUI.Label(new Rect(rr.x + o, rr.y + o, rr.width, rr.height), s_shadowContent, st);
+                GUI.color = prevGui;
+            }
+            GUI.Label(rr, s_shadowContent, st);
+            GUI.matrix = prevM;
+        }
+
+        /// <summary>Taille (unités 1080p) du texte tel que <see cref="SharpLabel"/> le rend.</summary>
+        public static Vector2 SharpSize(string text, GUIStyle style)
+        {
+            float s = CurrentScale;
+            s_shadowContent.text = SharpText(text, s);
+            return SharpStyle(style, s).CalcSize(s_shadowContent) / s;
+        }
+
+        /// <summary>Hauteur (unités 1080p) du texte renvoyé à la ligne dans cette largeur, tel que <see cref="SharpLabel"/> le rend.</summary>
+        public static float SharpHeight(string text, GUIStyle style, float width)
+        {
+            float s = CurrentScale;
+            s_shadowContent.text = SharpText(text, s);
+            return SharpStyle(style, s).CalcHeight(s_shadowContent, width * s) / s;
+        }
+
         private static GUISkin s_skin;
         private static GUIStyle s_focus;
 

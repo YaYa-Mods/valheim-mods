@@ -69,8 +69,11 @@ Everything can also be changed in game with Mod Hub (F9).
 - The mouse wheel scrolls the window's lists instead of zooming the camera, the way build mode frees it to rotate a piece.
 - The on-screen pill stays fully visible: near a screen edge it moves inward and shows an arrow towards the target, and it never lands on the creature name plate the game draws, on the game HUD (health bars, hotbar, minimap, messages, boss bar) or on another mod's panel.
 - Dungeon interiors (crypts, caves, infested mines) are ignored: the entrance is what gets pinned. Inside a burial
-  chamber or a sunken crypt, the pill points at the nearest thing left (chest, surtling core, scrap pile); once
-  everything is taken, the dungeon marker is removed.
+  chamber or a sunken crypt, the pill points at the nearest thing left (chest, surtling core, scrap pile) in that
+  dungeon only; once every chest is empty and every core or pile is taken, the marker is removed and a new search no
+  longer offers that dungeon. The contents are read from the world's saved objects, so a half-loaded interior never
+  counts as cleared.
+- The pill draws its text at the screen's real resolution: sharp at 1440p and 4K, not an enlarged 1080p image.
 - The catalogue is checked against the game's own placement tables (spawn lists, vegetation, locations) by the test
   harness, so every entry can actually be found in a normal world.
 - Layers and the "seen" list are stored in the character's custom data; removing the mod leaves nothing behind but that
@@ -97,7 +100,10 @@ proche. L'interface suit la langue du jeu.
 - **Traque (F4)** : dès que la cible est récoltée ou tuée, une nouvelle recherche part de là où vous êtes et la plus
   proche de vous devient la cible (pas la suivante de la liste trouvée au départ). Plus rien : la traque s'arrête.
 - **Donjons** (chambres funéraires, cryptes des marais) : l'entrée est épinglée ; à l'intérieur, la pastille montre le
-  plus proche de ce qui reste (coffre, cœur de surtling, ferraille) ; tout pris, le repère du donjon disparaît.
+  plus proche de ce qui reste dans ce donjon (coffre, cœur de surtling, ferraille) ; coffres vides et cœurs ramassés,
+  le repère disparaît et une nouvelle recherche ne le propose plus. Le contenu est lu dans la sauvegarde du monde : un
+  intérieur encore en chargement n'est jamais pris pour vidé.
+- Textes de la pastille nets à toutes les résolutions (1440p, 4K) : dessinés à la taille réelle de l'écran.
 - **Découverte** : le catalogue ne montre que ce que vous avez déjà vu, tenu en main ou combattu. Le reste peut être
   révélé entrée par entrée.
 - Les créatures ne sont trouvées que si elles sont chargées autour de vous ; sinon la fenêtre indique leurs biomes.

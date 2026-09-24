@@ -225,6 +225,27 @@ namespace TestHarness
             ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(Paths.ConfigPath, "guide_tracker_compact.png"));
             yield return new WaitForSecondsRealtime(0.8f);
             modeCfg.BoxedValue = modePrev;
+            yield return new WaitForSecondsRealtime(0.6f);
+
+            // Étape au titre long (deux lignes) : sa ligne grandit, la suivante ne la chevauche pas
+            var rectF = pluginT.GetField("LastTrackerRect", BindingFlags.NonPublic | BindingFlags.Static);
+            var guide = UnityEngine.Object.FindObjectOfType(pluginT);
+            var nextSteps = pluginT.GetField("_trackerNext", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(guide) as IList;
+            object longStep = nextSteps != null && nextSteps.Count > 1 ? nextSteps[1] : null;
+            var titleFuncF = longStep?.GetType().GetField("TitleFunc");
+            var prevFunc = titleFuncF?.GetValue(longStep);
+            if (longStep != null)
+            {
+                float before = ((Rect)rectF.GetValue(null)).height;
+                titleFuncF.SetValue(longStep, (Func<string>)(() => "Ouvrir la porte, verser le sang et vaincre le roi, puis rentrer au camp avant la nuit"));
+                yield return new WaitForSecondsRealtime(0.6f);
+                float after = ((Rect)rectF.GetValue(null)).height;
+                ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(Paths.ConfigPath, "guide_tracker_long.png"));
+                yield return new WaitForSecondsRealtime(0.8f);
+                titleFuncF.SetValue(longStep, prevFunc);
+                h.Check("Guide.étape sur deux lignes : sa ligne grandit", after >= before + 12f, $"hauteur du suivi {before:0} → {after:0}");
+            }
+            else h.Check("Guide.étape sur deux lignes : sa ligne grandit", false, "moins de deux étapes affichées");
             Plugin.Step("guide : ouverture de la fenêtre");
             pluginT.GetMethod("Toggle", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
             Plugin.Step("guide : fenêtre ouverte, attente");

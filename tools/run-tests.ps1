@@ -1,7 +1,7 @@
 ﻿# Tests d'intégration en jeu : déploie le harnais, arme AutoRun, lance Valheim (QuickStart charge la dernière partie),
 # attend la fin des tests, ferme le jeu, affiche les résultats, puis retire le harnais des plugins.
 # Prérequis : jeu fermé, QuickStart.AutoLoadLastWorld = true (sinon le monde n'est jamais chargé).
-param([switch]$Quick)
+param([switch]$Quick, [string]$Only = "")  # -Only DungeonTests,TrackTests : ces groupes seulement (avec -Quick)
 $ErrorActionPreference = 'Stop'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'; $env:DOTNET_NOLOGO = '1'
 $root = Split-Path $PSScriptRoot -Parent
@@ -30,7 +30,7 @@ try {
     
     dotnet build "$root\mods\TestHarness" -c Release -p:Deploy=true | Out-Null
     if (-not (Test-Path $plugin)) { throw "Harnais non déployé" }
-    Set-Content -Encoding ascii $cfg "[General]`r`nAutoRun = true`r`nQuick = $(if ($Quick) { 'true' } else { 'false' })`r`n"
+    Set-Content -Encoding ascii $cfg "[General]`r`nAutoRun = true`r`nQuick = $(if ($Quick) { 'true' } else { 'false' })`r`nOnly = $Only`r`n"
     
     if (Test-Path "$V\BepInEx\LogOutput.log") { Copy-Item "$V\BepInEx\LogOutput.log" "$V\BepInEx\LogOutput.prev.log" -Force }
     $p = Start-Process -FilePath "$V\valheim.exe" -WorkingDirectory $V -PassThru
@@ -64,7 +64,7 @@ finally {
     # Toujours executee, meme si le script est interrompu : le jeu du joueur ne doit jamais redemarrer sur le personnage de test
     Get-Process valheim -ErrorAction SilentlyContinue | Stop-Process -Force
     Remove-Item $plugin -Force -ErrorAction SilentlyContinue
-    if (Test-Path $cfg) { Set-Content -Encoding ascii $cfg "[General]`r`nAutoRun = false`r`nQuick = false`r`n" }
+    if (Test-Path $cfg) { Set-Content -Encoding ascii $cfg "[General]`r`nAutoRun = false`r`nQuick = false`r`nOnly = `r`n" }
     if (Test-Path $qsBackup) { Move-Item $qsBackup $qsCfg -Force; Write-Host "Configuration QuickStart du joueur restauree." -ForegroundColor DarkGray } else { Set-CfgKey $qsCfg 'AutoLoadCharacter' ''; Set-CfgKey $qsCfg 'AutoLoadWorld' '' }
     Write-Host "Harnais retire des plugins." -ForegroundColor DarkGray
 }

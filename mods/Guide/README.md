@@ -15,7 +15,8 @@ altar itself, recipes and building costs from the object database. The interface
   the time.
 - **On-screen tracker** (like a quest tracker): the current objective, a progress bar and the next steps. **F11**
   cycles between full, compact (one line) and hidden. It unfolds for a few seconds when a step is completed, and hides
-  during loading screens, teleports, the map, the inventory and menus.
+  during loading screens, teleports, the map, the inventory and menus. Text is drawn at the screen's real resolution
+  (sharp at 1440p and 4K), and a step that wraps onto two lines gets a taller row instead of overlapping the next one.
 - **Journal window (F10)**: all chapters, current one highlighted, previous ones collapsed. Each step shows the real
   recipe or building cost under its hint, a trophy icon in front of the chapter, and a **Target** button that starts
   the Resource Finder scanner on the related catalogue entry (altar, crypt, village...) when that mod is installed.
@@ -70,6 +71,7 @@ construction lus dans le jeu. L'interface suit la langue du jeu.
   inventaire du moment (offrandes), nourriture active. Losange plein : obligatoire ; creux : conseillé ; coche : fait.
 - **Suivi à l'écran** : objectif courant, barre, prochaines étapes. **F11** : complet, réduit, masqué. Se déploie
   quelques secondes quand une étape est accomplie ; caché pendant les chargements, la carte, l'inventaire et les menus.
+  Textes nets à toutes les résolutions ; une étape sur deux lignes a une ligne plus haute, sans chevaucher la suivante.
 - **Journal (F10)** : tous les chapitres, recette réelle sous chaque étape, icône du trophée, bouton **Cibler** qui
   lance le scanner de Resource Finder sur l'entrée liée.
 - **Anti-spoiler** : les chapitres à venir sont verrouillés jusqu'à la victoire sur le boss précédent ; chacun peut

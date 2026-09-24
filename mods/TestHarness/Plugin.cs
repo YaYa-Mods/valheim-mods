@@ -24,6 +24,7 @@ namespace TestHarness
         internal static ManualLogSource Log;
         internal static ConfigEntry<bool> AutoRun;
         internal static ConfigEntry<bool> Quick;
+        internal static ConfigEntry<string> Only;
         private bool _started;
         private int _pass, _fail;
 
@@ -33,6 +34,7 @@ namespace TestHarness
             AutoRun = Config.Bind("General", "AutoRun", false, "Exécute les tests au prochain chargement de monde, puis repasse à false.");
             WorldReport = Config.Bind("General", "WorldReport", false, "Écrit un rapport du monde (lieux clés, biomes, côte autour du spawn) au prochain chargement, puis repasse à false.");
             Quick = Config.Bind("General", "Quick", false, "Avec AutoRun : n'exécute que les tests rapides (manette, épingles).");
+            Only = Config.Bind("General", "Only", "", "Avec AutoRun : n'exécute que ces groupes (noms séparés par des virgules, ex. DungeonTests) ; vide = tous.");
             Harmony.CreateAndPatchAll(typeof(TestBootstrap), "vmods.testharness.bootstrap");
             Log.LogInfo($"Test Harness chargé (AutoRun={AutoRun.Value})");
         }
@@ -211,6 +213,7 @@ namespace TestHarness
         /// </summary>
         private IEnumerator Safe(string group, IEnumerator tests, float maxSeconds = GroupTimeout)
         {
+            if (group != "Run" && !Selected(group)) yield break;
             var stack = new Stack<IEnumerator>();
             stack.Push(tests);
             float start = Time.realtimeSinceStartup;
@@ -237,6 +240,15 @@ namespace TestHarness
 
         /// <summary>Délai maximum d'un groupe de tests (secondes réelles). Le plus long (placement du catalogue) dure environ une minute.</summary>
         private const float GroupTimeout = 150f;
+
+        /// <summary>Groupe retenu par le réglage Only (vide : tous).</summary>
+        private static bool Selected(string group)
+        {
+            string only = Only?.Value ?? "";
+            if (only.Trim().Length == 0) return true;
+            foreach (var g in only.Split(',')) if (string.Equals(g.Trim(), group, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
 
         /// <summary>Après une exception : referme les fenêtres des mods (finder, guide, hub) pour ne pas fausser les groupes suivants.</summary>
         private static void CloseModWindows()
@@ -330,8 +342,8 @@ namespace TestHarness
                 yield return Safe("AutoSaveTests", AutoSaveTests.Run(this, Player.m_localPlayer));
                 yield return Safe("MinerTests", MinerTests.Run(this, Player.m_localPlayer));
                 yield return Safe("GuideTests", GuideTests.Run(this, Player.m_localPlayer));
-                try { GuideAudit.Run(this); } catch (Exception ex) { Check("GuideAudit.exception", false, ex.Message); }
-                try { CatalogAudit.Run(this); } catch (Exception ex) { Check("CatalogAudit.exception", false, ex.Message); }
+                if (Selected("GuideAudit")) try { GuideAudit.Run(this); } catch (Exception ex) { Check("GuideAudit.exception", false, ex.Message); }
+                if (Selected("CatalogAudit")) try { CatalogAudit.Run(this); } catch (Exception ex) { Check("CatalogAudit.exception", false, ex.Message); }
                 yield return Safe("CatalogSearchTests", CatalogSearchTests.Run(this, Player.m_localPlayer));
                 yield return Safe("MaterialTests", MaterialTests.Run(this, Player.m_localPlayer));
                 yield return Safe("TeleportTests", TeleportTests.Run(this, Player.m_localPlayer));
@@ -601,8 +613,8 @@ namespace TestHarness
             yield return Safe("AutoSaveTests", AutoSaveTests.Run(this, player));
             yield return Safe("MinerTests", MinerTests.Run(this, player));
             yield return Safe("GuideTests", GuideTests.Run(this, player));
-            try { GuideAudit.Run(this); } catch (Exception ex) { Check("GuideAudit.exception", false, ex.Message); }
-            try { CatalogAudit.Run(this); } catch (Exception ex) { Check("CatalogAudit.exception", false, ex.Message); }
+            if (Selected("GuideAudit")) try { GuideAudit.Run(this); } catch (Exception ex) { Check("GuideAudit.exception", false, ex.Message); }
+            if (Selected("CatalogAudit")) try { CatalogAudit.Run(this); } catch (Exception ex) { Check("CatalogAudit.exception", false, ex.Message); }
             yield return Safe("CatalogSearchTests", CatalogSearchTests.Run(this, player));
             yield return Safe("MaterialTests", MaterialTests.Run(this, player));
             yield return Safe("TeleportTests", TeleportTests.Run(this, player));

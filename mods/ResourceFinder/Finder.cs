@@ -79,6 +79,7 @@ namespace ResourceFinder
         private HashSet<int> _hashes = new HashSet<int>();
         private Dictionary<int, string> _hashToName = new Dictionary<int, string>();
         private string[] _locationPatterns = Array.Empty<string>();
+        private ResourceEntry _entry;
         // Recherche d'un matériau : une créature n'est proposée que si elle est là, chargée autour du joueur. Un souvenir de
         // créature dans une zone non chargée (squelette apparu la nuit, parti au lever du jour) enverrait vers un endroit vide.
         private bool _liveCreaturesOnly;
@@ -165,6 +166,7 @@ namespace ResourceFinder
         {
             Cancel();
             Label = entry.Label;
+            _entry = entry;
             _origin = origin;
             Results.Clear();
             ZonesGenerated = 0;
@@ -484,9 +486,18 @@ namespace ResourceFinder
             Results.RemoveAll(r => r.IsLocation && Results.Any(o => !o.IsLocation && Vector3.Distance(o.Pos, r.Pos) < 60f));
             Results.Sort((a, b) => a.Distance(_origin).CompareTo(b.Distance(_origin)));
             // On ne garde que les N plus proches : une ressource courante (sapins, pierres...) existe par milliers
-            // dans le monde connu, et chaque résultat devient une épingle sur la carte.
+            // dans le monde connu, et chaque résultat devient une épingle sur la carte. Un donjon déjà vidé n'en fait pas
+            // partie : examinés du plus proche au plus loin, jusqu'à en avoir N.
             int keep = Mathf.Max(1, Plugin.ResultCount.Value);
-            if (Results.Count > keep) Results.RemoveRange(keep, Results.Count - keep);
+            var kept = new List<Result>(keep);
+            foreach (var r in Results)
+            {
+                if (kept.Count >= keep) break;
+                if (r.IsLocation && Dungeons.Emptied(r, _entry)) continue;
+                kept.Add(r);
+            }
+            Results.Clear();
+            Results.AddRange(kept);
         }
 
         private void Finish()

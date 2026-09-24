@@ -23,6 +23,7 @@ In-game integration tests for the other mods. Not meant to be installed by playe
 ```powershell
 $env:VALHEIM_DIR = 'path\to\Valheim'
 tools\run-tests.ps1 -Quick     # builds nothing: run tools\rebuild-all.ps1 first
+tools\run-tests.ps1 -Quick -Only "DungeonTests,GuideTests"   # only these groups
 ```
 
 The script deploys the harness DLL, points Quick Start at the test character and world, launches the game, waits for
@@ -45,5 +46,6 @@ Tests d'intégration en jeu pour les autres mods, réservés au développement.
   captures, langue rétablie).
 - Captures dans `BepInEx/config`.
 
-Lancement : `tools\run-tests.ps1 -Quick` (jeu fermé, `VALHEIM_DIR` défini). Le script restaure la configuration de
+Lancement : `tools\run-tests.ps1 -Quick` (jeu fermé, `VALHEIM_DIR` défini), ou `-Quick -Only "DungeonTests"` pour
+quelques groupes seulement. Le script restaure la configuration de
 Quick Start du joueur quoi qu'il arrive.

@@ -136,12 +136,18 @@ namespace ResourceFinder
             // cible devient le plus proche de là, pas le suivant d'une liste trouvée au départ, ailleurs (chasser vingt biches, miner un
             // filon après l'autre, sans rouvrir la fenêtre). Hors Traque : la suivante de la même couche.
             UpdateInside(player.transform.position);
-            // Donjon dont l'entrée est la cible, entièrement vidé (coffres pris, cœurs ramassés) : même chose qu'une cible disparue
+            // Donjon dont l'entrée est la cible, entièrement vidé (coffres pris, cœurs ramassés) : même chose qu'une cible
+            // disparue. La recherche ne propose plus un donjon vidé : pas de retour sur lui, pas de relance en boucle.
             bool emptied = _target != null && _target.IsLocation && Dungeons.Emptied(_target, TargetEntry());
-            if (emptied) { _targetLayer?.Results.Remove(_target); Layers.MarkDirty(); player.Message(MessageHud.MessageType.TopLeft, L.T("Donjon vidé : repère retiré")); }
+            if (emptied)
+            {
+                _targetLayer?.Results.Remove(_target); Layers.MarkDirty();
+                if (s_announcedEmpty.Add(Key(_target.Pos))) player.Message(MessageHud.MessageType.TopLeft, L.T("Donjon vidé : repère retiré"));
+            }
             if (_target != null && (emptied || !_target.StillExists()))
             {
                 _finder.Results.Remove(_target);
+                _gone = _target.Pos;
                 var from = player.transform.position;
                 if (Tracking && _currentEntry != null)
                 {
@@ -152,6 +158,11 @@ namespace ResourceFinder
             }
         }
 
+        // Cible qui vient de disparaître ou de se vider : une relance de la Traque ne doit pas la reprendre
+        private Vector3? _gone;
+        private static readonly HashSet<Vector2Int> s_announcedEmpty = new HashSet<Vector2Int>();
+        private static Vector2Int Key(Vector3 p) => new Vector2Int(Mathf.RoundToInt(p.x), Mathf.RoundToInt(p.z));
+
         // ---- à l'intérieur d'un donjon : la pastille montre le plus proche de ce qui reste, pas l'entrée
         private Result _insideTarget; private float _insideNext;
 
@@ -160,10 +171,11 @@ namespace ResourceFinder
 
         private void UpdateInside(Vector3 playerPos)
         {
-            if (_target == null || !_target.IsLocation) { _insideTarget = null; return; }
+            if (_target == null || !_target.IsLocation || playerPos.y < Finder.DungeonAltitude) { _insideTarget = null; return; }
             if (Time.unscaledTime < _insideNext) return;
             _insideNext = Time.unscaledTime + 0.25f;
-            var zdo = Dungeons.NearestInside(_target, TargetEntry(), playerPos);
+            // Le donjon où se trouve le joueur (celui de la cible ou un autre de la même ressource) : ce qui y reste
+            var zdo = Dungeons.NearestInside(TargetEntry(), playerPos);
             if (zdo == null) { _insideTarget = null; return; }
             if (_insideTarget != null && _insideTarget.Id == zdo.m_uid) { _insideTarget.Pos = zdo.GetPosition(); return; }
             var prefab = ZNetScene.instance.GetPrefab(zdo.GetPrefab());
@@ -404,6 +416,9 @@ namespace ResourceFinder
         {
             var player = Player.m_localPlayer;
             if (WindowOpen) FitWindow();
+            // Relance de la Traque : jamais la cible qu'on vient de quitter (vidée, récoltée), même si le monde la rend encore
+            if (_trackRelaunch && _gone.HasValue) _finder.Results.RemoveAll(r => Vector3.Distance(r.Pos, _gone.Value) < 1f);
+            _gone = null;
             if (_currentEntry != null && _finder.Results.Count > 0)
                 _targetLayer = Layers.Merge(_currentEntry, _finder.Results);
             _target = player != null ? Nearest(_finder.Results, player.transform.position) : null;
@@ -1210,8 +1225,8 @@ namespace ResourceFinder
                     string source = DisplayName(tgt);
                     if (!string.IsNullOrEmpty(source) && !string.Equals(source, label, StringComparison.OrdinalIgnoreCase)) _hudShownLabel = label + "  <color=#c9c2b4>· " + source + "</color>";
                 }
-                s_content.text = _hudShownLabel; _hudLabelW = _hudStyle.CalcSize(s_content).x;
-                s_content.text = _hudDistText; _hudDistW = _hudDist.CalcSize(s_content).x;
+                _hudLabelW = Theme.SharpSize(_hudShownLabel, _hudStyle).x; // mesuré tel que rendu : net, à la taille réelle de l'écran
+                _hudDistW = Theme.SharpSize(_hudDistText, _hudDist).x;
                 _hudIcon = inside ? (Icons.ForPrefab(tgt.Prefab) ?? Icons.ForEntry(_currentEntry)) : _targetLayer?.Icon() ?? (tgt.IsLocation ? Icons.ForEntry(_currentEntry) : (Icons.ForPrefab(tgt.Prefab) ?? Icons.ForEntry(_currentEntry)));
             }
             string distText = _hudDistText;
@@ -1250,12 +1265,13 @@ namespace ResourceFinder
             GUI.Box(rect, GUIContent.none, Theme.Veil); // même voile sans cadre que le suivi de quête
             float x = rect.x + 12f;
             bool arrowFirst = arrow == "◀" || arrow == "▲"; // la flèche est du côté où se trouve la cible
-            if (!onScreen && arrowFirst) { GUI.Label(new Rect(x - 4f, rect.y, 24f, h), arrow, _hudArrow); x += arrowW; }
+            if (!onScreen && arrowFirst) { Theme.SharpLabel(new Rect(x - 4f, rect.y, 24f, h), arrow, _hudArrow, false); x += arrowW; }
             if (icon != null) { Icons.Draw(new Rect(x, rect.y + 3f, 30f, 30f), icon); x += 38f; }
-            Theme.ShadowLabel(new Rect(x, rect.y, labelW + 4f, h), _hudShownLabel ?? label, _hudStyle); x += labelW + 10f;
-            Theme.ShadowLabel(new Rect(x, rect.y, distW + 4f, h), distText, _hudDist);
-            if (onScreen) GUI.Label(new Rect(Mathf.Clamp(p.x - 10f, 0f, sw - 20f), rect.yMax + 2f, 20f, 20f), "▼", _hudDist);
-            else if (!arrowFirst) GUI.Label(new Rect(rect.xMax - 26f, rect.y, 24f, h), arrow, _hudArrow);
+            Theme.SharpLabel(new Rect(x, rect.y, labelW + 4f, h), _hudShownLabel ?? label, _hudStyle); x += labelW + 10f;
+            Theme.SharpLabel(new Rect(x, rect.y, distW + 4f, h), distText, _hudDist);
+            // Créature : pastille au-dessus de la plaque de nom du jeu, qui désigne déjà la bête ; une flèche tomberait sur ce nom
+            if (onScreen && lift < 80f) Theme.SharpLabel(new Rect(Mathf.Clamp(p.x - 10f, 0f, sw - 20f), rect.yMax + 2f, 20f, 20f), "▼", _hudDist, false);
+            else if (!arrowFirst) Theme.SharpLabel(new Rect(rect.xMax - 26f, rect.y, 24f, h), arrow, _hudArrow, false);
         }
     }
 

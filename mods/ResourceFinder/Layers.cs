@@ -85,6 +85,7 @@ namespace ResourceFinder
         {
             ClearPins();
             All.Clear();
+            Dungeons.Forget();
             Discovery.Revealed.Clear();
             s_worldUid = 0;
         }

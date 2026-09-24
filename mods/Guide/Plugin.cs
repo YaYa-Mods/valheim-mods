@@ -180,9 +180,9 @@ namespace Guide
             _step = new GUIStyle(Theme.Skin.label) { fontSize = 14, wordWrap = true };
             _stepDone = new GUIStyle(_step); _stepDone.normal.textColor = new Color(0.55f, 0.75f, 0.45f);
             _tag = new GUIStyle(Theme.Skin.label) { fontSize = 12, alignment = TextAnchor.MiddleRight }; _tag.normal.textColor = Theme.MutedColor;
-            _trackerTitle = new GUIStyle(Theme.H2) { fontSize = 21 }; // Norsebold, comme les titres du jeu
+            _trackerTitle = new GUIStyle(Theme.H2) { fontSize = 21, alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip }; // Norsebold, comme les titres du jeu
             _trackerLine = new GUIStyle(Theme.Skin.label) { fontSize = 16, wordWrap = true, alignment = TextAnchor.MiddleLeft }; _trackerLine.padding = new RectOffset(2, 2, 4, 4); _trackerLine.margin = new RectOffset(0, 0, 0, 0); // sans la marge du thème : texte centré sur le losange et l'icône
-            _trackerCompact = new GUIStyle(Theme.H2) { fontSize = 15, wordWrap = false, clipping = TextClipping.Clip }; _trackerCompact.padding = new RectOffset(2, 2, 0, 0);
+            _trackerCompact = new GUIStyle(Theme.H2) { fontSize = 15, wordWrap = false, clipping = TextClipping.Clip, alignment = TextAnchor.MiddleLeft }; _trackerCompact.padding = new RectOffset(2, 2, 0, 0);
             _trackerMuted = new GUIStyle(_trackerLine); _trackerMuted.normal.textColor = Theme.MutedColor;
             _trackerDoneLine = new GUIStyle(_trackerLine); _trackerDoneLine.normal.textColor = new Color(0.60f, 0.82f, 0.48f);
             _trackerCount = new GUIStyle(_trackerMuted) { alignment = TextAnchor.MiddleRight, wordWrap = false };
@@ -245,51 +245,58 @@ namespace Guide
             }
             var next = _trackerNext; int done = _trackerDone;
             float frac = chapter.Steps.Count > 0 ? (float)done / chapter.Steps.Count : 0f;
-            bool repaint = Event.current.type == EventType.Repaint;
+            // Rien d'interactif : tout se calcule et se dessine au passage de rendu. Placement à la main (pas de GUILayout) :
+            // chaque ligne prend la hauteur de son texte une fois renvoyé à la ligne, et les textes sont rendus nets à la taille
+            // réelle de l'écran (Theme.SharpLabel), pas agrandis depuis le 1080p.
+            if (Event.current.type != EventType.Repaint) return;
 
             // Style « moderne » : pas de cadre, un voile sombre qui s'estompe vers le bas, textes ombrés, accents fins.
-            GUILayout.BeginArea(new Rect(x, y, 380f, 560f));
-            GUILayout.BeginVertical(Theme.Veil);
-
-            // ---- en-tête : trophée, titre en Norse, compteur ; filet accent qui s'efface vers la droite
-            GUILayout.BeginHorizontal();
+            const float W = 380f, PadL = 14f, PadR = 12f, PadT = 10f, PadB = 12f;
+            float cx = x + PadL, iw = W - PadL - PadR;
             var chIcon = Facts.ChapterIcon(chapter);
             float iconSize = compact ? 24f : 36f;
-            if (chIcon != null) { Theme.SpriteLayout(chIcon, iconSize); GUILayout.Space(8f); }
-            Theme.ShadowLabel(chapter.DisplayTitle, compact ? _trackerCompact : _trackerTitle, GUILayout.ExpandWidth(true));
-            Theme.ShadowLabel($"{done}<size=13>/{chapter.Steps.Count}</size>", _trackerCount, GUILayout.Width(60f));
-            GUILayout.EndHorizontal();
-            var rule = GUILayoutUtility.GetRect(10f, compact ? 3f : 4f, GUILayout.ExpandWidth(true));
-            if (repaint)
-            {
-                Theme.FadeLine(new Rect(rule.x + 2f, rule.y, rule.width - 4f, 1f), new Color(Theme.Accent.r, Theme.Accent.g, Theme.Accent.b, 0.7f));
-                // barre d'avancement : piste discrète, remplissage accent avec un point lumineux au bout
-                var pr = new Rect(rule.x + 2f, rule.y + (compact ? 2f : 3f), rule.width - 4f, compact ? 1f : 2f);
-                Theme.Fill(pr, new Color(1f, 1f, 1f, 0.10f));
-                if (frac > 0f) { Theme.Fill(new Rect(pr.x, pr.y, pr.width * frac, pr.height), Theme.Accent); Theme.Fill(new Rect(pr.x + pr.width * frac - 2f, pr.y - 1f, 4f, pr.height + 2f), new Color(1f, 0.9f, 0.7f, 0.9f)); }
-            }
-            GUILayout.Space(compact ? 4f : 10f);
+            var titleStyle = compact ? _trackerCompact : _trackerTitle;
+            string count = $"{done}<size=13>/{chapter.Steps.Count}</size>";
+            float headerH = Mathf.Max(chIcon != null ? iconSize : 0f, Theme.SharpSize(chapter.DisplayTitle, titleStyle).y, Theme.SharpSize(count, _trackerCount).y);
+            float ruleH = compact ? 3f : 4f, afterRule = compact ? 4f : 10f;
 
-            if (compact)
+            // Lignes à afficher (étape, courante, faite) ou message de fin, avec leur hauteur
+            _rows.Clear();
+            if (compact) { if (next.Count > 0) _rows.Add(Row(chapter, next[0], true, false, iw)); }
+            else
             {
-                // Mode réduit : la prochaine étape seulement
-                if (next.Count > 0) StepLine(chapter, next[0], true, false);
-                else Theme.ShadowLabel(Progress.ChapterDone(chapter) ? L.T("Chapitre terminé") : L.T("Tout est prêt : au combat !"), _trackerLine);
-                GUILayout.EndVertical();
-                GUILayout.EndArea();
-                return;
+                // Étape tout juste accomplie : reste affichée cochée en vert quelques secondes avant de laisser la place
+                if (_recentStep != null && _recentChapter == chapter && Time.unscaledTime - _recentTime < 5f) _rows.Add(Row(chapter, _recentStep, false, true, iw));
+                else _recentStep = null;
+                for (int i = 0; i < next.Count; i++) _rows.Add(Row(chapter, next[i], i == 0, false, iw));
             }
+            string endText = next.Count == 0 ? (Progress.ChapterDone(chapter) ? L.T("Chapitre terminé") : L.T("Tout est prêt : au combat !")) : null;
+            float endH = endText != null ? Mathf.Max(TrackerRowHeight, Theme.SharpHeight(endText, _trackerLine, iw)) : 0f;
 
-            // Étape tout juste accomplie : reste affichée cochée en vert quelques secondes avant de laisser la place
-            if (_recentStep != null && _recentChapter == chapter && Time.unscaledTime - _recentTime < 5f) StepLine(chapter, _recentStep, false, true);
-            else _recentStep = null;
-            for (int i = 0; i < next.Count; i++) StepLine(chapter, next[i], i == 0, false);
-            if (next.Count == 0) Theme.ShadowLabel(Progress.ChapterDone(chapter) ? L.T("Chapitre terminé") : L.T("Tout est prêt : au combat !"), _trackerLine);
-            GUILayout.Space(2f);
-            GUILayout.EndVertical();
+            float contentH = headerH + ruleH + afterRule + endH + (compact ? 0f : 2f);
+            foreach (var row in _rows) contentH += row.Height + (compact ? 0f : TrackerRowGap);
+            float totalH = PadT + contentH + PadB;
+            GUI.Box(new Rect(x, y, W, totalH), GUIContent.none, Theme.Veil);
+
+            // ---- en-tête : trophée, titre en Norse, compteur ; filet accent qui s'efface vers la droite
+            float cy = y + PadT;
+            float tx = cx;
+            if (chIcon != null) { Theme.DrawSprite(new Rect(cx, cy + (headerH - iconSize) * 0.5f, iconSize, iconSize), chIcon); tx += iconSize + 8f; }
+            Theme.SharpLabel(new Rect(tx, cy, cx + iw - 60f - tx, headerH), chapter.DisplayTitle, titleStyle);
+            Theme.SharpLabel(new Rect(cx + iw - 60f, cy, 60f, headerH), count, _trackerCount);
+            cy += headerH;
+            Theme.FadeLine(new Rect(cx + 2f, cy, iw - 4f, 1f), new Color(Theme.Accent.r, Theme.Accent.g, Theme.Accent.b, 0.7f));
+            // barre d'avancement : piste discrète, remplissage accent avec un point lumineux au bout
+            var pr = new Rect(cx + 2f, cy + (compact ? 2f : 3f), iw - 4f, compact ? 1f : 2f);
+            Theme.Fill(pr, new Color(1f, 1f, 1f, 0.10f));
+            if (frac > 0f) { Theme.Fill(new Rect(pr.x, pr.y, pr.width * frac, pr.height), Theme.Accent); Theme.Fill(new Rect(pr.x + pr.width * frac - 2f, pr.y - 1f, 4f, pr.height + 2f), new Color(1f, 0.9f, 0.7f, 0.9f)); }
+            cy += ruleH + afterRule;
+
+            foreach (var row in _rows) { DrawRow(row, new Rect(cx, cy, iw, row.Height)); cy += row.Height + (compact ? 0f : TrackerRowGap); }
+            if (endText != null) Theme.SharpLabel(new Rect(cx, cy, iw, endH), endText, _trackerLine);
+
             // Encombrement réel du suivi (unités 1080p) : sert aux tests de position (aucun recouvrement du HUD du jeu)
-            if (repaint) { var used = GUILayoutUtility.GetLastRect(); LastTrackerRect = new Rect(x + used.x, y + used.y, used.width, used.height); s_trackerDrawnAt = Time.unscaledTime; }
-            GUILayout.EndArea();
+            LastTrackerRect = new Rect(x, y, W, totalH); s_trackerDrawnAt = Time.unscaledTime;
         }
 
         /// <summary>Dernier encombrement dessiné du suivi, en unités 1080p (vide tant qu'il n'a pas été affiché).</summary>
@@ -303,35 +310,51 @@ namespace Guide
             return new[] { LastTrackerRect };
         }
 
-        /// <summary>Une ligne d'étape du suivi : marqueur dessiné, icône, titre ombré ; l'étape courante a un liseré et un texte plus clair.</summary>
-        private void StepLine(Chapter chapter, Step s, bool current, bool done)
+        /// <summary>Une ligne du suivi prête à dessiner : texte, style, icône, état, hauteur (celle du texte renvoyé à la ligne, 32 au moins).</summary>
+        private struct TrackerRow { public string Text; public GUIStyle Style; public Sprite Icon; public bool Required, Current, Done; public float Height; }
+        private readonly List<TrackerRow> _rows = new List<TrackerRow>();
+        private const float MarkerW = 16f, StepIconSize = 26f, TextGap = 6f;
+
+        private TrackerRow Row(Chapter chapter, Step s, bool current, bool done, float width)
         {
             var st = Progress.Get(chapter, s);
             string prog = st.Progress.Length > 0 && !done ? $"  <color=#f5a847>{st.Progress}</color>" : "";
-            GUILayout.BeginHorizontal(GUILayout.MinHeight(TrackerRowHeight));
-            Marker(s.Need == Need.Required, done);
-            Theme.SpriteLayout(Facts.StepIcon(s), 26f, TrackerRowHeight); // case réservée même sans icône : lignes alignées
-            GUILayout.Space(6f);
             var style = done ? _trackerDoneLine : current ? _trackerLine : _trackerMuted;
-            Theme.ShadowLabel(s.DisplayTitle + prog, style, GUILayout.MinHeight(TrackerRowHeight));
-            GUILayout.EndHorizontal();
-            if (current && !done && Event.current.type == EventType.Repaint)
+            string text = s.DisplayTitle + prog;
+            float textW = width - MarkerW - StepIconSize - TextGap;
+            return new TrackerRow
             {
-                var r = GUILayoutUtility.GetLastRect();
+                Text = text, Style = style, Icon = Facts.StepIcon(s), Required = s.Need == Need.Required, Current = current, Done = done,
+                Height = Mathf.Max(TrackerRowHeight, Theme.SharpHeight(text, style, textW)),
+            };
+        }
+
+        /// <summary>Une ligne d'étape du suivi : marqueur dessiné, icône, titre ombré ; l'étape courante a un liseré et un texte plus clair.</summary>
+        private static void DrawRow(TrackerRow row, Rect r)
+        {
+            if (row.Current && !row.Done)
+            {
                 // liseré accent à gauche de la ligne courante + léger surlignage qui s'estompe vers la droite
                 Theme.FadeLine(new Rect(r.x - 6f, r.y + 1f, r.width * 0.9f, r.height - 2f), new Color(1f, 0.75f, 0.35f, 0.10f));
                 Theme.Fill(new Rect(r.x - 8f, r.y + 3f, 2f, r.height - 6f), Theme.Accent);
             }
-            GUILayout.Space(TrackerRowGap); // de l'air entre deux étapes : chaque ligne se lit d'un coup d'œil en jouant
+            Marker(new Rect(r.x, r.y, MarkerW, r.height), row.Required, row.Done);
+            // case réservée même sans icône : lignes alignées ; icône et marqueur centrés sur la hauteur de la ligne
+            if (row.Icon != null) Theme.DrawSprite(new Rect(r.x + MarkerW, r.y + (r.height - StepIconSize) * 0.5f, StepIconSize, StepIconSize), row.Icon);
+            float tx = r.x + MarkerW + StepIconSize + TextGap;
+            Theme.SharpLabel(new Rect(tx, r.y, r.xMax - tx, r.height), row.Text, row.Style);
         }
 
-        private const float TrackerRowHeight = 32f, TrackerRowGap = 8f;
+        private const float TrackerRowHeight = 32f, TrackerRowGap = 8f; // de l'air entre deux étapes : chaque ligne se lit d'un coup d'œil en jouant
 
         /// <summary>Marqueur d'étape dessiné (pas un caractère de police) : losange plein accent = obligatoire, creux = conseillé, coche verte = fait.</summary>
         private static void Marker(bool required, bool done)
         {
             var r = GUILayoutUtility.GetRect(16f, TrackerRowHeight, GUILayout.Width(16f), GUILayout.Height(TrackerRowHeight));
-            if (Event.current.type != EventType.Repaint) return;
+            if (Event.current.type == EventType.Repaint) Marker(r, required, done);
+        }
+        private static void Marker(Rect r, bool required, bool done)
+        {
             float mid = r.y + r.height / 2f;
             var g = new Rect(r.x + 2f, mid - 6f, 12f, 12f);
             if (done) Theme.DrawCheck(new Rect(r.x, mid - 8f, 16f, 16f), new Color(0.49f, 0.76f, 0.35f));
