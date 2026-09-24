@@ -29,6 +29,9 @@ Only one thing is on screen at a time: opening a mod window closes the other mod
 the window closes itself when the game takes the screen back (inventory, map, pause menu, shop, death). On-screen elements
 (quest tracker, target pill) never cover the game HUD or each other.
 
+Text in every mod window and on the HUD is drawn at the screen's real resolution, so it stays sharp at 1440p, ultrawide
+and 4K instead of being an enlarged 1080p image (`mods/Common/Theme.cs`, `CrispText`).
+
 ## Building
 
 Requirements: .NET SDK (8+), Valheim installed, BepInEx 5 installed in the game folder (`BepInEx/core`).
@@ -73,7 +76,8 @@ Quinze mods BepInEx pour Valheim, compilés depuis les sources contre les DLL du
 
 Une seule chose à l'écran à la fois : ouvrir une fenêtre de mod ferme celles des autres mods, l'inventaire et la grande carte,
 et la fenêtre se ferme d'elle-même si le jeu reprend l'écran (inventaire, carte, menu, boutique, mort). Le suivi de quête et
-la pastille de cible ne recouvrent jamais le HUD du jeu ni l'un l'autre.
+la pastille de cible ne recouvrent jamais le HUD du jeu ni l'un l'autre. Les textes des fenêtres et du HUD sont dessinés à
+la résolution réelle de l'écran : nets en 1440p, en ultra-large et en 4K.
 
 Compilation : `dotnet build mods/<Mod> -c Release -p:Deploy=true` (dossier du jeu : variable `VALHEIM_DIR` ou
 `mods/Directory.Build.props.user`). Tests en jeu : `tools/run-tests.ps1 -Quick` (personnage et monde de test dédiés).

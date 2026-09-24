@@ -254,6 +254,13 @@ namespace TestHarness
             yield return new WaitForSecondsRealtime(1f);
             ScreenCapture.CaptureScreenshot(shotWindow);
             yield return new WaitForSecondsRealtime(1.5f);
+            // Même fenêtre avec le rendu d'origine du texte (agrandi), pour comparer la netteté et la mise en page
+            var crisp = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("ModsCommon.CrispText")).Where(t => t != null).Select(t => t.GetField("Off", BindingFlags.NonPublic | BindingFlags.Static)).Where(f => f != null).ToList();
+            foreach (var f in crisp) f.SetValue(null, true);
+            yield return new WaitForSecondsRealtime(0.5f);
+            ScreenCapture.CaptureScreenshot(System.IO.Path.Combine(Paths.ConfigPath, "guide_window_blurry.png"));
+            yield return new WaitForSecondsRealtime(1f);
+            foreach (var f in crisp) f.SetValue(null, false);
             pluginT.GetMethod("Toggle", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
             h.Check("Guide.captures", System.IO.File.Exists(shotTracker) && System.IO.File.Exists(shotWindow));
 

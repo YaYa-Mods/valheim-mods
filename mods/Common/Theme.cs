@@ -475,8 +475,176 @@ namespace ModsCommon
             skin.verticalScrollbarThumb.fixedWidth = 10;
             skin.scrollView.normal.background = Solid(new Color(0, 0, 0, 0.25f)); skin.scrollView.padding = new RectOffset(8, 8, 8, 8);
 
+            skin.name = SkinName; // reconnu par le rendu net du texte (toutes nos fenêtres, quel que soit le mod)
             s_skin = skin;
+            CrispText.Install();
+        }
+        internal const string SkinName = "vmods.theme";
+
+    }
+
+    /// <summary>
+    /// Texte net dans nos fenêtres. Elles sont mises en page en unités 1080p puis agrandies par GUI.matrix (×1,33 en
+    /// 1440p) : le jeu rend la police à sa taille 1080p et l'image est étirée, d'où un texte flou. Tout le texte IMGUI passe
+    /// par GUIStyle.Draw(Rect, GUIContent, int, bool, bool, bool, bool) : pour nos fenêtres (skin « vmods.theme »), on y
+    /// dessine le fond tel quel et on note le texte (position et zone visible à l'écran, style, état). Le texte noté est
+    /// dessiné juste après, par un composant passé en dernier, avec une police à la taille réelle de l'écran et sans
+    /// agrandissement. Il ne peut pas l'être sur place : le moteur découpe le contenu d'une fenêtre en coordonnées locales,
+    /// avant l'agrandissement, et un texte rendu 1,33 fois plus grand y dépasse (relevé en jeu : phrase coupée au bord de la
+    /// fenêtre). La mise en page, les clics et les autres interfaces ne changent pas. Un seul patch pour tous nos mods
+    /// (chacun embarque sa copie de ce fichier : le premier installe, les autres voient qu'un patch « vmods.sharptext » existe).
+    /// </summary>
+    internal static class CrispText
+    {
+        private const string HarmonyPrefix = "vmods.sharptext";
+        private static bool s_tried, s_busy;
+        internal static bool Off; // tests : rendu d'origine pour comparer
+        private static System.Action<GUIStyle, Rect, GUIContent, int, bool, bool, bool, bool> s_draw; // surcharge à 7 paramètres, pas publique : délégué direct
+        private static System.Func<Vector2, Vector2> s_unclip;
+        private static System.Func<Rect, Rect> s_unclipRect;
+        private static System.Func<Rect> s_visibleRect;
+        private static readonly GUIContent s_noText = new GUIContent(), s_text = new GUIContent();
+        private static readonly System.Collections.Generic.Dictionary<GUIStyle, GUIStyle> s_styles = new System.Collections.Generic.Dictionary<GUIStyle, GUIStyle>();
+        private static readonly System.Collections.Generic.Dictionary<string, string> s_sized = new System.Collections.Generic.Dictionary<string, string>();
+        private static readonly System.Text.RegularExpressions.Regex s_sizeTag = new System.Text.RegularExpressions.Regex(@"<size=(\d+)>");
+        private static float s_scale;
+
+        /// <summary>Un texte à dessiner : rectangle et zone visible en pixels d'écran, style à l'échelle, état, couleurs.</summary>
+        private struct Pending { public GUIStyle Style; public Rect Pixel, Clip; public string Text; public bool Hover, Active, On, Focus; public Color Color, ContentColor; }
+        private static readonly System.Collections.Generic.List<Pending> s_pending = new System.Collections.Generic.List<Pending>();
+
+        internal static void Install()
+        {
+            if (s_tried) return;
+            s_tried = true;
+            try
+            {
+                var draw = HarmonyLib.AccessTools.Method(typeof(GUIStyle), "Draw", new[] { typeof(Rect), typeof(GUIContent), typeof(int), typeof(bool), typeof(bool), typeof(bool), typeof(bool) });
+                var clipT = HarmonyLib.AccessTools.TypeByName("UnityEngine.GUIClip");
+                var unclip = HarmonyLib.AccessTools.Method(clipT, "Unclip", new[] { typeof(Vector2) });
+                var unclipRect = HarmonyLib.AccessTools.Method(clipT, "Unclip", new[] { typeof(Rect) });
+                var visible = HarmonyLib.AccessTools.PropertyGetter(clipT, "visibleRect");
+                if (draw == null || unclip == null || unclipRect == null || visible == null) return;
+                var info = HarmonyLib.Harmony.GetPatchInfo(draw);
+                if (info != null) foreach (var owner in info.Owners) if (owner.StartsWith(HarmonyPrefix, System.StringComparison.Ordinal)) return; // un autre de nos mods l'a posé
+                s_draw = HarmonyLib.AccessTools.MethodDelegate<System.Action<GUIStyle, Rect, GUIContent, int, bool, bool, bool, bool>>(draw);
+                s_unclip = (System.Func<Vector2, Vector2>)System.Delegate.CreateDelegate(typeof(System.Func<Vector2, Vector2>), unclip);
+                s_unclipRect = (System.Func<Rect, Rect>)System.Delegate.CreateDelegate(typeof(System.Func<Rect, Rect>), unclipRect);
+                s_visibleRect = (System.Func<Rect>)System.Delegate.CreateDelegate(typeof(System.Func<Rect>), visible);
+                var go = new GameObject("vmods.crisptext") { hideFlags = HideFlags.HideAndDontSave };
+                Object.DontDestroyOnLoad(go);
+                go.AddComponent<CrispTextPass>();
+                new HarmonyLib.Harmony(HarmonyPrefix + "." + typeof(CrispText).Assembly.GetName().Name)
+                    .Patch(draw, prefix: new HarmonyLib.HarmonyMethod(typeof(CrispText), nameof(DrawPrefix)));
+            }
+            catch (System.Exception ex) { Debug.LogWarning("[vmods] texte net indisponible : " + ex.Message); }
         }
 
+        private static bool DrawPrefix(GUIStyle __instance, Rect position, GUIContent content, int controlId, bool isHover, bool isActive, bool on, bool hasKeyboardFocus)
+        {
+            if (Off || s_busy || content == null || content.image != null || string.IsNullOrEmpty(content.text)) return true;
+            var ev = Event.current;
+            if (ev == null || ev.type != EventType.Repaint) return true;
+            var skin = GUI.skin;
+            if (skin == null || skin.name != Theme.SkinName) return true;
+            var m = GUI.matrix;
+            float s = m.m00;
+            // Agrandissement pur (celui de Theme.Begin) seulement ; texte déjà rendu net (HUD) ou matrice inhabituelle : tel quel
+            if (s <= 1.001f || !Mathf.Approximately(m.m11, s) || m.m01 != 0f || m.m10 != 0f || m.m03 != 0f || m.m13 != 0f) return true;
+            if (s_pending.Count > 4000) s_pending.Clear(); // passe finale absente : on ne s'accumule pas
+            s_busy = true;
+            try
+            {
+                // 1. fond, bordure, état (survol, appui) : le rendu du jeu, sans le texte
+                s_noText.text = ""; s_noText.image = null; s_noText.tooltip = content.tooltip;
+                s_draw(__instance, position, s_noText, controlId, isHover, isActive, on, hasKeyboardFocus);
+                // 2. texte noté en pixels d'écran : coin et zone visible en coordonnées absolues NON agrandies, lues sous une
+                // matrice neutre (sous la matrice agrandie, le moteur mélange décalage de fenêtre brut et contenu agrandi)
+                GUI.matrix = Matrix4x4.identity;
+                Vector2 a = s_unclip(position.position);
+                Rect vis = s_unclipRect(s_visibleRect());
+                GUI.matrix = m;
+                s_pending.Add(new Pending
+                {
+                    Style = Scaled(__instance, s), Text = Sized(content.text, s),
+                    Pixel = new Rect(a.x * s, a.y * s, position.width * s, position.height * s),
+                    Clip = new Rect(vis.x * s, vis.y * s, vis.width * s, vis.height * s),
+                    Hover = isHover, Active = isActive, On = on, Focus = hasKeyboardFocus, Color = GUI.color, ContentColor = GUI.contentColor,
+                });
+            }
+            catch { GUI.matrix = m; s_busy = false; return true; } // au moindre souci : rendu d'origine
+            s_busy = false;
+            return false;
+        }
+
+        /// <summary>Dessine les textes notés pendant ce passage de rendu, à la taille réelle de l'écran, chacun dans sa zone visible.</summary>
+        internal static void Flush()
+        {
+            if (s_pending.Count == 0) return;
+            var prevM = GUI.matrix; var prevC = GUI.color; var prevCC = GUI.contentColor;
+            GUI.matrix = Matrix4x4.identity;
+            s_busy = true;
+            try
+            {
+                foreach (var p in s_pending)
+                {
+                    GUI.BeginClip(p.Clip);
+                    GUI.color = p.Color; GUI.contentColor = p.ContentColor;
+                    s_text.text = p.Text;
+                    s_draw(p.Style, new Rect(p.Pixel.x - p.Clip.x, p.Pixel.y - p.Clip.y, p.Pixel.width, p.Pixel.height), s_text, -1, p.Hover, p.Active, p.On, p.Focus);
+                    GUI.EndClip();
+                }
+            }
+            finally
+            {
+                s_busy = false;
+                s_pending.Clear();
+                GUI.matrix = prevM; GUI.color = prevC; GUI.contentColor = prevCC;
+            }
+        }
+
+        /// <summary>Copie du style pour le texte seul : police et marges intérieures à l'échelle, aucun fond.</summary>
+        private static GUIStyle Scaled(GUIStyle style, float s)
+        {
+            if (!Mathf.Approximately(s, s_scale)) { s_styles.Clear(); s_sized.Clear(); s_scale = s; }
+            if (s_styles.TryGetValue(style, out var st)) return st;
+            st = new GUIStyle(style);
+            // Police héritée du thème (style sans police propre) : fixée ici, le dessin différé se fait hors de notre thème
+            if (st.font == null) st.font = GUI.skin.font;
+            int size = style.fontSize > 0 ? style.fontSize : (style.font != null && style.font.fontSize > 0 ? style.font.fontSize : (GUI.skin.font != null && GUI.skin.font.fontSize > 0 ? GUI.skin.font.fontSize : 13));
+            // Arrondi vers le bas : le texte ne prend jamais plus de place que ce que la mise en page 1080p a prévu
+            st.fontSize = Mathf.FloorToInt(size * s);
+            st.padding = new RectOffset(Mathf.RoundToInt(style.padding.left * s), Mathf.RoundToInt(style.padding.right * s), Mathf.RoundToInt(style.padding.top * s), Mathf.RoundToInt(style.padding.bottom * s));
+            st.contentOffset = style.contentOffset * s;
+            st.border = new RectOffset(); st.overflow = new RectOffset();
+            // Texte sur plusieurs lignes : la hauteur de ligne grandit un peu plus vite que la police (13 → 17 px) ; on le
+            // laisse dépasser de ces quelques pixels plutôt que de perdre une ligne
+            if (style.wordWrap) st.clipping = TextClipping.Overflow;
+            foreach (var state in new[] { st.normal, st.hover, st.active, st.focused, st.onNormal, st.onHover, st.onActive, st.onFocused })
+                state.background = null;
+            s_styles[style] = st;
+            return st;
+        }
+
+        /// <summary>Balises &lt;size=N&gt; en pixels : à l'échelle elles aussi.</summary>
+        private static string Sized(string text, float s)
+        {
+            if (text.IndexOf("<size=", System.StringComparison.Ordinal) < 0) return text;
+            if (s_sized.TryGetValue(text, out var t)) return t;
+            t = s_sizeTag.Replace(text, x => "<size=" + Mathf.RoundToInt(int.Parse(x.Groups[1].Value) * s) + ">");
+            if (s_sized.Count > 512) s_sized.Clear();
+            s_sized[text] = t;
+            return t;
+        }
+    }
+
+    /// <summary>Passe finale du texte net : son OnGUI vient après celui des mods (profondeur la plus basse = dessiné en dernier).</summary>
+    internal sealed class CrispTextPass : MonoBehaviour
+    {
+        private void OnGUI()
+        {
+            GUI.depth = -1000;
+            if (Event.current.type == EventType.Repaint) CrispText.Flush();
+        }
     }
 }

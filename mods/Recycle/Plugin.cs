@@ -208,12 +208,13 @@ namespace Recycle
             EnsureStyles();
             if (Time.unscaledTime >= _nextRefresh) { RefreshEntries(); _nextRefresh = Time.unscaledTime + 0.5f; }
             _window = GUILayout.Window(GetHashCode(), _window, DrawWindow, L.T("Recyclage"));
-            if (Theme.CloseButton(_window)) Close();
             Theme.End(prev);
         }
 
         private void DrawWindow(int id)
         {
+            // Croix de fermeture dans le coin de la fenêtre (coordonnées de la fenêtre, comme les autres mods)
+            if (Theme.CloseButton(_window)) Close();
             _pad.BeginWindow();
             GUILayout.Label(L.F("Chaque objet rend <color=#f5a847>{0:P0}</color> de son coût de fabrication (améliorations comprises), arrondi à l'unité inférieure. Ce qui est équipé n'apparaît pas : retirez-le d'abord.", Ratio.Value), _small);
             Theme.RowSpace();
