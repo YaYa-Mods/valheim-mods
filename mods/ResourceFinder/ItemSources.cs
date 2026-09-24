@@ -15,6 +15,11 @@ namespace ResourceFinder
     internal static class ItemSources
     {
         private static bool s_built;
+        private static readonly Dictionary<string, HashSet<string>> s_sources = new Dictionary<string, HashSet<string>>();
+
+        /// <summary>Prefabs du monde qui donnent cet objet (nom de prefab de l'objet), d'après les tables de butin du jeu.</summary>
+        public static HashSet<string> SourcesOfItem(string itemPrefab) { EnsureBuilt(); return itemPrefab != null && s_sources.TryGetValue(itemPrefab, out var s) ? s : s_empty; }
+        private static readonly HashSet<string> s_empty = new HashSet<string>();
 
         /// <summary>Ajoute les entrées « Matériaux » au catalogue, une seule fois, dès que le jeu a chargé ses prefabs.</summary>
         public static void EnsureBuilt()
@@ -27,7 +32,8 @@ namespace ResourceFinder
 
         private static void Build()
         {
-            var sources = new Dictionary<string, HashSet<string>>(); // objet (nom de prefab) → prefabs du monde qui le donnent
+            var sources = s_sources; // objet (nom de prefab) → prefabs du monde qui le donnent
+            sources.Clear();
             void Add(GameObject item, string source)
             {
                 if (item == null || item.GetComponent<ItemDrop>() == null) return;

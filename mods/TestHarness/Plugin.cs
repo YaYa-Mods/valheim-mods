@@ -341,6 +341,7 @@ namespace TestHarness
                 yield return Safe("NativeUiProbe", NativeUiProbe.Run(this, Player.m_localPlayer));
                 yield return Safe("ScrollTests", ScrollTests.Run(this, Player.m_localPlayer));
                 yield return Safe("WindowStackTests", WindowStackTests.Run(this, Player.m_localPlayer));
+                yield return Safe("DungeonTests", DungeonTests.Run(this, Player.m_localPlayer), 180f); // en dernier : téléporte le joueur puis le ramène
                 yield return Safe("L10nTests", L10nTests.Run(this, Player.m_localPlayer));
                 L10nTests.Restore();
                 { Log.LogInfo($"[TEST] ===== fin : {_pass} PASS, {_fail} FAIL ====="); _finished = true; }
@@ -611,6 +612,7 @@ namespace TestHarness
             yield return Safe("NativeUiProbe", NativeUiProbe.Run(this, player));
             yield return Safe("ScrollTests", ScrollTests.Run(this, player));
             yield return Safe("WindowStackTests", WindowStackTests.Run(this, player));
+            yield return Safe("DungeonTests", DungeonTests.Run(this, player), 180f);
             yield return Safe("L10nTests", L10nTests.Run(this, player));
             L10nTests.Restore();
 

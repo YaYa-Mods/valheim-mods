@@ -191,7 +191,7 @@ namespace ResourceFinder
             {
                 ResourceEntry entry = null;
                 foreach (var e in Catalog.Entries) if (string.Equals(e.Label, l.Label, StringComparison.OrdinalIgnoreCase)) { entry = e; break; }
-                int n = l.Results.RemoveAll(r => !r.StillExists() || (r.IsLocation && LocationEmptied(entry, r)));
+                int n = l.Results.RemoveAll(r => !r.StillExists() || (r.IsLocation && (LocationEmptied(entry, r) || Dungeons.Emptied(r, entry)))); // donjon vidé : son entrée n'a plus rien à offrir
                 if (n > 0) changed = true;
             }
             if (changed) { Save(); s_pinsDirty = true; }

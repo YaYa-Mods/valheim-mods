@@ -314,6 +314,7 @@ namespace ModsCommon
             { "Rien à recycler dans l'inventaire : seuls les objets fabriqués (armes, outils, armures, boucliers, munitions) sont proposés.", "Nothing to recycle in the inventory: only crafted items (weapons, tools, armour, shields, ammunition) are offered." },
             { "Confirmer ?", "Confirm?" },
             { "Recycleur", "Recycler" },
+            { "Donjon vidé : repère retiré", "Dungeon cleared: marker removed" },
             { "Jetez-y ce qui ne sert plus : le bouton « Recycler » de son panneau rend une part des matériaux de fabrication.", "Throw in what you no longer need: the Recycle button of its panel gives back a share of the crafting materials." },
             { "Rien à recycler dans le Recycleur", "Nothing to recycle in the Recycler" },
             { "{0} objet(s) recyclé(s) → {1}", "{0} item(s) recycled → {1}" },

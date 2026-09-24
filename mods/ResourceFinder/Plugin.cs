@@ -135,7 +135,11 @@ namespace ResourceFinder
             // Cible disparue (minée, cueillie et détruite, tuée...). En Traque : nouvelle recherche depuis la position ACTUELLE, et la
             // cible devient le plus proche de là, pas le suivant d'une liste trouvée au départ, ailleurs (chasser vingt biches, miner un
             // filon après l'autre, sans rouvrir la fenêtre). Hors Traque : la suivante de la même couche.
-            if (_target != null && !_target.StillExists())
+            UpdateInside(player.transform.position);
+            // Donjon dont l'entrée est la cible, entièrement vidé (coffres pris, cœurs ramassés) : même chose qu'une cible disparue
+            bool emptied = _target != null && _target.IsLocation && Dungeons.Emptied(_target, TargetEntry());
+            if (emptied) { _targetLayer?.Results.Remove(_target); Layers.MarkDirty(); player.Message(MessageHud.MessageType.TopLeft, L.T("Donjon vidé : repère retiré")); }
+            if (_target != null && (emptied || !_target.StillExists()))
             {
                 _finder.Results.Remove(_target);
                 var from = player.transform.position;
@@ -146,6 +150,33 @@ namespace ResourceFinder
                 }
                 else _target = Nearest(_targetLayer?.Results ?? _finder.Results, from);
             }
+        }
+
+        // ---- à l'intérieur d'un donjon : la pastille montre le plus proche de ce qui reste, pas l'entrée
+        private Result _insideTarget; private float _insideNext;
+
+        /// <summary>Ce que la pastille, le cadre et la lueur désignent : l'objet restant dans le donjon où l'on est, sinon la cible.</summary>
+        private Result Shown => _insideTarget ?? _target;
+
+        private void UpdateInside(Vector3 playerPos)
+        {
+            if (_target == null || !_target.IsLocation) { _insideTarget = null; return; }
+            if (Time.unscaledTime < _insideNext) return;
+            _insideNext = Time.unscaledTime + 0.25f;
+            var zdo = Dungeons.NearestInside(_target, TargetEntry(), playerPos);
+            if (zdo == null) { _insideTarget = null; return; }
+            if (_insideTarget != null && _insideTarget.Id == zdo.m_uid) { _insideTarget.Pos = zdo.GetPosition(); return; }
+            var prefab = ZNetScene.instance.GetPrefab(zdo.GetPrefab());
+            _insideTarget = new Result { Pos = zdo.GetPosition(), Prefab = prefab != null ? prefab.name : "", Hash = zdo.GetPrefab(), Id = zdo.m_uid, IsLocation = false };
+        }
+
+        /// <summary>Entrée du catalogue de la cible actuelle (par le libellé de sa couche ou de la recherche).</summary>
+        private ResourceEntry TargetEntry()
+        {
+            string label = _targetLayer?.Label ?? _finder.Label;
+            if (_currentEntry != null && _currentEntry.Label == label) return _currentEntry;
+            foreach (var e in Catalog.Entries) if (e.Label == label) return e;
+            return _currentEntry;
         }
 
         /// <summary>Mode Traque : la cible suivante s'enchaîne toute seule (touche TrackKey, bouton, roue).</summary>
@@ -976,13 +1007,13 @@ namespace ResourceFinder
 
         private void UpdateGlow()
         {
-            bool want = _target != null && !_target.IsLocation && Enabled.Value && (HighlightStyle.Value == Highlight.Lueur || HighlightStyle.Value == Highlight.LesDeux);
-            if (!want || _glowId != _target.Id || Time.unscaledTime >= _glowNextLookup)
+            bool want = Shown != null && !Shown.IsLocation && Enabled.Value && (HighlightStyle.Value == Highlight.Lueur || HighlightStyle.Value == Highlight.LesDeux);
+            if (!want || _glowId != Shown.Id || Time.unscaledTime >= _glowNextLookup)
             {
                 ClearGlow();
                 if (!want) return;
-                _glowId = _target.Id; _glowNextLookup = Time.unscaledTime + 1f;
-                var zdo = ZDOMan.instance != null ? ZDOMan.instance.GetZDO(_target.Id) : null;
+                _glowId = Shown.Id; _glowNextLookup = Time.unscaledTime + 1f;
+                var zdo = ZDOMan.instance != null ? ZDOMan.instance.GetZDO(Shown.Id) : null;
                 var nv = zdo != null && ZNetScene.instance != null ? ZNetScene.instance.FindInstance(zdo) : null;
                 if (nv == null) return;
                 foreach (var r in nv.GetComponentsInChildren<Renderer>())
@@ -1019,11 +1050,11 @@ namespace ResourceFinder
         private ZDOID _hlId; private GameObject _hlGo; private float _hlNextLookup;
         private void DrawTargetHighlight(Camera cam, float s)
         {
-            if (_target == null || _target.IsLocation || ZNetScene.instance == null || (HighlightStyle.Value != Highlight.Cadre && HighlightStyle.Value != Highlight.LesDeux)) return;
-            if (_hlId != _target.Id || _hlGo == null || Time.unscaledTime >= _hlNextLookup)
+            if (Shown == null || Shown.IsLocation || ZNetScene.instance == null || (HighlightStyle.Value != Highlight.Cadre && HighlightStyle.Value != Highlight.LesDeux)) return;
+            if (_hlId != Shown.Id || _hlGo == null || Time.unscaledTime >= _hlNextLookup)
             {
-                _hlId = _target.Id; _hlNextLookup = Time.unscaledTime + 1f;
-                var zdo = ZDOMan.instance != null ? ZDOMan.instance.GetZDO(_target.Id) : null;
+                _hlId = Shown.Id; _hlNextLookup = Time.unscaledTime + 1f;
+                var zdo = ZDOMan.instance != null ? ZDOMan.instance.GetZDO(Shown.Id) : null;
                 var nv = zdo != null ? ZNetScene.instance.FindInstance(zdo) : null;
                 _hlGo = nv != null ? nv.gameObject : null;
             }
@@ -1151,7 +1182,9 @@ namespace ResourceFinder
 
         private void DrawHud()
         {
-            if (_target == null) return;
+            var tgt = Shown;
+            if (tgt == null) return;
+            bool inside = tgt != _target; // dans un donjon : on guide vers ce qui reste à l'intérieur, pas vers l'entrée
             var cam = Utils.GetMainCamera();
             if (cam == null) return;
             float s = Theme.UiScale;
@@ -1159,31 +1192,31 @@ namespace ResourceFinder
             DrawTargetHighlight(cam, s);
 
             var from = Player.m_localPlayer.transform.position;
-            float dist = _target.Distance(from);
-            string label = L.T(_targetLayer?.Label ?? _finder.Label);
+            float dist = tgt.Distance(from);
+            string label = inside ? DisplayName(tgt) : L.T(_targetLayer?.Label ?? _finder.Label);
             // Textes, largeurs et icône figés tant que la cible, le libellé et la distance arrondie ne changent pas
             // (OnGUI passe plusieurs fois par image : pas de formatage ni de CalcSize à chaque passage)
             int distKey = dist >= 1000f ? 1000 + Mathf.RoundToInt(dist / 100f) : Mathf.RoundToInt(dist);
-            if (_hudTarget != _target || _hudLayer != _targetLayer || !ReferenceEquals(_hudLabel, label) || _hudDistKey != distKey || _hudTracking != Tracking)
+            if (_hudTarget != tgt || _hudLayer != _targetLayer || !ReferenceEquals(_hudLabel, label) || _hudDistKey != distKey || _hudTracking != Tracking)
             {
-                _hudTarget = _target; _hudLayer = _targetLayer; _hudLabel = label; _hudDistKey = distKey; _hudTracking = Tracking;
+                _hudTarget = tgt; _hudLayer = _targetLayer; _hudLabel = label; _hudDistKey = distKey; _hudTracking = Tracking;
                 _hudDistText = dist >= 1000f ? $"{dist / 1000f:0.0} km" : dist < 3f ? L.T("ici") : $"{dist:0} m";
                 // Pas de compteur sur la pastille : le rang n'est dit qu'au moment d'appuyer sur F6
                 if (Tracking) _hudDistText += L.T("  <size=12><color=#7cc35a>traque</color></size>");
                 // Recherche d'un matériau : la pastille dit aussi QUOI chercher (« Fragments d'os · Tas d'os », « · Squelette »)
                 _hudShownLabel = label;
-                if (!_target.IsLocation && IsMaterialLabel(_targetLayer?.Label ?? _finder.Label))
+                if (!inside && !tgt.IsLocation && IsMaterialLabel(_targetLayer?.Label ?? _finder.Label))
                 {
-                    string source = DisplayName(_target);
+                    string source = DisplayName(tgt);
                     if (!string.IsNullOrEmpty(source) && !string.Equals(source, label, StringComparison.OrdinalIgnoreCase)) _hudShownLabel = label + "  <color=#c9c2b4>· " + source + "</color>";
                 }
                 s_content.text = _hudShownLabel; _hudLabelW = _hudStyle.CalcSize(s_content).x;
                 s_content.text = _hudDistText; _hudDistW = _hudDist.CalcSize(s_content).x;
-                _hudIcon = _targetLayer?.Icon() ?? (_target.IsLocation ? Icons.ForEntry(_currentEntry) : (Icons.ForPrefab(_target.Prefab) ?? Icons.ForEntry(_currentEntry)));
+                _hudIcon = inside ? (Icons.ForPrefab(tgt.Prefab) ?? Icons.ForEntry(_currentEntry)) : _targetLayer?.Icon() ?? (tgt.IsLocation ? Icons.ForEntry(_currentEntry) : (Icons.ForPrefab(tgt.Prefab) ?? Icons.ForEntry(_currentEntry)));
             }
             string distText = _hudDistText;
 
-            Vector3 sp = cam.WorldToScreenPoint(_target.Pos + Vector3.up * 1.5f);
+            Vector3 sp = cam.WorldToScreenPoint(tgt.Pos + Vector3.up * 1.5f);
             bool behind = sp.z < 0f;
             var p = new Vector2(sp.x / s, sh - sp.y / s);
             if (behind) p = new Vector2(sw - p.x, sh - p.y);

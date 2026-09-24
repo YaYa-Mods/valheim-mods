@@ -68,7 +68,9 @@ Everything can also be changed in game with Mod Hub (F9).
 
 - The mouse wheel scrolls the window's lists instead of zooming the camera, the way build mode frees it to rotate a piece.
 - The on-screen pill stays fully visible: near a screen edge it moves inward and shows an arrow towards the target, and it never lands on the creature name plate the game draws, on the game HUD (health bars, hotbar, minimap, messages, boss bar) or on another mod's panel.
-- Dungeon interiors (crypts, caves, infested mines) are ignored: the entrance is what gets pinned.
+- Dungeon interiors (crypts, caves, infested mines) are ignored: the entrance is what gets pinned. Inside a burial
+  chamber or a sunken crypt, the pill points at the nearest thing left (chest, surtling core, scrap pile); once
+  everything is taken, the dungeon marker is removed.
 - The catalogue is checked against the game's own placement tables (spawn lists, vegetation, locations) by the test
   harness, so every entry can actually be found in a normal world.
 - Layers and the "seen" list are stored in the character's custom data; removing the mod leaves nothing behind but that
@@ -94,6 +96,8 @@ proche. L'interface suit la langue du jeu.
 - **F6** : cible suivante sans ouvrir la fenêtre. Clic droit sur un résultat : le voir sur la grande carte.
 - **Traque (F4)** : dès que la cible est récoltée ou tuée, une nouvelle recherche part de là où vous êtes et la plus
   proche de vous devient la cible (pas la suivante de la liste trouvée au départ). Plus rien : la traque s'arrête.
+- **Donjons** (chambres funéraires, cryptes des marais) : l'entrée est épinglée ; à l'intérieur, la pastille montre le
+  plus proche de ce qui reste (coffre, cœur de surtling, ferraille) ; tout pris, le repère du donjon disparaît.
 - **Découverte** : le catalogue ne montre que ce que vous avez déjà vu, tenu en main ou combattu. Le reste peut être
   révélé entrée par entrée.
 - Les créatures ne sont trouvées que si elles sont chargées autour de vous ; sinon la fenêtre indique leurs biomes.
